@@ -95,15 +95,15 @@
     <QtRcc Include="PROJETVOLANGTBL.qrc" />
     <QtUic Include="PROJETVOLANGTBL.ui" />
     <QtMoc Include="PROJETVOLANGTBL.h" />
-    <ClCompile Include="map.cpp" />
+    <ClCompile Include="map2d.cpp" />
     <ClCompile Include="PROJETVOLANGTBL.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="map.h" />
+    <ClInclude Include="map2d.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="projetvolangtbl.pro" />
+    <None Include="projetvolant.pro" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

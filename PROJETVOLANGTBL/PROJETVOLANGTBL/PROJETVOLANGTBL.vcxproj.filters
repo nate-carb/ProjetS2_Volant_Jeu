@@ -40,16 +40,18 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="map.cpp">
+    <ClCompile Include="map2d.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="map.h">
+    <ClInclude Include="map2d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="projetvolangtbl.pro" />
+    <None Include="projetvolant.pro">
+      <Filter>Translation Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
