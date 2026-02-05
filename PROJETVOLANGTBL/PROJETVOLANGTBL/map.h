@@ -15,6 +15,6 @@ class Map
 		QMatrix mapMatrix;
 
 
-};
+};qmak
 
 #endif	// MAP_H
