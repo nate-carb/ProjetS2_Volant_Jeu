@@ -49,4 +49,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="projetvolangtbl.pro" />
+  </ItemGroup>
 </Project>
