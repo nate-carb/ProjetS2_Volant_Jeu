@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <string>
 
 
 struct Vec2 {
@@ -61,9 +62,7 @@ class Map2D
 		int getChoixMap();
 
 		//std::vector<trackInfo> getTrackList()
-		void trackGenerator(Vec2 start, float startAng, 
-			const std::vector<float>& segmentAngles,
-			const std::vector<float>& segmentLengths);
+		void trackGenerator();
 		Vec2 getStartPos();
 
         std::vector<trackInfo> getTrackList();
@@ -77,9 +76,15 @@ class Map2D
             float trackWidth);*/
 		//track generator infos 
 		std::vector<trackInfo> trackList;
+        int trackListTaille;
+        void calculAngLen(
+            std::vector<Vec2>& track,
+            float& currentAngle, Vec2& currentPos,
+            std::vector<float>& angles, std::vector<float>& lengths
+        );
 		void addStartPos(Vec2 pos);
 		void addStartAng(float ang);
-
+        
         
 		
 		

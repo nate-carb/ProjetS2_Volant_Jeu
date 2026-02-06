@@ -51,9 +51,27 @@ Map2D::Map2D()
     trackList[0].startAngle = startAngle; 
     
     // Define the "angles" for each segment
-    std::vector<float> angles = { 0, 45, 0, -30, -45, 0, 30, 0, -60, 0 };
+    std::vector<float> angles = { 0, 45/4, 45 / 2, 45/4, 0};
+
+    /*std::vector<float> angles = { 
+            0, 0, -45, 0, -45,
+            0, 0, 0, 0, -45, 
+            0, -45, 0, 0, 0, 
+            0, -45, 0, -45, 0, 
+            0, 0, 0, -45, 0, 
+            -45, 0, 0 
+    };*/
     // Define the "lengths" of each segment
-    std::vector<float> lengths = { 50, 50, 50, 50, 50, 50, 50, 50, 50, 50 };
+    std::vector<float> lengths = {  20, 10, 10, 10, 20 };
+    
+    /*std::vector<float> lengths = { 
+            20, 20, 20, 20, 20,
+            20, 20, 20, 20, 20,
+            20, 20, 20, 20, 20,
+            20, 20, 20, 20, 20,
+            20, 20, 20, 20, 20,
+            20, 20, 20 
+    };*/
 
     std::vector<Vec2> track;
     track.push_back(start);
@@ -68,7 +86,7 @@ Map2D::Map2D()
         track.push_back(currentPos);
     }
     trackList[0].centerLine = track;
-    trackList[0].trackEdges = calculateTrackEdges(track, 2);
+    trackList[0].trackEdges = calculateTrackEdges(track, 40);
 
 
 
@@ -110,28 +128,105 @@ void Map2D::addStartAng(float ang)
     trackList[choixMap].startAngle = ang;
 }
 
-
-/*
-void Map2D::trackGenerator(Vec2 start, float startAng,
-    const std::vector<float>& segmentAngles,
-    const std::vector<float>& segmentLengths)
-{
-      segmentAngles 
-      std::vector<Vec2> track;
-      track.push_back(start);
-
-      float currentAngle = startAngle;
-      Vec2 currentPos = start;
-
-      for (size_t i = 0; i < angles.size(); i++) {
-          currentAngle += angles[i];
-          currentPos = currentPos.move(currentAngle, lengths[i]);
-          track.push_back(currentPos);
-      }
-
-      
+void Map2D::calculAngLen(
+    std::vector<Vec2>& track,
+    float& currentAngle, Vec2& currentPos,
+    std::vector<float>& angles, std::vector<float>& lengths
+) {
+	
+    for (size_t i = 0; i < angles.size(); i++) {
+        currentAngle += angles[i];
+        currentPos = currentPos.move(currentAngle, lengths[i]);
+        track.push_back(currentPos);
+    }
+    trackList[trackListTaille - 1].centerLine = track;
+    trackList[trackListTaille - 1].trackEdges = calculateTrackEdges(track, 20);
 }
-*/
+
+void Map2D::trackGenerator()  
+{
+	int size = trackList.size();
+	trackList.resize(size++);
+	trackListTaille = trackList.size();
+
+	Vec2 start(0,0);
+    /*int startAng;
+    
+    std::cout << "Entrer l'angle de depart (0 - 90): ";
+    std::cin >> startAng;*/
+    std::string input;
+
+    std::cout << "Entrer l'angle de depart (0 - 90): ";
+    std::getline(std::cin, input);
+    int startAng = std::stoi(input); 
+
+    std::vector<Vec2> track;
+    track.push_back(start);
+
+
+    float currentAngle = startAng;
+    Vec2 currentPos = start;
+
+    std::vector<float> angles;
+    std::vector<float> lengths;
+    std::string trackIn;
+    while (true) {
+
+        std::cout << "Entrer type de track (45g, 45d, 90g, 90d, droit) END pour la fin: ";
+        std::cin >> trackIn;
+        
+
+        if (trackIn == "END") {
+            break;  // Exit the loop
+        }
+
+        if (trackIn == "45g") {
+            // Define the "angles" for each segment
+            angles = { 0, 45 / 2, 0, 45 / 2, 0 };
+            // Define the "lengths" of each segment
+            lengths = { 20, 10, 10, 10, 20 };
+            calculAngLen(track, currentAngle, currentPos, angles, lengths);
+            drawMapASCII();
+        }
+        else if (trackIn == "45d") {
+            // Define the "angles" for each segment
+            angles = { 0, -45 / 2, 0, -45 / 2, 0 };
+            // Define the "lengths" of each segment
+            lengths = { 20, 10, 10, 10, 20 };
+            calculAngLen(track, currentAngle, currentPos, angles, lengths);
+            drawMapASCII();
+        }
+        else if (trackIn == "90g") {
+            // Define the "angles" for each segment
+            angles = { 0, 45, 0, 45, 0 };
+            // Define the "lengths" of each segment
+            lengths = { 20, 10, 10, 10, 20 };
+            calculAngLen(track, currentAngle, currentPos, angles, lengths);
+            drawMapASCII();
+        }
+        else if (trackIn == "90d") {
+            // Define the "angles" for each segment
+            angles = { 0, -45, 0, -45, 0 };
+            // Define the "lengths" of each segment
+            lengths = { 20, 10, 10, 10, 20 };
+            calculAngLen(track, currentAngle, currentPos, angles, lengths);
+            drawMapASCII();
+        }
+        else if (trackIn == "droit") {
+            // Define the "angles" for each segment
+            angles = { 0, 0, 0, 0, 0 };
+            // Define the "lengths" of each segment
+            lengths = { 20, 20, 20, 20, 20 };
+            calculAngLen(track, currentAngle, currentPos, angles, lengths);
+            drawMapASCII();
+        }
+        else {
+            std::cout << "Type de track invalide.\n";
+        }
+
+    }
+}
+
 
 struct GridPoint {
     int x;
@@ -171,6 +266,40 @@ void computeBounds(const trackInfo& track,
     for (auto& p : track.trackEdges.right) check(p);
 }
 
+void drawLine(char grid[GRID_H][GRID_W], GridPoint p0, GridPoint p1, char ch)
+{
+    // Bresenham's line algorithm
+    int dx = abs(p1.x - p0.x);
+    int dy = abs(p1.y - p0.y);
+    int sx = (p0.x < p1.x) ? 1 : -1;
+    int sy = (p0.y < p1.y) ? 1 : -1;
+    int err = dx - dy;
+
+    int x = p0.x;
+    int y = p0.y;
+
+    while (true) {
+        // Draw point if in bounds
+        if (x >= 0 && x < GRID_W && y >= 0 && y < GRID_H)
+            grid[y][x] = ch;
+
+        // Check if we've reached the end
+        if (x == p1.x && y == p1.y)
+            break;
+
+        int e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y += sy;
+        }
+    }
+}
+
+
 void drawTrackASCII(const trackInfo& track)
 {
     char grid[GRID_H][GRID_W];
@@ -193,20 +322,26 @@ void drawTrackASCII(const trackInfo& track)
     for (auto& p : track.centerLine) {
         GridPoint g = toGrid(p, minX, maxX, minY, maxY);
         if (g.x >= 0 && g.x < GRID_W && g.y >= 0 && g.y < GRID_H)
-            grid[g.y][g.x] = '.';
+            grid[g.y][g.x] = '-';
+    }
+    // 4. Draw left edge (connected)
+    for (size_t i = 0; i < track.trackEdges.left.size(); i++) {
+        GridPoint g = toGrid(track.trackEdges.left[i], minX, maxX, minY, maxY);
+
+        if (i > 0) {
+            GridPoint prev = toGrid(track.trackEdges.left[i - 1], minX, maxX, minY, maxY);
+            drawLine(grid, prev, g, '#');
+        }
     }
 
-    // 4. Dessiner bords
-    for (auto& p : track.trackEdges.left) {
-        GridPoint g = toGrid(p, minX, maxX, minY, maxY);
-        if (g.x >= 0 && g.x < GRID_W && g.y >= 0 && g.y < GRID_H)
-            grid[g.y][g.x] = '#';
-    }
+    // 5. Draw right edge (connected)
+    for (size_t i = 0; i < track.trackEdges.right.size(); i++) {
+        GridPoint g = toGrid(track.trackEdges.right[i], minX, maxX, minY, maxY);
 
-    for (auto& p : track.trackEdges.right) {
-        GridPoint g = toGrid(p, minX, maxX, minY, maxY);
-        if (g.x >= 0 && g.x < GRID_W && g.y >= 0 && g.y < GRID_H)
-            grid[g.y][g.x] = '#';
+        if (i > 0) {
+            GridPoint prev = toGrid(track.trackEdges.right[i - 1], minX, maxX, minY, maxY);
+            drawLine(grid, prev, g, '#');
+        }
     }
 
     // 5. Dessiner départ
