@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QGroupBox>
+#include <track3DViewer.h>
 #include "TrackCreator.h"
 #include "Track.h"
 
@@ -22,6 +23,7 @@ private slots:
     void onClear();
     void onSave();
     void onLoad();
+    void onView3D();
 
 private:
     TrackCreator* trackCreator;

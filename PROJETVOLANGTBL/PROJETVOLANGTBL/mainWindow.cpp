@@ -59,6 +59,12 @@ MainWindow::MainWindow(QWidget* parent)
 
     controlLayout->addWidget(trackControlsGroup);
 
+    // Add 3D View button
+    QPushButton* view3DBtn = new QPushButton("View in 3D", this);
+    view3DBtn->setStyleSheet("QPushButton { background-color: #9C27B0; color: white; padding: 8px; }");
+    connect(view3DBtn, &QPushButton::clicked, this, &MainWindow::onView3D);
+    controlLayout->addWidget(view3DBtn);
+
     // Status label
     statusLabel = new QLabel("Pieces: 0", this);
     controlLayout->addWidget(statusLabel);
@@ -174,5 +180,20 @@ void MainWindow::onLoad()
             QMessageBox::warning(this, "Load Failed",
                 "Failed to load track from:\n" + filename);
         }
+    }
+}
+void MainWindow::onView3D()
+{
+    // Save current track to temp file
+    Track currentTrack = trackCreator->getCurrentTrack();
+    QString tempFile = "temp_track.trk";
+
+    if (currentTrack.saveToFile(tempFile.toStdString())) {
+        // Open 3D viewer window
+        Track3DViewer* viewer3D = new Track3DViewer();
+        viewer3D->setWindowTitle("3D Track View");
+        viewer3D->resize(1024, 768);
+        viewer3D->loadTrackFile(tempFile);
+        viewer3D->show();
     }
 }

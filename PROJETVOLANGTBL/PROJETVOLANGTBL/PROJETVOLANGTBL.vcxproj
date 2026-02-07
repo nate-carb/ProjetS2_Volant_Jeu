@@ -37,7 +37,7 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.10.2_msvc2022_64</QtInstall>
-    <QtModules>core;gui;widgets</QtModules>
+    <QtModules>core;gui;widgets;3dcore;3drender;3dinput;3dextras;openglwidgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
@@ -93,9 +93,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="mainWindow.cpp" />
-    <ClCompile Include="Map3D_rendering.cpp" />
+    <ClCompile Include="track3DViewer.cpp" />
     <ClCompile Include="Track.cpp" />
+    <ClCompile Include="trackBuilder3D.cpp" />
     <ClCompile Include="trackCreator.cpp" />
+    <ClCompile Include="trackPieces3D.cpp" />
     <ClCompile Include="trackViewer.cpp" />
     <QtRcc Include="PROJETVOLANGTBL.qrc" />
     <QtUic Include="PROJETVOLANGTBL.ui" />
@@ -105,8 +107,10 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Map3D_rendering.h" />
+    <QtMoc Include="track3DViewer.h" />
     <ClInclude Include="Track.h" />
+    <ClInclude Include="trackBuilder3D.h" />
+    <ClInclude Include="trackPieces3D.h" />
     <QtMoc Include="trackCreator.h" />
     <QtMoc Include="mainWindow.h" />
     <ClInclude Include="map2d.h" />

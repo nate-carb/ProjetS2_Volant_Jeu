@@ -49,7 +49,7 @@
     <ClCompile Include="mainWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Map3D_rendering.cpp">
+    <ClCompile Include="track3DViewer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Track.cpp">
@@ -58,15 +58,24 @@
     <ClCompile Include="trackCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="trackPieces3D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="trackBuilder3D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="map2d.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Map3D_rendering.h">
+    <ClInclude Include="Track.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Track.h">
+    <ClInclude Include="trackPieces3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="trackBuilder3D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -83,6 +92,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="trackCreator.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="track3DViewer.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

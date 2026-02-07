@@ -94,6 +94,34 @@ Makefile: projetvolant.pro C:\Qt\6.10.2\msvc2022_64\mkspecs\win32-msvc\qmake.con
 		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_ext_libjpeg.pri \
 		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_ext_libpng.pri \
 		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_ext_openxr_loader.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3danimation.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3danimation_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dcore.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dcore_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dextras.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dextras_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dinput.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dinput_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dlogic.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dlogic_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquick.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquick_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickanimation.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickanimation_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickextras.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickextras_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickinput.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickinput_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquicklogic.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquicklogic_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickrender.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickrender_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickscene2d.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickscene2d_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickscene3d.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickscene3d_private.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3drender.pri \
+		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3drender_private.pri \
 		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_charts.pri \
 		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_charts_private.pri \
 		C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_chartsqml.pri \
@@ -316,15 +344,31 @@ Makefile: projetvolant.pro C:\Qt\6.10.2\msvc2022_64\mkspecs\win32-msvc\qmake.con
 		C:\Qt\6.10.2\msvc2022_64\mkspecs\features\yacc.prf \
 		C:\Qt\6.10.2\msvc2022_64\mkspecs\features\lex.prf \
 		projetvolant.pro \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt6OpenGLWidgets.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Widgets.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DExtras.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DRender.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6OpenGL.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DInput.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DLogic.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DCore.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Gui.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Concurrent.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Network.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Core.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6EntryPoint.prl \
 		C:\Qt\6.10.2\msvc2022_64\mkspecs\features\build_pass.prf \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt6OpenGLWidgetsd.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Widgetsd.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DExtrasd.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DRenderd.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6OpenGLd.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DInputd.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DLogicd.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt63DCored.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Guid.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Concurrentd.prl \
+		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Networkd.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6Cored.prl \
 		C:\Qt\6.10.2\msvc2022_64\lib\Qt6EntryPointd.prl
 	$(QMAKE) -o Makefile projetvolant.pro
@@ -338,6 +382,34 @@ C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_ext_freetype.pri:
 C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_ext_libjpeg.pri:
 C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_ext_libpng.pri:
 C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_ext_openxr_loader.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3danimation.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3danimation_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dcore.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dcore_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dextras.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dextras_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dinput.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dinput_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dlogic.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dlogic_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquick.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquick_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickanimation.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickanimation_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickextras.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickextras_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickinput.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickinput_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquicklogic.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquicklogic_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickrender.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickrender_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickscene2d.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickscene2d_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickscene3d.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3dquickscene3d_private.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3drender.pri:
+C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_3drender_private.pri:
 C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_charts.pri:
 C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_charts_private.pri:
 C:\Qt\6.10.2\msvc2022_64\mkspecs\modules\qt_lib_chartsqml.pri:
@@ -560,15 +632,31 @@ C:\Qt\6.10.2\msvc2022_64\mkspecs\features\exceptions.prf:
 C:\Qt\6.10.2\msvc2022_64\mkspecs\features\yacc.prf:
 C:\Qt\6.10.2\msvc2022_64\mkspecs\features\lex.prf:
 projetvolant.pro:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt6OpenGLWidgets.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6Widgets.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DExtras.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DRender.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6OpenGL.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DInput.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DLogic.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DCore.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6Gui.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt6Concurrent.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt6Network.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6Core.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6EntryPoint.prl:
 C:\Qt\6.10.2\msvc2022_64\mkspecs\features\build_pass.prf:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt6OpenGLWidgetsd.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6Widgetsd.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DExtrasd.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DRenderd.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6OpenGLd.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DInputd.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DLogicd.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt63DCored.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6Guid.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt6Concurrentd.prl:
+C:\Qt\6.10.2\msvc2022_64\lib\Qt6Networkd.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6Cored.prl:
 C:\Qt\6.10.2\msvc2022_64\lib\Qt6EntryPointd.prl:
 qmake: FORCE
