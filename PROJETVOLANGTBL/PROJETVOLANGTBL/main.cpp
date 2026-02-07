@@ -1,11 +1,12 @@
 #include "PROJETVOLANGTBL.h"
 #include "map2d.h"
+#include "MainWindow.h"
 #include <QtWidgets/QApplication>
 #include <windows.h>
 #include <iostream>
 #include <QDebug>
 #include <chrono>
-
+/*
 int main(int argc, char *argv[])
 {
     // Better console allocation
@@ -34,4 +35,14 @@ int main(int argc, char *argv[])
     window.show();
     return app.exec();
 	
+}
+*/
+int main(int argc, char* argv[])
+{
+    QApplication app(argc, argv);
+
+    MainWindow window;
+    window.show();
+
+    return app.exec();
 }

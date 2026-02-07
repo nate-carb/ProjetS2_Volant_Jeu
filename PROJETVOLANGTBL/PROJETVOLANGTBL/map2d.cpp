@@ -1,96 +1,9 @@
 ﻿#include "map2d.h"
 
 
-TrackEdges calculateTrackEdges(
-    const std::vector<Vec2>& centerLine,
-    float trackWidth)
-{
-    TrackEdges edges;
-
-    if (centerLine.size() < 2)
-        return edges;
-
-    float halfWidth = trackWidth * 0.5f;
-
-    for (size_t i = 0; i < centerLine.size(); i++) {
-
-        Vec2 dir;
-
-        if (i == 0) {
-            // first point → forward direction
-            dir = (centerLine[1] - centerLine[0]).normalized();
-        }
-        else if (i == centerLine.size() - 1) {
-            // last point → backward direction
-            dir = (centerLine[i] - centerLine[i - 1]).normalized();
-        }
-        else {
-            // middle point → average direction (smooth turns)
-            Vec2 dir1 = (centerLine[i] - centerLine[i - 1]).normalized();
-            Vec2 dir2 = (centerLine[i + 1] - centerLine[i]).normalized();
-            dir = (dir1 + dir2).normalized();
-        }
-
-        Vec2 normal = dir.perpendicular();
-
-        edges.left.push_back(centerLine[i] + normal * halfWidth);
-        edges.right.push_back(centerLine[i] - normal * halfWidth);
-    }
-
-    return edges;
-}
-
-
-
 Map2D::Map2D()
 {
-    trackList.resize(1);
-    Vec2 start(100, 100);
-    trackList[0].start = start;
-    float startAngle = 0.0;
-    trackList[0].startAngle = startAngle; 
-    
-    // Define the "angles" for each segment
-    std::vector<float> angles = { 0, 45/4, 45 / 2, 45/4, 0};
 
-    /*std::vector<float> angles = { 
-            0, 0, -45, 0, -45,
-            0, 0, 0, 0, -45, 
-            0, -45, 0, 0, 0, 
-            0, -45, 0, -45, 0, 
-            0, 0, 0, -45, 0, 
-            -45, 0, 0 
-    };*/
-    // Define the "lengths" of each segment
-    std::vector<float> lengths = {  20, 10, 10, 10, 20 };
-    
-    /*std::vector<float> lengths = { 
-            20, 20, 20, 20, 20,
-            20, 20, 20, 20, 20,
-            20, 20, 20, 20, 20,
-            20, 20, 20, 20, 20,
-            20, 20, 20, 20, 20,
-            20, 20, 20 
-    };*/
-
-    std::vector<Vec2> track;
-    track.push_back(start);
-
-
-    float currentAngle = startAngle;
-    Vec2 currentPos = start;
-
-    for (size_t i = 0; i < angles.size(); i++) {
-        currentAngle += angles[i];
-        currentPos = currentPos.move(currentAngle, lengths[i]);
-        track.push_back(currentPos);
-    }
-    trackList[0].centerLine = track;
-    trackList[0].trackEdges = calculateTrackEdges(track, 40);
-
-
-
-    //trackList[0]->trackEdges = trackEdges;
 }
 
 Map2D::~Map2D()
@@ -98,62 +11,11 @@ Map2D::~Map2D()
 
 }
 
-void Map2D::setChoixMap(int x)
-{
-	choixMap = x;
-}
-
-int Map2D::getChoixMap()
-{
-	return choixMap;
-}
-
-Vec2 Map2D::getStartPos()
-{
-    return trackList[choixMap].start;
-}
-
-std::vector<trackInfo> Map2D::getTrackList()
-{
-    return trackList;
-}
-
-void Map2D::addStartPos(Vec2 pos)
-{
-    trackList[choixMap].start = pos;
-}
-
-void Map2D::addStartAng(float ang)
-{
-    trackList[choixMap].startAngle = ang;
-}
-
-void Map2D::calculAngLen(
-    std::vector<Vec2>& track,
-    float& currentAngle, Vec2& currentPos,
-    std::vector<float>& angles, std::vector<float>& lengths
-) {
-	
-    for (size_t i = 0; i < angles.size(); i++) {
-        currentAngle += angles[i];
-        currentPos = currentPos.move(currentAngle, lengths[i]);
-        track.push_back(currentPos);
-    }
-    trackList[trackListTaille - 1].centerLine = track;
-    trackList[trackListTaille - 1].trackEdges = calculateTrackEdges(track, 20);
-}
-
+/*
 void Map2D::trackGenerator()  
 {
-	int size = trackList.size();
-	trackList.resize(size++);
-	trackListTaille = trackList.size();
-
 	Vec2 start(0,0);
-    /*int startAng;
     
-    std::cout << "Entrer l'angle de depart (0 - 90): ";
-    std::cin >> startAng;*/
     std::string input;
 
     std::cout << "Entrer l'angle de depart (0 - 90): ";
@@ -226,7 +88,7 @@ void Map2D::trackGenerator()
 
     }
 }
-
+*/
 
 struct GridPoint {
     int x;
@@ -247,7 +109,7 @@ GridPoint toGrid(const Vec2& v,
     return p;
 }
 
-void computeBounds(const trackInfo& track,
+void Map2D::computeBounds(
     float& minX, float& maxX,
     float& minY, float& maxY)
 {
@@ -261,9 +123,9 @@ void computeBounds(const trackInfo& track,
         maxY = std::max(maxY, v.y);
         };
 
-    for (auto& p : track.centerLine) check(p);
-    for (auto& p : track.trackEdges.left)  check(p);
-    for (auto& p : track.trackEdges.right) check(p);
+    for (auto& p : getCenterLine()) check(p);
+    for (auto& p : getTrackEdges().left)  check(p);
+    for (auto& p : getTrackEdges().right) check(p);
 }
 
 void drawLine(char grid[GRID_H][GRID_W], GridPoint p0, GridPoint p1, char ch)
@@ -300,7 +162,7 @@ void drawLine(char grid[GRID_H][GRID_W], GridPoint p0, GridPoint p1, char ch)
 }
 
 
-void drawTrackASCII(const trackInfo& track)
+void Map2D::drawTrackASCII()
 {
     char grid[GRID_H][GRID_W];
 
@@ -311,7 +173,7 @@ void drawTrackASCII(const trackInfo& track)
 
     // 2. Calculer limites
     float minX, maxX, minY, maxY;
-    computeBounds(track, minX, maxX, minY, maxY);
+    computeBounds(minX, maxX, minY, maxY);
 
     // marge
     float margin = 10.0f;
@@ -319,33 +181,35 @@ void drawTrackASCII(const trackInfo& track)
     minY -= margin; maxY += margin;
 
     // 3. Dessiner centre
-    for (auto& p : track.centerLine) {
+    for (auto& p : getCenterLine()) {
         GridPoint g = toGrid(p, minX, maxX, minY, maxY);
         if (g.x >= 0 && g.x < GRID_W && g.y >= 0 && g.y < GRID_H)
             grid[g.y][g.x] = '-';
     }
+
     // 4. Draw left edge (connected)
-    for (size_t i = 0; i < track.trackEdges.left.size(); i++) {
-        GridPoint g = toGrid(track.trackEdges.left[i], minX, maxX, minY, maxY);
+    for (size_t i = 0; i < getTrackEdges().left.size(); i++) {
+        GridPoint g = toGrid(getTrackEdges().left[i], minX, maxX, minY, maxY);
 
         if (i > 0) {
-            GridPoint prev = toGrid(track.trackEdges.left[i - 1], minX, maxX, minY, maxY);
+            GridPoint prev = toGrid(getTrackEdges().left[i - 1], minX, maxX, minY, maxY);
             drawLine(grid, prev, g, '#');
         }
     }
 
     // 5. Draw right edge (connected)
-    for (size_t i = 0; i < track.trackEdges.right.size(); i++) {
-        GridPoint g = toGrid(track.trackEdges.right[i], minX, maxX, minY, maxY);
+    for (size_t i = 0; i < getTrackEdges().right.size(); i++) {
+        GridPoint g = toGrid(getTrackEdges().right[i], minX, maxX, minY, maxY);
 
         if (i > 0) {
-            GridPoint prev = toGrid(track.trackEdges.right[i - 1], minX, maxX, minY, maxY);
+            GridPoint prev = toGrid(getTrackEdges().right[i - 1], minX, maxX, minY, maxY);
             drawLine(grid, prev, g, '#');
         }
     }
 
     // 5. Dessiner départ
-    GridPoint s = toGrid(track.start, minX, maxX, minY, maxY);
+    Vec2 start(0, 0); // Assuming start is at (0,0) for this example
+    GridPoint s = toGrid(start, minX, maxX, minY, maxY);
     grid[s.y][s.x] = 'S';
 
     // 6. Affichage console
@@ -356,13 +220,7 @@ void drawTrackASCII(const trackInfo& track)
     }
 }
 
-void Map2D::drawMapASCII() const
+void Map2D::displayTrack()
 {
-    if (trackList.empty()) {
-        std::cout << "No track\n";
-        return;
-    }
-
-    drawTrackASCII(trackList[choixMap]);
+    drawTrackASCII();
 }
-
