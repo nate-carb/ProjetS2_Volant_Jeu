@@ -95,6 +95,7 @@
     <ClCompile Include="mainWindow.cpp" />
     <ClCompile Include="Map3D_rendering.cpp" />
     <ClCompile Include="Track.cpp" />
+    <ClCompile Include="trackCreator.cpp" />
     <ClCompile Include="trackViewer.cpp" />
     <QtRcc Include="PROJETVOLANGTBL.qrc" />
     <QtUic Include="PROJETVOLANGTBL.ui" />
@@ -106,6 +107,7 @@
   <ItemGroup>
     <ClInclude Include="Map3D_rendering.h" />
     <ClInclude Include="Track.h" />
+    <QtMoc Include="trackCreator.h" />
     <QtMoc Include="mainWindow.h" />
     <ClInclude Include="map2d.h" />
     <QtMoc Include="trackViewer.h" />

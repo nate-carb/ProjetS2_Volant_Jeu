@@ -65,10 +65,11 @@ class TrackPieces
 		std::vector<float> getAngles() { return angles; };
 		std::vector<float> getLengths() { return lengths; };
 
-	private :
-		int pos;
+	
+		
 
 	protected:
+		int pos;
 		int id;
 		std::vector<float> angles;
 		std::vector<float> lengths;
@@ -77,53 +78,63 @@ class TrackPieces
 
 class Virage_45right : public TrackPieces
 {
-	Virage_45right();
+	public:
+		Virage_45right();
 	
 };
 
 class Virage_45left : public TrackPieces
 {
-	Virage_45left();
+	public:
+		Virage_45left();
 };
 
 class Virage_90right : public TrackPieces
 {
-	Virage_90right();
+	public:
+		Virage_90right();
 };
 
 class Virage_90left : public TrackPieces
 {
-	Virage_90left();
+	public:
+		Virage_90left();
 };
 
 class Straight : public TrackPieces
 {
-	Straight();
+	public:
+		Straight();
 };
 
 class StartLine : public TrackPieces
 {
-	StartLine();
+	public:
+		StartLine();
 };
 
 class Garage : public TrackPieces
 {
-	Garage();
+	public:
+		Garage();
 };
 
 class Pit : public TrackPieces
 {
-	Pit();
+	public:
+		Pit();
 };
 
 class Grandstand : public TrackPieces
 {
-	Grandstand();
+	public:
+		Grandstand();
 };
 
 class Bridges : public TrackPieces
 {
-	Bridges();
+	public:
+		Bridges();
 
 };
 
@@ -138,11 +149,15 @@ public:
 	void calculateTrackEdges();
 	void calculAngLen(int index);
 	//virtual void displayTrack() const = 0;
-
+	
+	// Save/Load functions
+	bool saveToFile(const std::string& filename) const;
+	bool loadFromFile(const std::string& filename);
 	
 	std::vector<TrackPieces> getPieces() const { return pieces; };
 	std::vector<Vec2> getCenterLine() const { return centerLine; };
 	TrackEdges getTrackEdges() const { return trackEdges; };
+    std::vector<int> getPiecesList() const { return piecesIntList; }
 
 private:
 	std::vector<TrackPieces> pieces;

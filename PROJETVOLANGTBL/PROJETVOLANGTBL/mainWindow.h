@@ -1,11 +1,12 @@
 #pragma once
 #include <QMainWindow>
 #include <QPushButton>
-#include <QLineEdit>
-#include <QComboBox>
 #include <QVBoxLayout>
-#include "TrackViewer.h"
-#include "map2d.h"
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QGroupBox>
+#include "TrackCreator.h"
+#include "Track.h"
 
 class MainWindow : public QMainWindow
 {
@@ -16,17 +17,15 @@ public:
     ~MainWindow();
 
 private slots:
-    void onAddSegment();
-    void onClearTrack();
+    void onAddPiece(int pieceType);
+    void onUndo();
+    void onClear();
+    void onSave();
+    void onLoad();
 
 private:
-    TrackViewer* trackViewer;
-    QComboBox* segmentTypeCombo;
-    QPushButton* addButton;
-    QPushButton* clearButton;
+    TrackCreator* trackCreator;
+    QLabel* statusLabel;
 
-    Map2D map;
-    std::vector<Vec2> track;
-    float currentAngle;
-    Vec2 currentPos;
+    void createPieceButtons(QVBoxLayout* layout);
 };

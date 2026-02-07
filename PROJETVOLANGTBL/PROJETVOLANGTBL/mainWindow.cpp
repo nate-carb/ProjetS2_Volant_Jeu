@@ -1,111 +1,178 @@
 #include "MainWindow.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QLabel>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , currentAngle(0)
-    , currentPos(0, 0)
 {
-    setWindowTitle("Track Builder");
-    resize(1000, 700);
+    setWindowTitle("Track Creator");
+    resize(1200, 800);
 
     // Central widget
     QWidget* centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
-    QVBoxLayout* mainLayout = new QVBoxLayout(centralWidget);
+    QHBoxLayout* mainLayout = new QHBoxLayout(centralWidget);
 
-    // Track viewer
-    trackViewer = new TrackViewer(this);
-    mainLayout->addWidget(trackViewer);
+    // Track viewer (left side)
+    trackCreator = new TrackCreator(this);
+    mainLayout->addWidget(trackCreator, 3);  // Takes 3/4 of space
 
-    // Controls
-    QHBoxLayout* controlsLayout = new QHBoxLayout();
+    // Control panel (right side)
+    QVBoxLayout* controlLayout = new QVBoxLayout();
+    mainLayout->addLayout(controlLayout, 1);  // Takes 1/4 of space
 
-    QLabel* label = new QLabel("Segment Type:", this);
-    controlsLayout->addWidget(label);
+    // Title
+    QLabel* titleLabel = new QLabel("Track Pieces", this);
+    QFont titleFont = titleLabel->font();
+    titleFont.setPointSize(14);
+    titleFont.setBold(true);
+    titleLabel->setFont(titleFont);
+    controlLayout->addWidget(titleLabel);
 
-    segmentTypeCombo = new QComboBox(this);
-    segmentTypeCombo->addItem("^");
-    segmentTypeCombo->addItem("45 <-");
-    segmentTypeCombo->addItem("45 ->");
-    segmentTypeCombo->addItem("90 <-");
-    segmentTypeCombo->addItem("90 ->");
-    controlsLayout->addWidget(segmentTypeCombo);
+    // Track pieces buttons
+    QGroupBox* piecesGroup = new QGroupBox("Add Pieces", this);
+    QVBoxLayout* piecesLayout = new QVBoxLayout(piecesGroup);
+    createPieceButtons(piecesLayout);
+    controlLayout->addWidget(piecesGroup);
 
-    addButton = new QPushButton("Add Segment", this);
-    connect(addButton, &QPushButton::clicked, this, &MainWindow::onAddSegment);
-    controlsLayout->addWidget(addButton);
+    // Track controls
+    QGroupBox* trackControlsGroup = new QGroupBox("Track Controls", this);
+    QVBoxLayout* trackControlsLayout = new QVBoxLayout(trackControlsGroup);
 
-    clearButton = new QPushButton("Clear Track", this);
-    connect(clearButton, &QPushButton::clicked, this, &MainWindow::onClearTrack);
-    controlsLayout->addWidget(clearButton);
+    QPushButton* undoBtn = new QPushButton("Undo Last Piece", this);
+    connect(undoBtn, &QPushButton::clicked, this, &MainWindow::onUndo);
+    trackControlsLayout->addWidget(undoBtn);
 
-    controlsLayout->addStretch();
-    mainLayout->addLayout(controlsLayout);
+    QPushButton* clearBtn = new QPushButton("Clear Track", this);
+    connect(clearBtn, &QPushButton::clicked, this, &MainWindow::onClear);
+    trackControlsLayout->addWidget(clearBtn);
 
-    // Initialize track
-    track.push_back(currentPos);
+    QPushButton* saveBtn = new QPushButton("Save Track", this);
+    connect(saveBtn, &QPushButton::clicked, this, &MainWindow::onSave);
+    trackControlsLayout->addWidget(saveBtn);
+
+    QPushButton* loadBtn = new QPushButton("Load Track", this);
+    connect(loadBtn, &QPushButton::clicked, this, &MainWindow::onLoad);
+    trackControlsLayout->addWidget(loadBtn);
+
+    controlLayout->addWidget(trackControlsGroup);
+
+    // Status label
+    statusLabel = new QLabel("Pieces: 0", this);
+    controlLayout->addWidget(statusLabel);
+
+    controlLayout->addStretch();
+
+    // Connect track updates
+    connect(trackCreator, &TrackCreator::trackUpdated, this, [this](const Track& track) {
+        statusLabel->setText(QString("Pieces: %1").arg(track.getCenterLine().size()));
+        });
 }
 
 MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::onAddSegment()
+void MainWindow::createPieceButtons(QVBoxLayout* layout)
 {
-    std::vector<float> angles;
-    std::vector<float> lengths;
+    // Straight
+    QPushButton* straightBtn = new QPushButton("Straight", this);
+    straightBtn->setStyleSheet("QPushButton { background-color: #4CAF50; color: white; padding: 8px; }");
+    connect(straightBtn, &QPushButton::clicked, [this]() { onAddPiece(STRAIGHT); });
+    layout->addWidget(straightBtn);
 
-    QString type = segmentTypeCombo->currentText();
+    // 45° Left
+    QPushButton* left45Btn = new QPushButton("45° Left Turn", this);
+    left45Btn->setStyleSheet("QPushButton { background-color: #2196F3; color: white; padding: 8px; }");
+    connect(left45Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_45LEFT); });
+    layout->addWidget(left45Btn);
 
-    if (type == "^") {
-        angles = { 0, 0, 0, 0, 0 };
-        lengths = { 20, 20, 20, 20, 20 };
-    }
-    else if (type == "45 ->") {
-        angles = { 0, 45.0f / 2, 0, 45.0f / 2, 0 };
-        lengths = { 20, 10, 10, 10, 20 };
-    }
-    else if (type == "45 <-") {
-        angles = { 0, -45.0f / 2, 0, -45.0f / 2, 0 };
-        lengths = { 20, 10, 10, 10, 20 };
-    }
-    else if (type == "90 ->") {
-        angles = { 0, 45, 0, 45, 0 };
-        lengths = { 20, 10, 10, 10, 20 };
-    }
-    else if (type == "90 <-") {
-        angles = { 0, -45, 0, -45, 0 };
-        lengths = { 20, 10, 10, 10, 20 };
-    }
+    // 45° Right
+    QPushButton* right45Btn = new QPushButton("45° Right Turn", this);
+    right45Btn->setStyleSheet("QPushButton { background-color: #2196F3; color: white; padding: 8px; }");
+    connect(right45Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_45RIGHT); });
+    layout->addWidget(right45Btn);
 
-    // Add segment
-    for (size_t i = 0; i < angles.size(); i++) {
-        currentAngle += angles[i];
-        currentPos = currentPos.move(currentAngle, lengths[i]);
-        track.push_back(currentPos);
-    }
+    // 90° Left
+    QPushButton* left90Btn = new QPushButton("90° Left Turn", this);
+    left90Btn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
+    connect(left90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90LEFT); });
+    layout->addWidget(left90Btn);
 
-    // Update display
-    trackInfo displayTrack;
-    displayTrack.start = track[0];
-    displayTrack.centerLine = track;
-    displayTrack.trackEdges = map.calculateTrackEdges(track, 40);
-
-    trackViewer->updateTrack(displayTrack);
+    // 90° Right
+    QPushButton* right90Btn = new QPushButton("90° Right Turn", this);
+    right90Btn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
+    connect(right90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90RIGHT); });
+    layout->addWidget(right90Btn);
 }
 
-void MainWindow::onClearTrack()
+void MainWindow::onAddPiece(int pieceType)
 {
-    track.clear();
-    currentPos = Vec2(0, 0);
-    currentAngle = 0;
-    track.push_back(currentPos);
+    qDebug() << "Adding piece type:" << pieceType;  // Debug output
+    trackCreator->addPiece(pieceType);
+}
 
-    trackInfo emptyTrack;
-    emptyTrack.start = currentPos;
-    trackViewer->updateTrack(emptyTrack);
+void MainWindow::onUndo()
+{
+    // TODO: Implement undo functionality
+    // You'll need to add a method to TrackCreator to remove last piece
+    QMessageBox::information(this, "Undo", "Undo functionality - to be implemented");
+}
+
+void MainWindow::onClear()
+{
+    trackCreator->clearTrack();
+    statusLabel->setText("Pieces: 0");
+}
+
+void MainWindow::onSave()
+{
+    QString filename = QFileDialog::getSaveFileName(
+        this,
+        "Save Track",
+        "",
+        "Track Files (*.trk);;All Files (*)"
+    );
+
+    if (!filename.isEmpty()) {
+        Track currentTrack = trackCreator->getCurrentTrack();
+
+        if (currentTrack.saveToFile(filename.toStdString())) {
+            QMessageBox::information(this, "Save Successful",
+                "Track saved to:\n" + filename);
+            statusLabel->setText("Track saved successfully");
+        }
+        else {
+            QMessageBox::warning(this, "Save Failed",
+                "Failed to save track to:\n" + filename);
+        }
+    }
+}
+
+void MainWindow::onLoad()
+{
+    QString filename = QFileDialog::getOpenFileName(
+        this,
+        "Load Track",
+        "",
+        "Track Files (*.trk);;All Files (*)"
+    );
+
+    if (!filename.isEmpty()) {
+        Track loadedTrack;
+
+        if (loadedTrack.loadFromFile(filename.toStdString())) {
+            trackCreator->loadTrack(loadedTrack);
+            QMessageBox::information(this, "Load Successful",
+                "Track loaded from:\n" + filename);
+            statusLabel->setText(QString("Track loaded - Pieces: %1")
+                .arg(loadedTrack.getPiecesList().size()));
+        }
+        else {
+            QMessageBox::warning(this, "Load Failed",
+                "Failed to load track from:\n" + filename);
+        }
+    }
 }
