@@ -1,12 +1,11 @@
 // main.cpp
-#include "PROJETVOLANGTBL.h"
 #include <QtWidgets/QApplication>
 #include "Vehicule.h"
 #include <windows.h>
 #include <iostream>
 #include <QDebug>
 #include <chrono>
-
+#include "mainwindow.h"
 bool isKeyPressed(int vkCode) {
     return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
 }
@@ -26,7 +25,7 @@ int main(int argc, char* argv[])
 
     // Chronomètre pour delta time
     auto lastTime = std::chrono::steady_clock::now();
-
+    /*
     while (true) {
         // ===== DELTA TIME =====
         auto currentTime = std::chrono::steady_clock::now();
@@ -73,13 +72,12 @@ int main(int argc, char* argv[])
         // 60 FPS (16ms par frame)
         Sleep(16);
     }
-
+	*/
     std::cout << "Jeu termine!" << std::endl;
 
-    // QApplication app(argc, argv);
-    // PROJETVOLANGTBL window;
-    // window.show();
-    // return app.exec();
+    QApplication app(argc, argv);
+    MainWindow window;
+    window.show();
+    return app.exec();
 
-    return 0;
 }
