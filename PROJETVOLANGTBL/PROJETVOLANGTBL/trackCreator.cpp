@@ -1,7 +1,7 @@
 #include "trackCreator.h"
-#include <QPainter>
-#include <QPen>
-#include <algorithm>
+#include <QPainter> //Library for drawing on widgets
+#include <QPen> //Library for defining pen styles (color, width, etc.)
+#include <algorithm> // Library for algorithms like std::min and std::max
 
 TrackCreator::TrackCreator(QWidget* parent)
     : QWidget(parent)
@@ -9,16 +9,17 @@ TrackCreator::TrackCreator(QWidget* parent)
     , offset(0, 0)
     , dragging(false)
 {
-    setMinimumSize(800, 600);
-    setMouseTracking(true);
+	setMinimumSize(800, 600); // Basic size for the track creator widget
+	setMouseTracking(true); // Enable mouse tracking for interactive features
 
     // Initialize with empty track
     clearTrack();
 }
+
 void TrackCreator::loadTrack(const Track& track)
 {
     // Get the pieces list from loaded track
-    piecesList = track.getPiecesList();
+	piecesList = track.getPiecesList(); // List of piece types that make up the track
     currentTrack = track;
 
     // Auto-fit view
@@ -36,7 +37,7 @@ void TrackCreator::loadTrack(const Track& track)
         }
     }
 
-    emit trackUpdated(currentTrack);
+	emit trackUpdated(currentTrack); // Notify that a new track has been loaded
     update();
 }
 void TrackCreator::setTrack(const Track& track)
@@ -69,6 +70,7 @@ void TrackCreator::updateTrack(const Track& track)
     update();
 }
 
+
 void TrackCreator::addPiece(int pieceType)
 {
     // Add piece to list
@@ -97,13 +99,13 @@ void TrackCreator::rebuildTrack()
     emit trackUpdated(currentTrack);
     update();
 }
-
-void TrackCreator::calculateBounds(float& minX, float& maxX, float& minY, float& maxY)
+// Calculate the bounding box of the track for auto-fitting
+void TrackCreator::calculateBounds(float& minX, float& maxX, float& minY, float& maxY) 
 {
     minX = minY = 1e9f;
     maxX = maxY = -1e9f;
 
-    auto checkPoint = [&](const Vec2& p) {
+	auto checkPoint = [&](const Vec2& p) {
         minX = std::min(minX, p.x);
         maxX = std::max(maxX, p.x);
         minY = std::min(minY, p.y);
@@ -114,13 +116,14 @@ void TrackCreator::calculateBounds(float& minX, float& maxX, float& minY, float&
     for (const auto& p : currentTrack.getTrackEdges().left) checkPoint(p);
     for (const auto& p : currentTrack.getTrackEdges().right) checkPoint(p);
 }
-
+// Convert world coordinates to screen coordinates based on current zoom and offset
 QPointF TrackCreator::worldToScreen(const Vec2& worldPos)
 {
     double screenX = (worldPos.x + offset.x()) * zoom + width() / 2.0;
     double screenY = (worldPos.y + offset.y()) * zoom + height() / 2.0;
     return QPointF(screenX, screenY);
 }
+
 
 void TrackCreator::drawTrack(QPainter& painter)
 {

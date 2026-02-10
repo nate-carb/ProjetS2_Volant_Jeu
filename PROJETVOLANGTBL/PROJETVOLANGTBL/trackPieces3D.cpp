@@ -2,14 +2,15 @@
 
 QMap<int, TrackPiece3DInfo> TrackPiece3DLibrary::pieceLibrary;
 
+// Load all 3D models and their properties into the library
 void TrackPiece3DLibrary::loadAllModels()
 {
     // STRAIGHT piece
     TrackPiece3DInfo straight;
     straight.pieceId = STRAIGHT;
     straight.modelPath = "models/straight.obj";  // Relative to exe
-    straight.size = QVector3D(40, 20, 2.5);
-    straight.entryAngle = 0;
+    straight.size = QVector3D(40, 20, 2.5); // Dimensions de la piece 3D
+    straight.entryAngle = 0; 
     straight.exitAngle = 0;
     straight.exitOffset = QVector3D(0, 0, 40);  // Move 100 forward (Z-axis)
     pieceLibrary[STRAIGHT] = straight;
