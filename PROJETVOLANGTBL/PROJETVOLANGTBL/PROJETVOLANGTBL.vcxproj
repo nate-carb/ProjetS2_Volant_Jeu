@@ -123,13 +123,6 @@
   <ItemGroup>
     <ResourceCompile Include="PROJETVOLANGTBL.rc" />
   </ItemGroup>
-  <ItemGroup>
-    <Object Include="curve_45_left.obj" />
-    <Object Include="curve_45_right.obj" />
-    <Object Include="curve_90_left.obj" />
-    <Object Include="curve_90_right.obj" />
-    <Object Include="straight.obj" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
     <Import Project="$(QtMsBuild)\qt.targets" />
