@@ -8,22 +8,22 @@ void TrackPiece3DLibrary::loadAllModels()
     TrackPiece3DInfo straight;
     straight.pieceId = STRAIGHT;
     straight.modelPath = "models/straight.obj";  // Relative to exe
-    straight.size = QVector3D(100, 1, 40);
+    straight.size = QVector3D(40, 20, 2.5);
     straight.entryAngle = 0;
     straight.exitAngle = 0;
-    straight.exitOffset = QVector3D(0, 0, 100);  // Move 100 forward (Z-axis)
+    straight.exitOffset = QVector3D(0, 0, 40);  // Move 100 forward (Z-axis)
     pieceLibrary[STRAIGHT] = straight;
 
     // VIRAGE_45LEFT piece
     TrackPiece3DInfo left45;
     left45.pieceId = VIRAGE_45LEFT;
     left45.modelPath = "models/curve_45_left.obj";
-    left45.size = QVector3D(70, 1, 40);
+    left45.size = QVector3D(30, 30, 2);
     left45.entryAngle = 0;
-    left45.exitAngle = 45;
-    left45.exitOffset = QVector3D(-35, 0, 35);  // Diagonal for 45° turn
+	left45.exitAngle = 45;
+    left45.exitOffset = QVector3D(5 * sin(qDegreesToRadians(45)),0,15*sin(qDegreesToRadians(45)));  // Diagonal for 45° turn
     pieceLibrary[VIRAGE_45LEFT] = left45;
-
+  
     // VIRAGE_45RIGHT piece
     TrackPiece3DInfo right45;
     right45.pieceId = VIRAGE_45RIGHT;

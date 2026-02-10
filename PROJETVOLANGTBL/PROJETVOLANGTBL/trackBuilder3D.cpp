@@ -81,7 +81,7 @@ void Track3DBuilder::placePiece(int pieceId)
 
     currentPosition += rotatedOffset;
     currentAngle += info.exitAngle;
-	if (currentAngle >= 360) currentAngle -= 360;
+	//if (currentAngle >= 360) currentAngle -= 360;
 
     qDebug() << "Placed piece" << pieceId
         << "at" << placed.position
