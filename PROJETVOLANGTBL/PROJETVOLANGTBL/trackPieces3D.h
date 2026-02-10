@@ -3,7 +3,6 @@
 #include <QString>
 #include <QVector3D>
 #include <QQuaternion>
-
 #include "Track.h"
 
 struct TrackPiece3DInfo {

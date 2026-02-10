@@ -5,7 +5,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QGroupBox>
-#include <track3DViewer.h>
+#include "track3DViewer.h"
 #include "TrackCreator.h"
 #include "Track.h"
 

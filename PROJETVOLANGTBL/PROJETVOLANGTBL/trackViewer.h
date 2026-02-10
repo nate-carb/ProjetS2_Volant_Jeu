@@ -14,6 +14,7 @@ public:
     explicit TrackViewer(QWidget* parent = nullptr);
     void setTrack(const Track& track);
     void updateTrack(const Track& track);
+	
 
 protected:
     void paintEvent(QPaintEvent* event) override;

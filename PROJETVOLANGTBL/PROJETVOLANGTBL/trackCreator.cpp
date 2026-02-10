@@ -2,6 +2,7 @@
 #include <QPainter> //Library for drawing on widgets
 #include <QPen> //Library for defining pen styles (color, width, etc.)
 #include <algorithm> // Library for algorithms like std::min and std::max
+#include <QTransform>
 
 TrackCreator::TrackCreator(QWidget* parent)
     : QWidget(parent)

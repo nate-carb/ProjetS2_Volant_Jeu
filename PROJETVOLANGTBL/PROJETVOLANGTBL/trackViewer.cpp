@@ -41,6 +41,8 @@ void TrackViewer::updateTrack(const Track& track)
     update();
 }
 
+
+
 void TrackViewer::calculateBounds(float& minX, float& maxX, float& minY, float& maxY)
 {
     minX = minY = 1e9f;
@@ -64,6 +66,8 @@ QPointF TrackViewer::worldToScreen(const Vec2& worldPos)
     double screenY = (worldPos.y + offset.y()) * zoom + height() / 2.0;
     return QPointF(screenX, screenY);
 }
+
+
 
 void TrackViewer::drawTrack(QPainter& painter)
 {
