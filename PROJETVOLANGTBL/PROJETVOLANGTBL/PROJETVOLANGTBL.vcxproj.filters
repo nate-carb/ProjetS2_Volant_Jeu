@@ -64,7 +64,7 @@
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\..\..\..\..\Documents\GitHub\ProjetS2_Volant_Jeu\PROJETVOLANGTBL\PROJETVOLANGTBL\images\RBR SS.PNG">
+    <Image Include="images\car.PNG">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

@@ -1,6 +1,7 @@
 // Vehicule.cpp
 #include "Vehicule.h"
 #include <cmath>
+#include <qDebug>
 Vehicule::Vehicule()
 {
     vitesse.x = 0.0f;
@@ -73,6 +74,7 @@ void Vehicule::update(float deltaTime)
     if (accel > 0) {
         carburant -= 0.01f * accel * deltaTime;
     }
+	qDebug() << "Mon angle : " << angle << " et ma vitesse : " << getSpeed() << " m/s" << " et ma position : (" << position.x << ", " << position.y << ")";
 }
 
 float Vehicule::getSpeed() const
