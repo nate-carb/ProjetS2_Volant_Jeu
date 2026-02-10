@@ -21,6 +21,9 @@
       <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
       <Extensions>ts</Extensions>
     </Filter>
+    <Filter Include="models">
+      <UniqueIdentifier>{5621c0ed-7c77-41e2-b04a-21cecdf8e167}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="PROJETVOLANGTBL.qrc">
@@ -78,6 +81,9 @@
     <ClInclude Include="trackBuilder3D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="projetvolant.pro">
@@ -97,5 +103,27 @@
     <QtMoc Include="track3DViewer.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PROJETVOLANGTBL.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="curve_45_left.obj">
+      <Filter>models</Filter>
+    </Object>
+    <Object Include="curve_45_right.obj">
+      <Filter>models</Filter>
+    </Object>
+    <Object Include="curve_90_left.obj">
+      <Filter>models</Filter>
+    </Object>
+    <Object Include="curve_90_right.obj">
+      <Filter>models</Filter>
+    </Object>
+    <Object Include="straight.obj">
+      <Filter>models</Filter>
+    </Object>
   </ItemGroup>
 </Project>

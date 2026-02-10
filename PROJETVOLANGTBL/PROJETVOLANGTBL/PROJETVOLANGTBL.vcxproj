@@ -108,6 +108,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="track3DViewer.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Track.h" />
     <ClInclude Include="trackBuilder3D.h" />
     <ClInclude Include="trackPieces3D.h" />
@@ -118,6 +119,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="projetvolant.pro" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PROJETVOLANGTBL.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="curve_45_left.obj" />
+    <Object Include="curve_45_right.obj" />
+    <Object Include="curve_90_left.obj" />
+    <Object Include="curve_90_right.obj" />
+    <Object Include="straight.obj" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
