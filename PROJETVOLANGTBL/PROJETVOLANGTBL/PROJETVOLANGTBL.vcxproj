@@ -107,7 +107,9 @@
     <ClInclude Include="Vehicule.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="images\car.PNG" />
+    <Image Include="images\car.PNG">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

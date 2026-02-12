@@ -20,6 +20,7 @@ protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
     void keyPressEvent(QKeyEvent* event) override;
+	void keyReleaseEvent(QKeyEvent* event) override;
 
 private slots:
     void gameLoop();
@@ -33,6 +34,10 @@ private:
     float deltaTime;             // Temps en secondes depuis dernière frame
 	QTimer* timer;          // Timer pour la boucle de jeu
     QTime lastFrameTime; //Temos deouis derniere frame
+    bool keyW = false;
+    bool keyA = false;
+    bool keyS = false;
+    bool keyD = false;
 };
 
 #endif

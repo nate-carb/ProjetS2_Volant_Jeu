@@ -6,15 +6,17 @@
 #include <QDir>
 #include "Vehicule.h"
 #include <QKeyEvent>
+
+
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), imageX(100), imageY(100)
 {
     // Voir où le programme cherche les fichiers
     qDebug() << "Dossier de travail actuel:" << QDir::currentPath();
-
     // Essayer de charger l'image
+
     image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
-	image = image.scaled(200, 100, Qt::KeepAspectRatio);
+	image = image.scaled(100, 100, Qt::KeepAspectRatio);
 	voiture = Vehicule();
 
     // Vérifier si ça a marché
@@ -48,10 +50,18 @@ MainWindow::~MainWindow()
 void MainWindow::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
-	imageX = voiture.getPosition().x;
-	imageY = voiture.getPosition().y;
-    painter.drawPixmap(imageX, imageY, image);
-    painter.drawText(100, 100, "Salut");
+    const float PIXELS_PER_METER = 4.0f;
+    float x = voiture.getPosition().x()*PIXELS_PER_METER;
+    float y = voiture.getPosition().y()*PIXELS_PER_METER;
+    float angle = voiture.getAngle();  // en radians
+
+    painter.translate(x, y);                 // va à la position de la voiture
+    painter.rotate(angle * 180.0 / M_PI);   // Qt veut des degrés
+
+    // Dessine l'image centrée sur (0,0)
+    painter.drawPixmap(-image.width() / 2,
+        -image.height() / 2,
+        image);
 }
 
 // Cette fonction capte les clics de souris
@@ -67,46 +77,21 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    // W - Monter
-    if (event->key() == Qt::Key_W) {
-        voiture.setAccel(1.0);
-        voiture.update(0.016f);// Simule une frame de 16ms
-        update();      // Redemande à Qt de redessiner
-		voiture.setAccel(0.0); // Réinitialise l'accélération pour éviter une accélération continue
-    }
-
-    // A - Gauche
-    else if (event->key() == Qt::Key_A) {
-        voiture.setSteering(-1);
-        voiture.update(0.016f);
-		voiture.setSteering(0); // Réinitialise le steering pour éviter une rotation continue
-        update();
-    }
-
-    // S - Descendre
-    else if (event->key() == Qt::Key_S) {
-		voiture.setBreaking(1.0);
-        voiture.update(0.016f);
-        update();
-        voiture.setBreaking(1.0);
-    }
-
-    // D - Droite
-    else if (event->key() == Qt::Key_D) {
-        voiture.setSteering(1);
-        voiture.update(0.016f);
-        update();
-		voiture.setSteering(0); // Réinitialise le steering pour éviter une rotation continue
-    }
-
-    // 0 - Réinitialiser position
-    else if (event->key() == Qt::Key_0) {
-        imageX = 100;
-        imageY = 100;
-        voiture.update(0.016f);
-        update();
-    }
+    if (event->key() == Qt::Key_W) keyW = true;
+    if (event->key() == Qt::Key_A) keyA = true;
+    if (event->key() == Qt::Key_S) keyS = true;
+    if (event->key() == Qt::Key_D) keyD = true;
 }
+
+void MainWindow::keyReleaseEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_W) keyW = false;
+    if (event->key() == Qt::Key_A) keyA = false;
+    if (event->key() == Qt::Key_S) keyS = false;
+    if (event->key() == Qt::Key_D) keyD = false;
+}
+
+
 
 void MainWindow::gameLoop()
 {
@@ -115,8 +100,15 @@ void MainWindow::gameLoop()
     deltaTime = msElapsed / 1000.0f;  // Convertit en secondes
     lastFrameTime = currentTime;  // Sauvegarde pour la prochaine frame
 
-	voiture.update(deltaTime);  // Met à jour la voiture avec le delta time
-     
+    voiture.setAccel(keyW ? 1.0f : 0.0f);
+    voiture.setBreaking(keyS ? 1.0f : 0.0f);
+
+    if (keyA && !keyD) voiture.setSteering(-1.0f);
+    else if (keyD && !keyA) voiture.setSteering(1.0f);
+    else voiture.setSteering(0.0f);
+
+    // ===== UPDATE PHYSIQUE =====
+    voiture.update(deltaTime);
 
     update();
 }
