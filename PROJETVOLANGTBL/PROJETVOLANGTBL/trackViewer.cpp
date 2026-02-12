@@ -146,9 +146,7 @@ void TrackViewer::mousePressEvent(QMouseEvent* event)
     if (event->button() == Qt::RightButton && dragging == true) {
         dragging = false;
         lastMousePos = event->pos();
-	}
-
-    
+    }
 }
 
 

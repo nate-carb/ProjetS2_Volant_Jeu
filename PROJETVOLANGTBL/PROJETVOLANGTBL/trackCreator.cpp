@@ -166,7 +166,7 @@ void TrackCreator::drawTrack(QPainter& painter)
             painter.drawLine(p1, p2);
         }
     }
-
+    drawCar(painter);
     // Draw start position (green circle)
     QPointF startScreen = worldToScreen(QVector2D(0, 0));
     painter.setPen(Qt::green);
@@ -182,6 +182,17 @@ void TrackCreator::drawTrack(QPainter& painter)
         QString("Pieces: %1").arg(piecesList.size()));
 }
 
+void TrackCreator::drawCar(QPainter& painter) {
+    if (currentTrack.isVector2DOnTrack(carPos))
+        painter.setBrush(Qt::green);
+    else
+        painter.setBrush(Qt::red);
+
+    // Convert car position from world to screen coordinates
+    QPointF screenPos = worldToScreen(carPos);
+    painter.drawEllipse(screenPos, 8, 8); //painter.drawEllipse(QPointF(carPos.x(), carPos.y()), 8, 8);
+}
+
 void TrackCreator::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
@@ -193,38 +204,38 @@ void TrackCreator::paintEvent(QPaintEvent* event)
     // Draw track
     drawTrack(painter);
 
+    // Draw car
+    //drawCar(painter);
+
     // Draw controls hint
     painter.setPen(Qt::white);
     painter.drawText(10, 20, "Mouse wheel: Zoom | Left drag: Pan | Right click: Stop pan");
 
-    if (currentTrack.isVector2DOnTrack(carPos))
-        painter.setBrush(Qt::green);
-    else
-        painter.setBrush(Qt::red);
-
-    painter.drawEllipse(QPointF(carPos.x(), carPos.y()), 8, 8);
+    
 }
 
 void TrackCreator::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton && !dragging) {
-        dragging = true;
-        lastMousePos = event->pos();
+        QVector2D mousePos(event->pos());
+        QVector2D carScreenPos = QVector2D(worldToScreen(carPos));
+
+        float distance = (mousePos - carScreenPos).length();
+
+        if (distance <= carRadius)
+        {
+            draggingCar = true;
+            // Store offset in world coordinates
+            dragOffset = carPos - screenToWorld(event->pos());
+        }
+        else
+        {
+            dragging = true;
+            lastMousePos = event->pos();
+        }
     }
     if (event->button() == Qt::RightButton && dragging) {
         dragging = false;
-    }
-    
-    QVector2D mousePos(event->pos());
-
-    float distance = (mousePos - carPos).length();
-
-    if (distance <= carRadius)
-    {
-        draggingCar = true;
-
-        // Store offset so car doesn't snap to cursor center
-        dragOffset = carPos - mousePos;
     }
     
 }
@@ -239,17 +250,16 @@ void TrackCreator::mouseReleaseEvent(QMouseEvent* event)
 
 void TrackCreator::mouseMoveEvent(QMouseEvent* event)
 {
-    if (dragging) {
+    if (draggingCar)
+    {
+        QVector2D mouseWorldPos = screenToWorld(event->pos());
+        carPos = mouseWorldPos + dragOffset;
+        update();
+    }
+    else if (dragging) {
         QPoint delta = event->pos() - lastMousePos;
         offset += QPointF(delta.x() / zoom, delta.y() / zoom);
         lastMousePos = event->pos();
-        update();
-    }
-    if (draggingCar)
-    {
-        QVector2D mousePos(event->pos());
-        carPos = mousePos + dragOffset;
-
         update();
     }
 }
@@ -264,4 +274,10 @@ void TrackCreator::wheelEvent(QWheelEvent* event)
         zoom /= zoomFactor;
     }
     update();
+}
+QVector2D TrackCreator::screenToWorld(const QPointF& screenPos)
+{
+    double worldX = (screenPos.x() - width() / 2.0) / zoom - offset.x();
+    double worldY = (screenPos.y() - height() / 2.0) / zoom - offset.y();
+    return QVector2D(worldX, worldY);
 }

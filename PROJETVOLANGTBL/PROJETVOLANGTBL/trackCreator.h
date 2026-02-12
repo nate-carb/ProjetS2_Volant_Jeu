@@ -35,7 +35,7 @@ protected:
 private:
     Track currentTrack;
     std::vector<int> piecesList;  // Track the pieces added
-
+    void drawCar(QPainter& painter);
     // Camera/view controls
     double zoom;
     QPointF offset;
@@ -44,6 +44,7 @@ private:
 
     // Helper functions
     QPointF worldToScreen(const QVector2D& worldPos);
+    QVector2D screenToWorld(const QPointF& screenPos);
     void drawTrack(QPainter& painter);
     void drawPiecePreview(QPainter& painter, int pieceType, const QVector2D& startPos, float startAngle);
     void calculateBounds(float& minX, float& maxX, float& minY, float& maxY);
@@ -51,7 +52,7 @@ private:
     
     
     //Car on track
-    QVector2D carPos = QVector2D(0, 0);
+    QVector2D carPos = QVector2D(20, 20);
     bool draggingCar = false;
     float carRadius = 4.0f;
 

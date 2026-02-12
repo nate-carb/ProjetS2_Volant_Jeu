@@ -41,7 +41,7 @@ bool Track::isVector2DOnTrack(const QVector2D& point) const
     for (size_t i = 1; i < centerLine.size(); i++) {
 
 		// Calcule la distance du point au segment formé par centerLine[i-1] et centerLine[i]
-        float d = distancePointToSegment(point, centerLine[i], centerLine[i + 1]);
+        float d = distancePointToSegment(point, centerLine[i - 1], centerLine[i]);
         minDist = std::min(minDist, d); // Met à jour la distance minimale si nécessaire
     }
     return minDist <= trackWidth / 2.0f; // Vérifie si la distance minimale est inférieure ou égale à la moitié de la largeur de la piste
