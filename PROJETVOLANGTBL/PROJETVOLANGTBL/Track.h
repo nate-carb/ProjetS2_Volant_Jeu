@@ -3,6 +3,7 @@
 #define TRACK_H
 #include <vector>
 #include <iostream>
+#include <qvector2d.h>
 
 #define VIRAGE_45RIGHT 1
 #define VIRAGE_45LEFT 2
@@ -18,38 +19,16 @@
 // *  Stuctures 
 // *-----------------------------------------------------------
 
-struct Vec2 {
-	float x;
-	float y;
-
-	Vec2() : x(0), y(0) {}
-	Vec2(float _x, float _y) : x(_x), y(_y) {}
-
-	Vec2 move(float angleDeg, float distance) const {
-		float rad = angleDeg * (3.14159265f / 180.0f);
-		return Vec2(x + distance * cos(rad),
-			y + distance * sin(rad));
-	}
-
-	Vec2 operator-(const Vec2& other) const { return Vec2(x - other.x, y - other.y); }
-	Vec2 operator+(const Vec2& other) const { return Vec2(x + other.x, y + other.y); }
-	Vec2 operator*(float s) const { return Vec2(x * s, y * s); }
-
-	float length() const { return std::sqrt(x * x + y * y); }
-
-	Vec2 normalized() const {
-		float len = length();
-		return (len > 0) ? Vec2(x / len, y / len) : Vec2(0, 0);
-	}
-
-	Vec2 perpendicular() const { return Vec2(-y, x); } // rotate 90°
-};
-
 struct TrackEdges {
-	std::vector<Vec2> left;
-	std::vector<Vec2> right;
+	std::vector<QVector2D> left;
+	std::vector<QVector2D> right;
 };
 
+QVector2D perpendicular(QVector2D v);
+
+QVector2D move(QVector2D v, float angleDeg, float distance);
+
+float distancePointToSegment(const QVector2D& P, const QVector2D& A, const QVector2D& B);
 
 // * ----------------------------------------------------------
 // *  Classes
@@ -154,19 +133,21 @@ public:
 	bool saveToFile(const std::string& filename) const;
 	bool loadFromFile(const std::string& filename);
 	
+	bool isVector2DOnTrack(const QVector2D& point) const;
+	float getTrackWidth() const { return trackWidth; };
 	std::vector<TrackPieces> getPieces() const { return pieces; };
-	std::vector<Vec2> getCenterLine() const { return centerLine; };
+	std::vector<QVector2D> getCenterLine() const { return centerLine; };
 	TrackEdges getTrackEdges() const { return trackEdges; };
     std::vector<int> getPiecesList() const { return piecesIntList; }
 
 private:
 	std::vector<TrackPieces> pieces;
-	std::vector<Vec2> centerLine;
+	std::vector<QVector2D> centerLine;
 	TrackEdges trackEdges;
 
 	float startAngle;
 	float currentAngle;
-	Vec2 currentPos;
+	QVector2D currentPos;
 	float trackWidth;
 	std::vector<int> piecesIntList;
 	

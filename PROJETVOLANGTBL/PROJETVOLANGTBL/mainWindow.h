@@ -24,7 +24,7 @@ private slots:
     void onSave();
     void onLoad();
     void onView3D();
-
+    
 private:
     TrackCreator* trackCreator;
     QLabel* statusLabel;

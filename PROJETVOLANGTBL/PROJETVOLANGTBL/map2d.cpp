@@ -1,6 +1,6 @@
 ﻿#include "map2d.h"
 
-
+/*
 Map2D::Map2D()
 {
 
@@ -146,3 +146,4 @@ void Map2D::displayTrack()
 {
     drawTrackASCII();
 }
+*/

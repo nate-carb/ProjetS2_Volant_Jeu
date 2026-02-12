@@ -48,11 +48,11 @@ void TrackViewer::calculateBounds(float& minX, float& maxX, float& minY, float& 
     minX = minY = 1e9f;
     maxX = maxY = -1e9f;
 
-    auto checkPoint = [&](const Vec2& p) {
-        minX = std::min(minX, p.x);
-        maxX = std::max(maxX, p.x);
-        minY = std::min(minY, p.y);
-        maxY = std::max(maxY, p.y);
+    auto checkPoint = [&](const QVector2D& p) {
+        minX = std::min(minX, p.x());
+        maxX = std::max(maxX, p.x());
+        minY = std::min(minY, p.y());
+        maxY = std::max(maxY, p.y());
         };
 
     for (const auto& p : currentTrack.getCenterLine()) checkPoint(p);
@@ -60,10 +60,10 @@ void TrackViewer::calculateBounds(float& minX, float& maxX, float& minY, float& 
     for (const auto& p : currentTrack.getTrackEdges().right) checkPoint(p);
 }
 
-QPointF TrackViewer::worldToScreen(const Vec2& worldPos)
+QPointF TrackViewer::worldToScreen(const QVector2D& worldPos)
 {
-    double screenX = (worldPos.x + offset.x()) * zoom + width() / 2.0;
-    double screenY = (worldPos.y + offset.y()) * zoom + height() / 2.0;
+    double screenX = (worldPos.x() + offset.x()) * zoom + width() / 2.0;
+    double screenY = (worldPos.y() + offset.y()) * zoom + height() / 2.0;
     return QPointF(screenX, screenY);
 }
 
@@ -111,7 +111,7 @@ void TrackViewer::drawTrack(QPainter& painter)
     }
 
     // Draw start position (green circle)
-    QPointF startScreen = worldToScreen(Vec2(0,0));
+    QPointF startScreen = worldToScreen(QVector2D(0,0));
     painter.setPen(Qt::green);
     painter.setBrush(Qt::green);
     painter.drawEllipse(startScreen, 8, 8);
@@ -147,6 +147,8 @@ void TrackViewer::mousePressEvent(QMouseEvent* event)
         dragging = false;
         lastMousePos = event->pos();
 	}
+
+    
 }
 
 

@@ -17,7 +17,10 @@ public:
     void clearTrack();              // Clear and start over
     Track getCurrentTrack() const { return currentTrack; }
     void loadTrack(const Track& track);
-    std::vector<int> getPiecesList() const { return piecesList; }
+    std::vector<int> getPiecesList() const { return piecesList; }\
+
+	QVector2D getCarPos() const { return carPos; }
+    
 
 signals:
     void trackUpdated(const Track& track);
@@ -40,9 +43,17 @@ private:
     bool dragging;
 
     // Helper functions
-    QPointF worldToScreen(const Vec2& worldPos);
+    QPointF worldToScreen(const QVector2D& worldPos);
     void drawTrack(QPainter& painter);
-    void drawPiecePreview(QPainter& painter, int pieceType, const Vec2& startPos, float startAngle);
+    void drawPiecePreview(QPainter& painter, int pieceType, const QVector2D& startPos, float startAngle);
     void calculateBounds(float& minX, float& maxX, float& minY, float& maxY);
     void rebuildTrack();
+    
+    
+    //Car on track
+    QVector2D carPos = QVector2D(0, 0);
+    bool draggingCar = false;
+    float carRadius = 4.0f;
+
+    QVector2D dragOffset;  
 };

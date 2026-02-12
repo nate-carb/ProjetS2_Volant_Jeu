@@ -106,11 +106,11 @@ void TrackCreator::calculateBounds(float& minX, float& maxX, float& minY, float&
     minX = minY = 1e9f;
     maxX = maxY = -1e9f;
 
-	auto checkPoint = [&](const Vec2& p) {
-        minX = std::min(minX, p.x);
-        maxX = std::max(maxX, p.x);
-        minY = std::min(minY, p.y);
-        maxY = std::max(maxY, p.y);
+	auto checkPoint = [&](const QVector2D& p) {
+        minX = std::min(minX, p.x());
+        maxX = std::max(maxX, p.x());
+        minY = std::min(minY, p.y());
+        maxY = std::max(maxY, p.y());
         };
 
     for (const auto& p : currentTrack.getCenterLine()) checkPoint(p);
@@ -118,10 +118,10 @@ void TrackCreator::calculateBounds(float& minX, float& maxX, float& minY, float&
     for (const auto& p : currentTrack.getTrackEdges().right) checkPoint(p);
 }
 // Convert world coordinates to screen coordinates based on current zoom and offset
-QPointF TrackCreator::worldToScreen(const Vec2& worldPos)
+QPointF TrackCreator::worldToScreen(const QVector2D& worldPos)
 {
-    double screenX = (worldPos.x + offset.x()) * zoom + width() / 2.0;
-    double screenY = (worldPos.y + offset.y()) * zoom + height() / 2.0;
+    double screenX = (worldPos.x() + offset.x()) * zoom + width() / 2.0;
+    double screenY = (worldPos.y() + offset.y()) * zoom + height() / 2.0;
     return QPointF(screenX, screenY);
 }
 
@@ -168,7 +168,7 @@ void TrackCreator::drawTrack(QPainter& painter)
     }
 
     // Draw start position (green circle)
-    QPointF startScreen = worldToScreen(Vec2(0, 0));
+    QPointF startScreen = worldToScreen(QVector2D(0, 0));
     painter.setPen(Qt::green);
     painter.setBrush(Qt::green);
     painter.drawEllipse(startScreen, 8, 8);
@@ -196,6 +196,13 @@ void TrackCreator::paintEvent(QPaintEvent* event)
     // Draw controls hint
     painter.setPen(Qt::white);
     painter.drawText(10, 20, "Mouse wheel: Zoom | Left drag: Pan | Right click: Stop pan");
+
+    if (currentTrack.isVector2DOnTrack(carPos))
+        painter.setBrush(Qt::green);
+    else
+        painter.setBrush(Qt::red);
+
+    painter.drawEllipse(QPointF(carPos.x(), carPos.y()), 8, 8);
 }
 
 void TrackCreator::mousePressEvent(QMouseEvent* event)
@@ -207,6 +214,19 @@ void TrackCreator::mousePressEvent(QMouseEvent* event)
     if (event->button() == Qt::RightButton && dragging) {
         dragging = false;
     }
+    
+    QVector2D mousePos(event->pos());
+
+    float distance = (mousePos - carPos).length();
+
+    if (distance <= carRadius)
+    {
+        draggingCar = true;
+
+        // Store offset so car doesn't snap to cursor center
+        dragOffset = carPos - mousePos;
+    }
+    
 }
 
 void TrackCreator::mouseReleaseEvent(QMouseEvent* event)
@@ -214,6 +234,7 @@ void TrackCreator::mouseReleaseEvent(QMouseEvent* event)
     if (event->button() == Qt::LeftButton) {
         dragging = false;
     }
+	draggingCar = false;
 }
 
 void TrackCreator::mouseMoveEvent(QMouseEvent* event)
@@ -222,6 +243,13 @@ void TrackCreator::mouseMoveEvent(QMouseEvent* event)
         QPoint delta = event->pos() - lastMousePos;
         offset += QPointF(delta.x() / zoom, delta.y() / zoom);
         lastMousePos = event->pos();
+        update();
+    }
+    if (draggingCar)
+    {
+        QVector2D mousePos(event->pos());
+        carPos = mousePos + dragOffset;
+
         update();
     }
 }

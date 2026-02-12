@@ -32,7 +32,8 @@ private:
     bool dragging;
 
     // Helper functions
-    QPointF worldToScreen(const Vec2& worldPos);
+    QPointF worldToScreen(const QVector2D& worldPos);
     void drawTrack(QPainter& painter);
     void calculateBounds(float& minX, float& maxX, float& minY, float& maxY);
+
 };

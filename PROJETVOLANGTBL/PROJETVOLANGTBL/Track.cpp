@@ -1,5 +1,51 @@
 ﻿#include "Track.h"
 
+
+QVector2D perpendicular(QVector2D v)
+{
+
+    return QVector2D(-v.y(), v.x());
+}
+QVector2D move(QVector2D v, float angleDeg, float distance)
+{
+    float rad = angleDeg * (3.14159265f / 180.0f);
+    return QVector2D(v.x() + distance * cos(rad), v.y() + distance * sin(rad));
+}
+
+float distancePointToSegment(const QVector2D& P,
+    const QVector2D& A,
+    const QVector2D& B)
+{
+    QVector2D AB = B - A; //Vector entre les points central
+	QVector2D AP = P - A; //Vector entre le point et le point central
+
+    float ab2 = QVector2D::dotProduct(AB, AB);
+
+	// Si AB est un point, alors la distance est simplement la distance entre P et A
+    if (ab2 == 0.0f)
+        return (P - A).length();
+
+	// Projection de AP sur AB, normalisée par la longueur de AB au carré
+    float t = QVector2D::dotProduct(AP, AB) / ab2;
+
+    t = std::max(0.0f, std::min(1.0f, t));
+
+    QVector2D closestPoint = A + AB * t;
+
+	// La distance entre P et le point le plus proche sur le segment AB
+    return (P - closestPoint).length();
+}
+bool Track::isVector2DOnTrack(const QVector2D& point) const
+{
+    float minDist = 300000;//Valeur arbitraire très grande pour initialiser la distance minimale
+    for (size_t i = 1; i < centerLine.size(); i++) {
+
+		// Calcule la distance du point au segment formé par centerLine[i-1] et centerLine[i]
+        float d = distancePointToSegment(point, centerLine[i], centerLine[i + 1]);
+        minDist = std::min(minDist, d); // Met à jour la distance minimale si nécessaire
+    }
+    return minDist <= trackWidth / 2.0f; // Vérifie si la distance minimale est inférieure ou égale à la moitié de la largeur de la piste
+}
 // TrackPieces base class
 TrackPieces::~TrackPieces() {}
 
@@ -7,40 +53,44 @@ TrackPieces::~TrackPieces() {}
 Virage_45right::Virage_45right() {
     id = VIRAGE_45RIGHT;
     pos = 0;
-    angles = { 0, 45.0f / 2, 0, 45.0f / 2, 0 };
-    lengths = { 20, 10, 10, 10, 20 };
+    //angles = { 0, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 0};
+    angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
+    //lengths = { 0, 10, 10, 10, 10, 0 };
+    lengths = {10, 10, 10, 10};
 }
 
 // Virage_45left
 Virage_45left::Virage_45left() {
     id = VIRAGE_45LEFT;
     pos = 0;
-    angles = { 0, -45.0f / 2, 0, -45.0f / 2, 0 };
-    lengths = { 20, 10, 10, 10, 20 };
+    //angles = {0, -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, 0 };
+    angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
+    //lengths = {0, 10, 10, 10, 10, 0 };
+    lengths = { 10, 10, 10, 10 };
 }
 
 // Virage_90right
 Virage_90right::Virage_90right() {
     id = VIRAGE_90RIGHT;
     pos = 0;
-    angles = { 0, 45, 0, 45, 0 };
-    lengths = { 20, 10, 10, 10, 20 };
+    angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
+    lengths = { 10, 10, 10, 10, 10, 10, 10, 10 };
 }
 
 // Virage_90left
 Virage_90left::Virage_90left() {
     id = VIRAGE_90LEFT;
     pos = 0;
-    angles = { 0, -45, 0, -45, 0 };
-    lengths = { 20, 10, 10, 10, 20 };
+    angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, - 45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
+    lengths = { 10, 10, 10, 10, 10, 10, 10, 10 };
 }
 
 // Straight
 Straight::Straight() {
     id = STRAIGHT;
     pos = 0;
-    angles = { 0, 0, 0, 0, 0 };
-    lengths = { 20, 20, 20, 20, 20 };
+    angles = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    lengths = { 10, 10, 10, 10, 10, 10, 10, 10 };
 }
 
 // StartLine
@@ -151,7 +201,7 @@ void Track::calculAngLen(int index)
     // Generate track points
     for (size_t i = 0; i < angles.size() && i < lengths.size(); i++) {
         currentAngle += angles[i];
-        currentPos = currentPos.move(currentAngle, lengths[i]);
+        currentPos = move(currentPos, currentAngle, lengths[i]);
         centerLine.push_back(currentPos);
     }
 
@@ -168,7 +218,7 @@ void Track::calculateTrackEdges()
     float halfWidth = trackWidth * 0.5f;
 
     for (size_t i = 0; i < centerLine.size(); i++) {
-        Vec2 dir;
+        QVector2D dir;
 
         if (i == 0) {
             // First point - use direction to next point
@@ -180,12 +230,12 @@ void Track::calculateTrackEdges()
         }
         else {
             // Middle point - average direction for smooth turns
-            Vec2 dir1 = (centerLine[i] - centerLine[i - 1]).normalized();
-            Vec2 dir2 = (centerLine[i + 1] - centerLine[i]).normalized();
+            QVector2D dir1 = (centerLine[i] - centerLine[i - 1]).normalized();
+            QVector2D dir2 = (centerLine[i + 1] - centerLine[i]).normalized();
             dir = (dir1 + dir2).normalized();
         }
 
-        Vec2 normal = dir.perpendicular();
+        QVector2D normal = perpendicular(dir);
 
         trackEdges.left.push_back(centerLine[i] + normal * halfWidth);
         trackEdges.right.push_back(centerLine[i] - normal * halfWidth);
@@ -220,18 +270,18 @@ bool Track::saveToFile(const std::string& filename) const
     // Optional: Write centerline for verification
     file << "CENTERLINE " << centerLine.size() << "\n";
     for (const auto& point : centerLine) {
-        file << point.x << " " << point.y << "\n";
+        file << point.x() << " " << point.y() << "\n";
     }
 
     // Optional: Write edges for verification
     file << "LEFT_EDGE " << trackEdges.left.size() << "\n";
     for (const auto& point : trackEdges.left) {
-        file << point.x << " " << point.y << "\n";
+        file << point.x() << " " << point.y() << "\n";
     }
 
     file << "RIGHT_EDGE " << trackEdges.right.size() << "\n";
     for (const auto& point : trackEdges.right) {
-        file << point.x << " " << point.y << "\n";
+        file << point.x() << " " << point.y() << "\n";
     }
 
     file.close();
@@ -302,7 +352,7 @@ bool Track::loadFromFile(const std::string& filename)
     trackWidth = loadedTrackWidth;
     startAngle = loadedStartAngle;
     currentAngle = startAngle;
-    currentPos = Vec2(0, 0);
+    currentPos = QVector2D(0, 0);
 
     centerLine.clear();
     centerLine.push_back(currentPos);
@@ -316,3 +366,5 @@ bool Track::loadFromFile(const std::string& filename)
     std::cout << "Track loaded successfully from: " << filename << std::endl;
     return true;
 }
+
+

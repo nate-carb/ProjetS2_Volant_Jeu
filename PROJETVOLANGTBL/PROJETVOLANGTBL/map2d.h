@@ -1,6 +1,6 @@
 #ifndef MAP2D_H
 #define MAP2D_H
-
+/*
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -28,5 +28,5 @@ class Map2D : public Track
 
 
 
-
+*/
 #endif	// MAP2D_H
