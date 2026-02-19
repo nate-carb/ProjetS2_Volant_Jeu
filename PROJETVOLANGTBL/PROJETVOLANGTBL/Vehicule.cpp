@@ -89,11 +89,11 @@ void Vehicule::update(float deltaTime)
 {
     if (carburant <= 0) return;
 
-    const float maxAcceleration = 25.0f;
-    const float drag = 0.999999f;
+    const float maxAcceleration = 35.0f;
+    const float drag = 0.999f;
 
     // ===== PARAMÈTRES DE CONDUITE =====
-    const float maxTurnSpeed = 3.0f;      // rad/s
+    const float maxTurnSpeed = 4.0f;      // rad/s
     const float turnResponsiveness = 8.0f;
 
     // 1) ACCÉLÉRATION agit sur la vitesse SCALAIRE
@@ -105,8 +105,10 @@ void Vehicule::update(float deltaTime)
     // 2) FREINAGE agit sur speed
     if (breaking > 0) {
         speed *= (1.0f - breaking * 0.01f);
+        speed = speed - 0.3f;
+		speed = std::max(speed, 0.0f);
     }
-
+        
     // 3) FRICTION naturelle
     speed *= drag;
 
@@ -134,9 +136,8 @@ void Vehicule::update(float deltaTime)
         // rotation du vecteur vitesse
         vitesse.setX(vx * cs - vy * sn);
         vitesse.setY(vx * sn + vy * cs);
+        angle = std::atan2(vitesse.y(), vitesse.x());
     }
-
-    angle = std::atan2(vitesse.y(), vitesse.x());
 
     // 5) Reconstruit la vitesse à partir de l’angle
     vitesse.setX(std::cos(angle) * speed);

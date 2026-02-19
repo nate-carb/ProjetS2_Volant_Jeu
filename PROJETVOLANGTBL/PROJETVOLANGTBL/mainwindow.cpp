@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget* parent)
     // Essayer de charger l'image
 
     image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
-	image = image.scaled(100, 100, Qt::KeepAspectRatio);
+	image = image.scaled(60, 60, Qt::KeepAspectRatio);
 	voiture = Vehicule();
 
     // Vérifier si ça a marché
@@ -50,7 +50,7 @@ MainWindow::~MainWindow()
 void MainWindow::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
-    const float PIXELS_PER_METER = 4.0f;
+    const float PIXELS_PER_METER = 5.0f;
     float x = voiture.getPosition().x()*PIXELS_PER_METER;
     float y = voiture.getPosition().y()*PIXELS_PER_METER;
     float angle = voiture.getAngle();  // en radians
