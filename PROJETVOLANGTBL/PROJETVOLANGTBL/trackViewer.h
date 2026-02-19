@@ -1,9 +1,9 @@
 #pragma once
 #include <QWidget>
 #include <QPainter>
-#include <QMouseEvent>
-#include <QWheelEvent>
-#include "map2d.h"
+//#include <QMouseEvent>
+//#include <QWheelEvent>
+//#include "map2d.h"
 #include "Track.h"
 
 class TrackViewer : public QWidget
@@ -12,15 +12,13 @@ class TrackViewer : public QWidget
 
 public:
     explicit TrackViewer(QWidget* parent = nullptr);
+    void loadTrack(const Track& track);
     void setTrack(const Track& track);
     void updateTrack(const Track& track);
-	
+	Track getCurrentTrack() const { return currentTrack; }
 
 protected:
     void paintEvent(QPaintEvent* event) override;
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
-    void wheelEvent(QWheelEvent* event) override;
 
 private:
     Track currentTrack;
@@ -28,9 +26,7 @@ private:
     // Camera/view controls
     double zoom;
     QPointF offset;
-    QPoint lastMousePos;
-    bool dragging;
-
+   
     // Helper functions
     QPointF worldToScreen(const QVector2D& worldPos);
     void drawTrack(QPainter& painter);

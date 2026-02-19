@@ -1,6 +1,7 @@
 #include "PROJETVOLANGTBL.h"
 #include "map2d.h"
 #include "MainWindow.h"
+#include "mainWindowView.h"
 #include <QtWidgets/QApplication>
 #include <windows.h>
 #include <iostream>
@@ -42,7 +43,7 @@ int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
 
-    MainWindow window;
+    MainWindowView window;
     window.show();
 
     return app.exec();

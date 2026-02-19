@@ -92,7 +92,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="camera2D.cpp" />
     <ClCompile Include="mainWindow.cpp" />
+    <ClCompile Include="mainWindowView.cpp" />
     <ClCompile Include="track3DViewer.cpp" />
     <ClCompile Include="Track.cpp" />
     <ClCompile Include="trackBuilder3D.cpp" />
@@ -108,6 +110,8 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="track3DViewer.h" />
+    <ClInclude Include="camera2D.h" />
+    <QtMoc Include="mainWindowView.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Track.h" />
     <ClInclude Include="trackBuilder3D.h" />

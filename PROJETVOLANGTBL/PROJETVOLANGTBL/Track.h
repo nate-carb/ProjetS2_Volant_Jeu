@@ -44,14 +44,15 @@ class TrackPieces
 		std::vector<float> getAngles() { return angles; };
 		std::vector<float> getLengths() { return lengths; };
 
-	
+	private:
+		float trackWidth = 40.0f;
 		
-
 	protected:
 		int pos;
 		int id;
 		std::vector<float> angles;
 		std::vector<float> lengths;
+		float lengthAngleVirage = trackWidth/8 / cos(qDegreesToRadians(45.0f / 4));
 		
 };
 
@@ -149,7 +150,10 @@ private:
 	float currentAngle;
 	QVector2D currentPos;
 	float trackWidth;
+	
 	std::vector<int> piecesIntList;
+
+	
 	
 
 };

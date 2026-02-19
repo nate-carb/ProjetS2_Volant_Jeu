@@ -1,5 +1,6 @@
 ﻿#include "Track.h"
-
+#include <fstream>
+#include <sstream>
 
 QVector2D perpendicular(QVector2D v)
 {
@@ -49,6 +50,7 @@ bool Track::isVector2DOnTrack(const QVector2D& point) const
 // TrackPieces base class
 TrackPieces::~TrackPieces() {}
 
+
 // Virage_45right
 Virage_45right::Virage_45right() {
     id = VIRAGE_45RIGHT;
@@ -56,7 +58,7 @@ Virage_45right::Virage_45right() {
     //angles = { 0, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 0};
     angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
     //lengths = { 0, 10, 10, 10, 10, 0 };
-    lengths = {10, 10, 10, 10};
+    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
 
 // Virage_45left
@@ -66,7 +68,7 @@ Virage_45left::Virage_45left() {
     //angles = {0, -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, 0 };
     angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
     //lengths = {0, 10, 10, 10, 10, 0 };
-    lengths = { 10, 10, 10, 10 };
+    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
 
 // Virage_90right
@@ -74,7 +76,7 @@ Virage_90right::Virage_90right() {
     id = VIRAGE_90RIGHT;
     pos = 0;
     angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
-    lengths = { 10, 10, 10, 10, 10, 10, 10, 10 };
+    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
 
 // Virage_90left
@@ -82,15 +84,15 @@ Virage_90left::Virage_90left() {
     id = VIRAGE_90LEFT;
     pos = 0;
     angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, - 45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
-    lengths = { 10, 10, 10, 10, 10, 10, 10, 10 };
+    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
 
 // Straight
 Straight::Straight() {
     id = STRAIGHT;
     pos = 0;
-    angles = { 0, 0, 0, 0, 0, 0, 0, 0 };
-    lengths = { 10, 10, 10, 10, 10, 10, 10, 10 };
+    angles = { 0, 0, 0, 0};
+    lengths = { 10, 10, 10, 10};
 }
 
 // StartLine
@@ -138,10 +140,11 @@ Track::Track()
     : startAngle(0)
     , currentAngle(0)
     , currentPos(0, 0)
-    , trackWidth(40)
 {
     // Start with just the starting position
     centerLine.push_back(currentPos);
+
+	trackWidth = 40.0f; // Default track width
 }
 
 Track::Track(std::vector<int> listPieces)
@@ -149,11 +152,11 @@ Track::Track(std::vector<int> listPieces)
     , startAngle(0)
     , currentAngle(0)
     , currentPos(0, 0)
-    , trackWidth(40)
+    
 {
     // Start with the origin
     centerLine.push_back(currentPos);
-
+    trackWidth = 40.0f;
     // Build track from piece list
     for (int pieceId : piecesIntList) {
         calculAngLen(pieceId);
@@ -241,8 +244,7 @@ void Track::calculateTrackEdges()
         trackEdges.right.push_back(centerLine[i] - normal * halfWidth);
     }
 }
-#include <fstream>
-#include <sstream>
+
 
 bool Track::saveToFile(const std::string& filename) const
 {

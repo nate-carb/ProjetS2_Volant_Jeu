@@ -7,11 +7,12 @@ TrackViewer::TrackViewer(QWidget* parent)
     : QWidget(parent)
     , zoom(1.0)
     , offset(0, 0)
-    , dragging(false)
 {
     setMinimumSize(800, 600);
-    setMouseTracking(true);
+	currentTrack.loadFromFile("tracks/defaultTrack1.trk"); // Load a default track on startup
 }
+
+
 
 void TrackViewer::setTrack(const Track& track)
 {
@@ -132,42 +133,5 @@ void TrackViewer::paintEvent(QPaintEvent* event)
     // Draw track
     drawTrack(painter);
 
-    // Draw controls hint
-    painter.setPen(Qt::white);
-    painter.drawText(10, 20, "Mouse wheel: Zoom | Drag: Pan");
-}
-
-void TrackViewer::mousePressEvent(QMouseEvent* event)
-{
-    if (event->button() == Qt::LeftButton && dragging == false) {
-        dragging = true;
-        lastMousePos = event->pos();
-    }
-    if (event->button() == Qt::RightButton && dragging == true) {
-        dragging = false;
-        lastMousePos = event->pos();
-    }
-}
-
-
-void TrackViewer::mouseMoveEvent(QMouseEvent* event)
-{
-    if (dragging) {
-        QPoint delta = event->pos() - lastMousePos;
-        offset += QPointF(delta.x() / zoom, delta.y() / zoom);
-        lastMousePos = event->pos();
-        update();
-    }
-}
-
-void TrackViewer::wheelEvent(QWheelEvent* event)
-{
-    double zoomFactor = 1.1;
-    if (event->angleDelta().y() > 0) {
-        zoom *= zoomFactor;
-    }
-    else {
-        zoom /= zoomFactor;
-    }
-    update();
+    
 }
