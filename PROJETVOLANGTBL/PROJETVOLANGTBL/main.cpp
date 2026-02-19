@@ -6,12 +6,15 @@
 #include <QDebug>
 #include <chrono>
 #include "mainwindownate.h"
+#include "mainWindowCreator.h"
+#include "mainWindowView.h"
 bool isKeyPressed(int vkCode) {
     return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
 }
 
 int main(int argc, char* argv[])
 {
+    
     AllocConsole();
 
     FILE* fp;
@@ -25,6 +28,7 @@ int main(int argc, char* argv[])
 
     // Chronomètre pour delta time
     auto lastTime = std::chrono::steady_clock::now();
+    
     /*
     while (true) {
         // ===== DELTA TIME =====
@@ -73,7 +77,9 @@ int main(int argc, char* argv[])
         Sleep(16);
     }
 	*/
+
     std::cout << "Jeu termine!" << std::endl;
+
 
     QApplication app(argc, argv);
     MainWindow window;
