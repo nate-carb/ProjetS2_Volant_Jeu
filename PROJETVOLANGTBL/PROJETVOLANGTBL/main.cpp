@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 
     Vehicule f1car;
 
-    // Chronomètre pour delta time
+    // ChronomÃ¨tre pour delta time
     auto lastTime = std::chrono::steady_clock::now();
     /*
     while (true) {
@@ -33,12 +33,12 @@ int main(int argc, char* argv[])
         lastTime = currentTime;
 
         // ===== INPUT =====
-        // Réinitialiser les inputs chaque frame
+        // RÃ©initialiser les inputs chaque frame
         f1car.setAccel(0.0f);
         f1car.setSteering(0.0f);
 		f1car.setBreaking(0.0f);
         if (isKeyPressed('W')) f1car.setAccel(1.0f);
-        if (isKeyPressed('S')) f1car.setBreaking(1.0f);  // Marche arrière plus lente
+        if (isKeyPressed('S')) f1car.setBreaking(1.0f);  // Marche arriÃ¨re plus lente
         if (isKeyPressed('A')) f1car.setSteering(-1.0f);
         if (isKeyPressed('D')) f1car.setSteering(1.0f);
         if (isKeyPressed(VK_ESCAPE)) break;
