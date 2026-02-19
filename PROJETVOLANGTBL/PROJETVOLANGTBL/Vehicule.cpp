@@ -110,7 +110,7 @@ void Vehicule::update(float deltaTime)
     }
         
     // 3) FRICTION naturelle
-    speed *= drag;
+    speed *= drag_on_track;
 
     // 4) STEERING -> angular velocity (dépend de la vitesse)
     float speedValue = vitesse.length();
