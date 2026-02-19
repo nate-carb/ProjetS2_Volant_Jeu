@@ -36,7 +36,8 @@ public:
 
 	float getBreaking() const { return breaking; }
 	void setBreaking(float b) { breaking = b; }
-
+    bool is_on_track = true; // pour gérer les différents types de terrain
+    bool is_on_grass = false;
 private:
     QVector2D vitesse;
     QVector2D position;
@@ -47,6 +48,4 @@ private:
     float breaking;  // 0 à 1 
     float carburant; // en pourcentage
     float angularVelocity;    // vitesse de rotation
-	bool is_on_track = true; // pour gérer les différents types de terrain
-	bool is_on_grass = false;
 };
