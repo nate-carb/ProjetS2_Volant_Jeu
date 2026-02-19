@@ -90,8 +90,8 @@ void Vehicule::update(float deltaTime)
     if (carburant <= 0) return;
 
     const float maxAcceleration = 35.0f;
-    const float drag = 0.999f;
-
+    const float drag_on_track = 0.999f;
+    const float drag_on_grass = 0.96;
     // ===== PARAMÈTRES DE CONDUITE =====
     const float maxTurnSpeed = 4.0f;      // rad/s
     const float turnResponsiveness = 8.0f;
