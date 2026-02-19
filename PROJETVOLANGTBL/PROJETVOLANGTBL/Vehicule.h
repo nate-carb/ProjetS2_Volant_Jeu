@@ -1,4 +1,5 @@
 // Vehicule.h
+#include <QVector2D>
 #pragma once
 struct Vector2
 {
@@ -15,8 +16,8 @@ public:
 
     void update(float deltaTime);  // Nouvelle fonction principale
 
-    Vector2 getVitesse() const { return vitesse; }
-    void setVitesse(float vx, float vy) { vitesse.x = vx; vitesse.y = vy; }
+    QVector2D getVitesse() const { return vitesse; }
+    void setVitesse(float vx, float vy) { vitesse.setX(vx); vitesse.setY(vy); }
 
     float getAccel() const { return accel; }
     void setAccel(float a) { accel = a; }
@@ -24,8 +25,8 @@ public:
     float getCarburant() const { return carburant; }
     void setCarburant(float c) { carburant = c; }
 
-    Vector2 getPosition() const { return position; }
-    void setPosition(float x, float y) { position.x = x; position.y = y; }
+    QVector2D getPosition() const { return position; }
+    void setPosition(float x, float y) { position.setX(x); position.setY(y); }
 
     float getSteering() const { return steering; }
     void setSteering(float s) { steering = s; }
@@ -37,12 +38,13 @@ public:
 	void setBreaking(float b) { breaking = b; }
 
 private:
-    Vector2 vitesse;
-    Vector2 position;
-    float angle;  // NOUVEAU - direction de la voiture en radians
-
+    QVector2D vitesse;
+    QVector2D position;
+    float angle;  // direction de la voiture en radians
+	float speed;  // vitesse scalaire en m/s
     float accel;     // 0 à 1	
     float steering;  // -1 à 1
     float breaking;  // 0 à 1 
     float carburant; // en pourcentage
+    float angularVelocity;    // vitesse de rotation
 };
