@@ -15,19 +15,19 @@ bool isKeyPressed(int vkCode) {
 int main(int argc, char* argv[])
 {
     
-    AllocConsole();
+    //AllocConsole();
 
-    FILE* fp;
-    freopen_s(&fp, "CONOUT$", "w", stdout);
-    freopen_s(&fp, "CONOUT$", "w", stderr);
-    freopen_s(&fp, "CONIN$", "r", stdin);
+    //FILE* fp;
+    //freopen_s(&fp, "CONOUT$", "w", stdout);
+    //freopen_s(&fp, "CONOUT$", "w", stderr);
+    //freopen_s(&fp, "CONIN$", "r", stdin);
 
-    std::cout << "=== F1 RACING GAME ===" << std::endl;
+    //std::cout << "=== F1 RACING GAME ===" << std::endl;
 
-    Vehicule f1car;
+    //Vehicule f1car;
 
-    // Chronomètre pour delta time
-    auto lastTime = std::chrono::steady_clock::now();
+    //// Chronomètre pour delta time
+    //auto lastTime = std::chrono::steady_clock::now();
     
     /*
     while (true) {
@@ -78,11 +78,11 @@ int main(int argc, char* argv[])
     }
 	*/
 
-    std::cout << "Jeu termine!" << std::endl;
+    //std::cout << "Jeu termine!" << std::endl;
 
 
     QApplication app(argc, argv);
-    MainWindow window;
+    MainWindowView window;
     window.show();
     return app.exec();
 
