@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
 	image = image.scaled(60, 60, Qt::KeepAspectRatio);
+
 	voiture = Vehicule();
     track = Track();
 	track.loadFromFile("tracks/defaultTrack1.trk");

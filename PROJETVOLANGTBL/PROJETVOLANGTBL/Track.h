@@ -41,6 +41,7 @@ class TrackPieces
 		int getPos() { return pos; };
 		void setPos(int x) { pos = x; };
 		int getId() { return id; };
+		std::string spritePath;
 		std::vector<float> getAngles() { return angles; };
 		std::vector<float> getLengths() { return lengths; };
 

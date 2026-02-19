@@ -46,6 +46,7 @@ private:
     QPointF worldToScreen(const QVector2D& worldPos);
     QVector2D screenToWorld(const QPointF& screenPos);
     void drawTrack(QPainter& painter);
+    void drawSpriteTrack(QPainter& painter);
     void drawPiecePreview(QPainter& painter, int pieceType, const QVector2D& startPos, float startAngle);
     void calculateBounds(float& minX, float& maxX, float& minY, float& maxY);
     void rebuildTrack();

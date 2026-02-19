@@ -181,6 +181,52 @@ void TrackCreator::drawTrack(QPainter& painter)
     painter.drawText(10, height() - 10,
         QString("Pieces: %1").arg(piecesList.size()));
 }
+void TrackCreator::drawSpriteTrack(QPainter& painter)
+{
+    if (currentTrack.getCenterLine().empty())
+        return;
+
+    // Set up the world-to-screen transform
+    QTransform transform;
+    transform.translate(width() / 2.0, height() / 2.0);
+    transform.scale(zoom, zoom);
+    transform.translate(offset.x(), offset.y());
+    painter.setTransform(transform);
+
+    // Draw each piece sprite along the center line
+    auto centerLine = currentTrack.getCenterLine();
+    for (size_t i = 1; i < centerLine.size(); i++) {
+        QVector2D pos = centerLine[i];
+        QVector2D prev = centerLine[i - 1];
+        QVector2D dir = pos - prev;
+
+        float angle = atan2(dir.y(), dir.x()) * 180.0f / M_PI;
+
+        // Pick sprite based on piece type
+        QPixmap& sprite = (i - 1 < piecesList.size() && piecesList[i - 1] == 0)
+            ? straightSprite : curveSprite;
+
+        if (sprite.isNull()) continue;
+
+        painter.save();
+        painter.translate(pos.x(), pos.y());
+        painter.rotate(angle);
+        painter.drawPixmap(
+            -sprite.width() / 2,
+            -sprite.height() / 2,
+            sprite
+        );
+        painter.restore();
+    }
+
+    // Reset transform for UI elements drawn in screen space
+    painter.resetTransform();
+
+    // Draw start, piece count etc. (screen space)
+    painter.setPen(Qt::white);
+    painter.drawText(10, height() - 10,
+        QString("Pieces: %1").arg(piecesList.size()));
+}
 
 void TrackCreator::drawCar(QPainter& painter) {
     if (currentTrack.isVector2DOnTrack(carPos))

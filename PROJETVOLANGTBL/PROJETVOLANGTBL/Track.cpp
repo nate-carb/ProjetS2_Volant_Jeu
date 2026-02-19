@@ -55,6 +55,7 @@ TrackPieces::~TrackPieces() {}
 Virage_45right::Virage_45right() {
     id = VIRAGE_45RIGHT;
     pos = 0;
+    spritePath;
     //angles = { 0, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 0};
     angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
     //lengths = { 0, 10, 10, 10, 10, 0 };
