@@ -20,6 +20,8 @@ Vehicule::Vehicule()
     steering = 0.0f;
     carburant = 100.0f;
     angularVelocity = 0.0f;
+	is_on_grass = false;
+	is_on_track = true;
 }
 
 Vehicule::Vehicule(float x, float y)
@@ -36,6 +38,8 @@ Vehicule::Vehicule(float x, float y)
     steering = 0.0f;
     carburant = 100.0f;
     angularVelocity = 0.0f;
+    is_on_grass = false;
+    is_on_track = true;
 }
 
 Vehicule::~Vehicule()
@@ -110,7 +114,12 @@ void Vehicule::update(float deltaTime)
     }
         
     // 3) FRICTION naturelle
-    speed *= drag_on_track;
+    if (is_on_grass) {
+        speed *= drag_on_grass;
+    }
+    else if (is_on_track) {
+        speed *= drag_on_track;
+    }
 
     // 4) STEERING -> angular velocity (dépend de la vitesse)
     float speedValue = vitesse.length();

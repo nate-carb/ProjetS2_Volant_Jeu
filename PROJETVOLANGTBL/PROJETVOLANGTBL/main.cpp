@@ -5,7 +5,7 @@
 #include <iostream>
 #include <QDebug>
 #include <chrono>
-#include "mainwindow.h"
+#include "mainwindownate.h"
 bool isKeyPressed(int vkCode) {
     return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
 }

@@ -47,4 +47,6 @@ private:
     float breaking;  // 0 à 1 
     float carburant; // en pourcentage
     float angularVelocity;    // vitesse de rotation
+	bool is_on_track = true; // pour gérer les différents types de terrain
+	bool is_on_grass = false;
 };

@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "mainwindownate.h"
 
 #include <QPainter>
 #include <QMouseEvent>
