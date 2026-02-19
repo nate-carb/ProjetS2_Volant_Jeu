@@ -20,13 +20,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
@@ -92,40 +92,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="camera2D.cpp" />
-    <ClCompile Include="mainWindow.cpp" />
-    <ClCompile Include="mainWindowView.cpp" />
-    <ClCompile Include="track3DViewer.cpp" />
-    <ClCompile Include="Track.cpp" />
-    <ClCompile Include="trackBuilder3D.cpp" />
-    <ClCompile Include="trackCreator.cpp" />
-    <ClCompile Include="trackPieces3D.cpp" />
-    <ClCompile Include="trackViewer.cpp" />
+    <ClCompile Include="GameEngine.cpp" />
+    <ClCompile Include="mainwindow.cpp" />
+    <ClCompile Include="Vehicule.cpp" />
     <QtRcc Include="PROJETVOLANGTBL.qrc" />
     <QtUic Include="PROJETVOLANGTBL.ui" />
     <QtMoc Include="PROJETVOLANGTBL.h" />
-    <ClCompile Include="map2d.cpp" />
     <ClCompile Include="PROJETVOLANGTBL.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="track3DViewer.h" />
-    <ClInclude Include="camera2D.h" />
-    <QtMoc Include="mainWindowView.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="Track.h" />
-    <ClInclude Include="trackBuilder3D.h" />
-    <ClInclude Include="trackPieces3D.h" />
-    <QtMoc Include="trackCreator.h" />
-    <QtMoc Include="mainWindow.h" />
-    <ClInclude Include="map2d.h" />
-    <QtMoc Include="trackViewer.h" />
+    <ClInclude Include="GameEngine.h" />
+    <QtMoc Include="mainwindow.h" />
+    <ClInclude Include="Vehicule.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="projetvolant.pro" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="PROJETVOLANGTBL.rc" />
+    <Image Include="images\car.PNG">
+      <DeploymentContent>true</DeploymentContent>
+    </Image>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
