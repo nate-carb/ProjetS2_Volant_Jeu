@@ -92,8 +92,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="camera2D.cpp" />
     <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="mainwindownate.cpp" />
+    <ClCompile Include="mainWindowView.cpp" />
+    <ClCompile Include="map2d.cpp" />
+    <ClCompile Include="Track.cpp" />
+    <ClCompile Include="track3DViewer.cpp" />
+    <ClCompile Include="trackBuilder3D.cpp" />
+    <ClCompile Include="trackCreator.cpp" />
+    <ClCompile Include="trackPieces3D.cpp" />
+    <ClCompile Include="trackViewer.cpp" />
     <ClCompile Include="Vehicule.cpp" />
     <QtRcc Include="PROJETVOLANGTBL.qrc" />
     <QtUic Include="PROJETVOLANGTBL.ui" />
@@ -102,8 +111,19 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="camera2D.h" />
     <ClInclude Include="GameEngine.h" />
     <QtMoc Include="mainwindownate.h" />
+    <QtMoc Include="mainWindowView.h" />
+    <ClInclude Include="map2d.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Track.h" />
+    <QtMoc Include="track3DViewer.h" />
+    <ClInclude Include="trackBuilder3D.h" />
+    <QtMoc Include="trackCreator.h" />
+    <ClInclude Include="trackPieces3D.h" />
+    <QtMoc Include="trackViewer.h" />
+    <ClInclude Include="ui_PROJETVOLANGTBL.h" />
     <ClInclude Include="Vehicule.h" />
   </ItemGroup>
   <ItemGroup>
