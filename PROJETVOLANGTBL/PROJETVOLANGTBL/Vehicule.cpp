@@ -163,6 +163,7 @@ void Vehicule::update(float deltaTime)
     }
 
     qDebug() << "Mon angle : " << angle << " et ma vitesse : " << getSpeed() << " m/s" << " et ma position : (" << position.x() << ", " << position.y() << ")";
+	qDebug() << "Surface: " << (is_on_grass ? "Herbe" : (is_on_track ? "Piste" : "Autre"));
 }
 
 
