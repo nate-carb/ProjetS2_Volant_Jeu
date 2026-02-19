@@ -1,199 +1,114 @@
-#include "MainWindow.h"
-#include <QFileDialog>
-#include <QMessageBox>
+#include "mainwindow.h"
+
+#include <QPainter>
+#include <QMouseEvent>
 #include <QDebug>
+#include <QDir>
+#include "Vehicule.h"
+#include <QKeyEvent>
+
 
 MainWindow::MainWindow(QWidget* parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent), imageX(100), imageY(100)
 {
-    setWindowTitle("Track Creator");
-    resize(1200, 800);
+    // Voir où le programme cherche les fichiers
+    qDebug() << "Dossier de travail actuel:" << QDir::currentPath();
+    // Essayer de charger l'image
 
-    // Central widget
-    QWidget* centralWidget = new QWidget(this);
-    setCentralWidget(centralWidget);
+    image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
+	image = image.scaled(60, 60, Qt::KeepAspectRatio);
+	voiture = Vehicule();
 
-    QHBoxLayout* mainLayout = new QHBoxLayout(centralWidget);
+    // Vérifier si ça a marché
+    if (image.isNull()) {
+        qDebug() << "ERREUR: Image non chargée!";
+        qDebug() << "Le fichier existe?" << QFile::exists("images/car.PNG");
+    }
+    else {
+        qDebug() << "SUCCESS! Taille:" << image.size();
+    }
 
-    // Track viewer (left side)
-    trackCreator = new TrackCreator(this);
-    mainLayout->addWidget(trackCreator, 3);  // Takes 3/4 of space
+    resize(800, 600);
 
-    // Control panel (right side)
-    QVBoxLayout* controlLayout = new QVBoxLayout();
-    mainLayout->addLayout(controlLayout, 1);  // Takes 1/4 of space
+    // Crée un timer
+    timer = new QTimer(this);
 
-    // Title
-    QLabel* titleLabel = new QLabel("Track Pieces", this);
-    QFont titleFont = titleLabel->font();
-    titleFont.setPointSize(14);
-    titleFont.setBold(true);
-    titleLabel->setFont(titleFont);
-    controlLayout->addWidget(titleLabel);
+    // CONNECTE le timer à ta fonction gameLoop
+    connect(timer, &QTimer::timeout, this, &MainWindow::gameLoop);
 
-    // Track pieces buttons
-    QGroupBox* piecesGroup = new QGroupBox("Add Pieces", this);
-    QVBoxLayout* piecesLayout = new QVBoxLayout(piecesGroup);
-    createPieceButtons(piecesLayout);
-    controlLayout->addWidget(piecesGroup);
+    // DÉMARRE le timer - déclenche toutes les 16ms
+    timer->start(8);  // 16 millisecondes ? 60 fois par seconde
 
-    // Track controls
-    QGroupBox* trackControlsGroup = new QGroupBox("Track Controls", this);
-    QVBoxLayout* trackControlsLayout = new QVBoxLayout(trackControlsGroup);
-
-    QPushButton* undoBtn = new QPushButton("Undo Last Piece", this);
-    connect(undoBtn, &QPushButton::clicked, this, &MainWindow::onUndo);
-    trackControlsLayout->addWidget(undoBtn);
-
-    QPushButton* clearBtn = new QPushButton("Clear Track", this);
-    connect(clearBtn, &QPushButton::clicked, this, &MainWindow::onClear);
-    trackControlsLayout->addWidget(clearBtn);
-
-    QPushButton* saveBtn = new QPushButton("Save Track", this);
-    connect(saveBtn, &QPushButton::clicked, this, &MainWindow::onSave);
-    trackControlsLayout->addWidget(saveBtn);
-
-    QPushButton* loadBtn = new QPushButton("Load Track", this);
-    connect(loadBtn, &QPushButton::clicked, this, &MainWindow::onLoad);
-    trackControlsLayout->addWidget(loadBtn);
-
-    controlLayout->addWidget(trackControlsGroup);
-
-    // Add 3D View button
-    QPushButton* view3DBtn = new QPushButton("View in 3D", this);
-    view3DBtn->setStyleSheet("QPushButton { background-color: #9C27B0; color: white; padding: 8px; }");
-    connect(view3DBtn, &QPushButton::clicked, this, &MainWindow::onView3D);
-    controlLayout->addWidget(view3DBtn);
-
-    // Status label
-    statusLabel = new QLabel("Pieces: 0", this);
-    controlLayout->addWidget(statusLabel);
-
-    controlLayout->addStretch();
-
-    // Connect track updates
-    connect(trackCreator, &TrackCreator::trackUpdated, this, [this](const Track& track) {
-        statusLabel->setText(QString("Pieces: %1").arg(track.getCenterLine().size()));
-        });
+    lastFrameTime = QTime::currentTime();
 }
 
 MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::createPieceButtons(QVBoxLayout* layout)
+// Cette fonction dessine l'image
+void MainWindow::paintEvent(QPaintEvent* event)
 {
-    // Straight
-    QPushButton* straightBtn = new QPushButton("Straight", this);
-    straightBtn->setStyleSheet("QPushButton { background-color: #4CAF50; color: white; padding: 8px; }");
-    connect(straightBtn, &QPushButton::clicked, [this]() { onAddPiece(STRAIGHT); });
-    layout->addWidget(straightBtn);
+    QPainter painter(this);
+    const float PIXELS_PER_METER = 5.0f;
+    float x = voiture.getPosition().x()*PIXELS_PER_METER;
+    float y = voiture.getPosition().y()*PIXELS_PER_METER;
+    float angle = voiture.getAngle();  // en radians
 
-    // 45° Left
-    QPushButton* left45Btn = new QPushButton("45° Left Turn", this);
-    left45Btn->setStyleSheet("QPushButton { background-color: #2196F3; color: white; padding: 8px; }");
-    connect(left45Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_45LEFT); });
-    layout->addWidget(left45Btn);
+    painter.translate(x, y);                 // va à la position de la voiture
+    painter.rotate(angle * 180.0 / M_PI);   // Qt veut des degrés
 
-    // 45° Right
-    QPushButton* right45Btn = new QPushButton("45° Right Turn", this);
-    right45Btn->setStyleSheet("QPushButton { background-color: #2196F3; color: white; padding: 8px; }");
-    connect(right45Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_45RIGHT); });
-    layout->addWidget(right45Btn);
-
-    // 90° Left
-    QPushButton* left90Btn = new QPushButton("90° Left Turn", this);
-    left90Btn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
-    connect(left90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90LEFT); });
-    layout->addWidget(left90Btn);
-
-    // 90° Right
-    QPushButton* right90Btn = new QPushButton("90° Right Turn", this);
-    right90Btn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
-    connect(right90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90RIGHT); });
-    layout->addWidget(right90Btn);
+    // Dessine l'image centrée sur (0,0)
+    painter.drawPixmap(-image.width() / 2,
+        -image.height() / 2,
+        image);
 }
 
-void MainWindow::onAddPiece(int pieceType)
+// Cette fonction capte les clics de souris
+void MainWindow::mousePressEvent(QMouseEvent* event)
 {
-    qDebug() << "Adding piece type:" << pieceType;  // Debug output
-    trackCreator->addPiece(pieceType);
+    // Met à jour les coordonnées
+    imageX = event->pos().x() - image.width() / 2;
+    imageY = event->pos().y() - image.height() / 2;
+
+    // Redemande à Qt de redessiner
+    update();
 }
 
-void MainWindow::onUndo()
+void MainWindow::keyPressEvent(QKeyEvent* event)
 {
-    // TODO: Implement undo functionality
-    // You'll need to add a method to TrackCreator to remove last piece
-    QMessageBox::information(this, "Undo", "Undo functionality - to be implemented");
+    if (event->key() == Qt::Key_W) keyW = true;
+    if (event->key() == Qt::Key_A) keyA = true;
+    if (event->key() == Qt::Key_S) keyS = true;
+    if (event->key() == Qt::Key_D) keyD = true;
 }
 
-void MainWindow::onClear()
+void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-    trackCreator->clearTrack();
-    statusLabel->setText("Pieces: 0");
+    if (event->key() == Qt::Key_W) keyW = false;
+    if (event->key() == Qt::Key_A) keyA = false;
+    if (event->key() == Qt::Key_S) keyS = false;
+    if (event->key() == Qt::Key_D) keyD = false;
 }
 
-void MainWindow::onSave()
+
+
+void MainWindow::gameLoop()
 {
-    QString filename = QFileDialog::getSaveFileName(
-        this,
-        "Save Track",
-        "",
-        "Track Files (*.trk);;All Files (*)"
-    );
+    QTime currentTime = QTime::currentTime();
+    int msElapsed = lastFrameTime.msecsTo(currentTime);  // Millisecondes écoulées
+    deltaTime = msElapsed / 1000.0f;  // Convertit en secondes
+    lastFrameTime = currentTime;  // Sauvegarde pour la prochaine frame
 
-    if (!filename.isEmpty()) {
-        Track currentTrack = trackCreator->getCurrentTrack();
+    voiture.setAccel(keyW ? 1.0f : 0.0f);
+    voiture.setBreaking(keyS ? 1.0f : 0.0f);
 
-        if (currentTrack.saveToFile(filename.toStdString())) {
-            QMessageBox::information(this, "Save Successful",
-                "Track saved to:\n" + filename);
-            statusLabel->setText("Track saved successfully");
-        }
-        else {
-            QMessageBox::warning(this, "Save Failed",
-                "Failed to save track to:\n" + filename);
-        }
-    }
-}
+    if (keyA && !keyD) voiture.setSteering(-1.0f);
+    else if (keyD && !keyA) voiture.setSteering(1.0f);
+    else voiture.setSteering(0.0f);
 
-void MainWindow::onLoad()
-{
-    QString filename = QFileDialog::getOpenFileName(
-        this,
-        "Load Track",
-        "",
-        "Track Files (*.trk);;All Files (*)"
-    );
+    // ===== UPDATE PHYSIQUE =====
+    voiture.update(deltaTime);
 
-    if (!filename.isEmpty()) {
-        Track loadedTrack;
-
-        if (loadedTrack.loadFromFile(filename.toStdString())) {
-            trackCreator->loadTrack(loadedTrack);
-            QMessageBox::information(this, "Load Successful",
-                "Track loaded from:\n" + filename);
-            statusLabel->setText(QString("Track loaded - Pieces: %1")
-                .arg(loadedTrack.getPiecesList().size()));
-        }
-        else {
-            QMessageBox::warning(this, "Load Failed",
-                "Failed to load track from:\n" + filename);
-        }
-    }
-}
-void MainWindow::onView3D()
-{
-    // Save current track to temp file
-    Track currentTrack = trackCreator->getCurrentTrack();
-    QString tempFile = "temp_track.trk";
-
-    if (currentTrack.saveToFile(tempFile.toStdString())) {
-        // Open 3D viewer window
-        Track3DViewer* viewer3D = new Track3DViewer();
-        viewer3D->setWindowTitle("3D Track View");
-        viewer3D->resize(1024, 768);
-        viewer3D->loadTrackFile(tempFile);
-        viewer3D->show();
-    }
+    update();
 }
