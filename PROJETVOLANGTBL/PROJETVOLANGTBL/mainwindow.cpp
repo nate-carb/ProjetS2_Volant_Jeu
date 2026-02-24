@@ -40,6 +40,11 @@ MainWindow::MainWindow(QWidget* parent)
     timer->start(8);  // 16 millisecondes ? 60 fois par seconde
 
     lastFrameTime = QTime::currentTime();
+
+    // Crée un pitstop
+    pitStop = QRect(300, 250, 80, 80);   // position et taille qu'on peut ajuster
+    inPitStop = false;
+    pitStopReady = false;
 }
 
 MainWindow::~MainWindow()
@@ -62,6 +67,38 @@ void MainWindow::paintEvent(QPaintEvent* event)
     painter.drawPixmap(-image.width() / 2,
         -image.height() / 2,
         image);
+
+    // Affiche le niveau de NOS a l'écran
+    painter.resetTransform();   // important — annule le translate/rotate de la voiture (jsp si necessaire, j'avais fait le 
+                                // boost initial mais Claude m'a dit de mettre ca en checkant ce que j'avais fait)
+    // Texte carburant
+    painter.setPen(Qt::white);      //blanc carburant
+    painter.setFont(QFont("Arial", 12));
+    painter.drawText(20, 30, QString("Carburant: %1%").arg((int)voiture.getCarburant()));
+
+    // Texte NOS
+    painter.setPen(QColor(0, 200, 255));        // bleu NOS
+    painter.drawText(20, 55, QString("NOS: %1%").arg((int)voiture.getNos()));
+
+    // Zone pit stop
+    painter.setBrush(QColor(255, 200, 0, 180));   // jaune semi-transparent
+    painter.setPen(QPen(Qt::yellow, 2));
+    painter.drawRect(pitStop);
+    painter.setPen(Qt::black);
+    painter.setFont(QFont("Arial", 9, QFont::Bold));
+    painter.drawText(pitStop, Qt::AlignCenter, "PIT\nSTOP");
+
+    // Indicateur si on est dedans
+    if (inPitStop) {
+        painter.setPen(Qt::green);
+        painter.setFont(QFont("Arial", 14, QFont::Bold));
+        if (!pitStopReady) {
+            painter.drawText(20, 90, "PIT STOP - Rechargement...");
+        }
+        else {
+            painter.drawText(20, 90, "PRÊT ! Appuie sur Entrée pour partir !");
+        }
+    }
 }
 
 // Cette fonction capte les clics de souris
@@ -81,6 +118,8 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     if (event->key() == Qt::Key_A) keyA = true;
     if (event->key() == Qt::Key_S) keyS = true;
     if (event->key() == Qt::Key_D) keyD = true;
+    if (event->key() == Qt::Key_Space) keySpace = true;
+    if (event->key() == Qt::Key_Return) keyEnter = true;
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
@@ -89,6 +128,8 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
     if (event->key() == Qt::Key_A) keyA = false;
     if (event->key() == Qt::Key_S) keyS = false;
     if (event->key() == Qt::Key_D) keyD = false;
+    if (event->key() == Qt::Key_Space) keySpace = false;
+    if (event->key() == Qt::Key_Return) keyEnter = false;
 }
 
 
@@ -102,10 +143,34 @@ void MainWindow::gameLoop()
 
     voiture.setAccel(keyW ? 1.0f : 0.0f);
     voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    voiture.setBoosting(keySpace);
 
     if (keyA && !keyD) voiture.setSteering(-1.0f);
     else if (keyD && !keyA) voiture.setSteering(1.0f);
     else voiture.setSteering(0.0f);
+
+    // Détection de la zone de pit stop
+    const float PIXELS_PER_METER = 4.0f;
+    int carX = (int)(voiture.getPosition().x() * PIXELS_PER_METER);
+    int carY = (int)(voiture.getPosition().y() * PIXELS_PER_METER);
+
+    inPitStop = pitStop.contains(carX, carY);
+
+    inPitStop = pitStop.contains(carX, carY);
+
+    // Reset quand on a complètement quitté la zone
+    if (!inPitStop) leavingPitStop = false;
+
+    if (inPitStop && !leavingPitStop && !keyEnter) {
+        const float rechargeRate = 20.0f;
+        voiture.setCarburant(std::min(voiture.getCarburant() + rechargeRate * deltaTime, 100.0f));
+        voiture.setNos(std::min(voiture.getNos() + rechargeRate * deltaTime, 100.0f));
+        update();
+        return;
+    }
+
+    // Joueur appuie Entrée — on note qu'il veut partir
+    if (inPitStop && keyEnter) leavingPitStop = true;
 
     // ===== UPDATE PHYSIQUE =====
     voiture.update(deltaTime);

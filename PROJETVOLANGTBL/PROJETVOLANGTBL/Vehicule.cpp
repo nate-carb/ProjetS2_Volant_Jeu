@@ -20,6 +20,8 @@ Vehicule::Vehicule()
     steering = 0.0f;
     carburant = 100.0f;
     angularVelocity = 0.0f;
+    nos = 100.0f;
+    boosting = false;
 }
 
 Vehicule::Vehicule(float x, float y)
@@ -36,6 +38,8 @@ Vehicule::Vehicule(float x, float y)
     steering = 0.0f;
     carburant = 100.0f;
     angularVelocity = 0.0f;
+    nos = 100.0f;
+    boosting = false;
 }
 
 Vehicule::~Vehicule()
@@ -102,15 +106,31 @@ void Vehicule::update(float deltaTime)
         speed += maxAcceleration * accel * deltaTime;
     }
 
-    // 2) FREINAGE agit sur speed
+    // 2) NOS boost la vitesse du véhicule
+    const float nosForce = 50.0f;       // force du boost (on peut ajuster en consequece apres tests)
+    const float nosDrain = 15.0f;       //consommation de nos/seconde
+    if (boosting && nos > 0.0f) {
+        speed += nosForce * deltaTime;
+        nos -= nosDrain * deltaTime;
+        nos = std::max(nos, 0.0f);      //empeche que le nos aille sous 0
+    }
+
+    const float nosRegen = 2.0f;        // % par seconde (on peut ajuster en consequece apres tests)
+
+    if (!boosting && nos < 100.0f) {
+        nos += nosRegen * deltaTime;
+        nos = std::min(nos, 100.0f);        // empêche que le nos dépasse 100
+    }
+
+    // 3) FREINAGE agit sur speed
     if (breaking > 0) {
         speed *= (1.0f - breaking * 0.01f);
     }
 
-    // 3) FRICTION naturelle
+    // 4) FRICTION naturelle
     speed *= drag;
 
-    // 4) STEERING -> angular velocity (dépend de la vitesse)
+    // 5) STEERING -> angular velocity (dépend de la vitesse)
     float speedValue = vitesse.length();
 
     if (speedValue > 0.1f)
@@ -138,19 +158,24 @@ void Vehicule::update(float deltaTime)
 
     angle = std::atan2(vitesse.y(), vitesse.x());
 
-    // 5) Reconstruit la vitesse à partir de l’angle
+    // 6) Reconstruit la vitesse à partir de l’angle
     vitesse.setX(std::cos(angle) * speed);
     vitesse.setY(std::sin(angle) * speed);
 
-    // 6) Position
+    // 7) Position
 
     position.setX(position.x() + vitesse.x() * deltaTime);
     position.setY(position.y() + vitesse.y() * deltaTime);
 
-    // 7) Carburant
-    if (accel > 0) {
-        carburant -= 0.01f * accel * deltaTime;
+    // 8) Carburant
+    if (speed > 0.1f) {
+        carburant -= 0.5f * deltaTime;         // consommation de base en mouvement
     }
+    if (accel > 0 || boosting) {
+        carburant -= 0.01f * deltaTime;        // consommation en accel et boost
+    }
+
+    carburant = std::max(carburant, 0.0f);  // empêche d'aller sous 0
 
     qDebug() << "Mon angle : " << angle << " et ma vitesse : " << getSpeed() << " m/s" << " et ma position : (" << position.x() << ", " << position.y() << ")";
 }

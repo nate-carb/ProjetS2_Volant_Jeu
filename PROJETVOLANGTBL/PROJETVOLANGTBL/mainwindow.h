@@ -38,6 +38,12 @@ private:
     bool keyA = false;
     bool keyS = false;
     bool keyD = false;
+    bool keySpace = false;
+    bool keyEnter = false;
+    QRect pitStop;          // zone du pit stop
+    bool inPitStop;         // est-ce-que lnotre char est dans le pit stop
+    bool pitStopReady;      // recharge terminée, peut partir
+    bool leavingPitStop = false;
 };
 
 #endif

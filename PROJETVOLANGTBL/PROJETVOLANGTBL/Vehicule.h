@@ -37,6 +37,12 @@ public:
 	float getBreaking() const { return breaking; }
 	void setBreaking(float b) { breaking = b; }
 
+    float getNos() const { return nos; }
+    void setNos(float n) { nos = n; }
+
+    void setBoosting(bool b) { boosting = b; }
+    bool isBoosting() const { return boosting; }
+
 private:
     QVector2D vitesse;
     QVector2D position;
@@ -47,4 +53,6 @@ private:
     float breaking;  // 0 à 1 
     float carburant; // en pourcentage
     float angularVelocity;    // vitesse de rotation
+    float nos;          // réservoir de NOS, 0 à 100%
+    bool boosting;      // est-ce-qu'on boost live ou non
 };
