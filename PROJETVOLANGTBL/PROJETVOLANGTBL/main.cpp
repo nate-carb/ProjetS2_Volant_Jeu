@@ -82,7 +82,8 @@ int main(int argc, char* argv[])
 
 
     QApplication app(argc, argv);
-    MainWindow window;
+    MainWindow1 window;
+
     window.show();
     return app.exec();
 
