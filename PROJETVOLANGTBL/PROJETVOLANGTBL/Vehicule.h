@@ -36,6 +36,8 @@ public:
 
 	float getBreaking() const { return breaking; }
 	void setBreaking(float b) { breaking = b; }
+    bool is_on_track = true; // pour gérer les différents types de terrain
+    bool is_on_grass = false;
 
     float getNos() const { return nos; }
     void setNos(float n) { nos = n; }

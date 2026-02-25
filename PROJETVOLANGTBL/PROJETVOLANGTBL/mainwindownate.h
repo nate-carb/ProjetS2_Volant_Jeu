@@ -7,7 +7,7 @@
 #include <QElapsedTimer>
 #include <QTimer>
 #include <QTime>
-
+#include <Track.h>
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -22,6 +22,9 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
 	void keyReleaseEvent(QKeyEvent* event) override;
 
+    void drawTrack(QPainter& painter, float scale);
+    void drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color);
+
 private slots:
     void gameLoop();
 
@@ -30,7 +33,7 @@ private:
     float imageX;     // Position X
     float imageY;     // Position Y
     Vehicule voiture; 
-            
+	Track track; // Piste de course
     float deltaTime;             // Temps en secondes depuis dernière frame
 	QTimer* timer;          // Timer pour la boucle de jeu
     QTime lastFrameTime; //Temos deouis derniere frame

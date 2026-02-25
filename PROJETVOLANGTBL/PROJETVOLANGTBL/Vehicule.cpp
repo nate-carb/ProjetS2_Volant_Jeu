@@ -20,6 +20,8 @@ Vehicule::Vehicule()
     steering = 0.0f;
     carburant = 100.0f;
     angularVelocity = 0.0f;
+	is_on_grass = false;
+	is_on_track = true;
     nos = 100.0f;
     boosting = false;
 }
@@ -38,6 +40,8 @@ Vehicule::Vehicule(float x, float y)
     steering = 0.0f;
     carburant = 100.0f;
     angularVelocity = 0.0f;
+    is_on_grass = false;
+    is_on_track = true;
     nos = 100.0f;
     boosting = false;
 }
@@ -93,11 +97,11 @@ void Vehicule::update(float deltaTime)
 {
     if (carburant <= 0) return;
 
-    const float maxAcceleration = 25.0f;
-    const float drag = 0.999999f;
-
+    const float maxAcceleration = 35.0f;
+    const float drag_on_track = 0.999f;
+    const float drag_on_grass = 0.96;
     // ===== PARAMÈTRES DE CONDUITE =====
-    const float maxTurnSpeed = 3.0f;      // rad/s
+    const float maxTurnSpeed = 4.0f;      // rad/s
     const float turnResponsiveness = 8.0f;
 
     // 1) ACCÉLÉRATION agit sur la vitesse SCALAIRE
@@ -125,10 +129,17 @@ void Vehicule::update(float deltaTime)
     // 3) FREINAGE agit sur speed
     if (breaking > 0) {
         speed *= (1.0f - breaking * 0.01f);
+        speed = speed - 0.3f;
+		speed = std::max(speed, 0.0f);
     }
-
-    // 4) FRICTION naturelle
-    speed *= drag;
+        
+    // 3) FRICTION naturelle
+    if (is_on_grass) {
+        speed *= drag_on_grass;
+    }
+    else if (is_on_track) {
+        speed *= drag_on_track;
+    }
 
     // 5) STEERING -> angular velocity (dépend de la vitesse)
     float speedValue = vitesse.length();
@@ -154,11 +165,10 @@ void Vehicule::update(float deltaTime)
         // rotation du vecteur vitesse
         vitesse.setX(vx * cs - vy * sn);
         vitesse.setY(vx * sn + vy * cs);
+        angle = std::atan2(vitesse.y(), vitesse.x());
     }
 
-    angle = std::atan2(vitesse.y(), vitesse.x());
-
-    // 6) Reconstruit la vitesse à partir de l’angle
+    // 5) Reconstruit la vitesse à partir de l’angle
     vitesse.setX(std::cos(angle) * speed);
     vitesse.setY(std::sin(angle) * speed);
 
@@ -178,6 +188,7 @@ void Vehicule::update(float deltaTime)
     carburant = std::max(carburant, 0.0f);  // empêche d'aller sous 0
 
     qDebug() << "Mon angle : " << angle << " et ma vitesse : " << getSpeed() << " m/s" << " et ma position : (" << position.x() << ", " << position.y() << ")";
+	qDebug() << "Surface: " << (is_on_grass ? "Herbe" : (is_on_track ? "Piste" : "Autre"));
 }
 
 
