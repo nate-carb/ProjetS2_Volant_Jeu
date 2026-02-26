@@ -274,6 +274,9 @@ void Track::generatePitLane(int startIndex, int endIndex)
             + entryEnd * t3;
         pitLane.entryCurve.push_back(point);
     }
+	// Ensure the curve starts/ends exactly at the track/pit points to avoid gaps
+	pitLane.entryCurve.push_back(pitLane.centerLine[0]);
+    //pitLane.entryCurve.push_back(pitLane.centerLine[1]);
     // Build edges AFTER the curve is complete, using actual curve direction at each point
     for (size_t i = 0; i < pitLane.entryCurve.size(); i++) {
         QVector2D dir;
@@ -288,7 +291,7 @@ void Track::generatePitLane(int startIndex, int endIndex)
         pitLane.entryCurveEdges.left.push_back(pitLane.entryCurve[i] + normal * halfWidth);
         pitLane.entryCurveEdges.right.push_back(pitLane.entryCurve[i] - normal * halfWidth);
     }
-
+    
 
     // --- Build curved exit (cubic bezier from pit lane back to main track) ---
     QVector2D exitStart = pitLane.centerLine.back();
@@ -314,6 +317,9 @@ void Track::generatePitLane(int startIndex, int endIndex)
             + exitEnd * t3;
         pitLane.exitCurve.push_back(point);
     }
+    // Ensure the curve starts/ends exactly at the track/pit points to avoid gaps
+    //pitLane.exitCurve.push_back(pitLane.centerLine[centerLine.size()-1]);
+    //pitLane.exitCurve.push_back(pitLane.centerLine[centerLine.size()-2]);
     for (size_t i = 0; i < pitLane.exitCurve.size(); i++) {
         QVector2D dir;
         if (i == 0)
