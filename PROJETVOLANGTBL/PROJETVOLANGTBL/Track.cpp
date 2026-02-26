@@ -55,7 +55,10 @@ float lenghtForStep(float stepAngleDeg, float radius) {
     float rad = std::abs(stepAngleDeg) * (3.14159265f / 180.0f);
     return 2.0f * radius * std::sin(rad / 2.0f);
 }
-
+// Arc length of one step = radius * stepAngle_in_radians (for the straight)
+float arcLengthPerStep(float stepAngleDeg, float radius) {
+    return radius * (stepAngleDeg * 3.14159265f / 180.0f);
+}
 // Virage_45right
 Virage_45right::Virage_45right() {
     id = VIRAGE_45RIGHT;
@@ -96,10 +99,10 @@ Virage_90right::Virage_90right() {
     pos = 0;
     spritePath = "trackPieces/versionPNG/Virage90Right.png";
     spriteRotationOffset = 0.0f;
-    stepAngleDeg = 45.0f / 8;
+    stepAngleDeg = 45.0f / 4;
     float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
-    angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
-    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
+    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
     //angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
     //lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
@@ -110,10 +113,10 @@ Virage_90left::Virage_90left() {
     pos = 0;
     spritePath = "trackPieces/versionPNG/Virage90Left.png";
     spriteRotationOffset = 42.5f;
-    stepAngleDeg = -45.0f / 8;
+    stepAngleDeg = -45.0f / 4;
     float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
-    angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
-    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
+    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
     //angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, - 45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
     //lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
@@ -124,8 +127,25 @@ Straight::Straight() {
     pos = 0;
 	spritePath = "trackPieces/versionPNG/Straight.png";
     spriteRotationOffset = 0.0f;
+    
+    // This makes one straight piece geometrically equivalent to one 45° curve piece
+    //float totalLength = 1.0f * getTurnRadius() * std::sin(22.5f * 3.14159265f / 180.0f);
+
+    angles = { 0.0f};
+    lengths = { getTrackWidth()};
+    // Match the arc length of 4 steps of a 45° turn at TURN_RADIUS
+    //float unitLength = arcLengthPerStep(45.0f / 4, getTurnRadius()); // one step unit
+    //float straightLength = unitLength * 2  ; // tune the multiplier to match your sprite
+
+    //angles = { 0, 0, 0, 0 };
+    //lengths = { straightLength / 4, straightLength / 4, straightLength / 4, straightLength / 4 };
+
     angles = { 0, 0, 0, 0};
     lengths = { 10, 10, 10, 10};
+ //   stepAngleDeg = 0;
+	//float lenghtFromTurnRadius = getTurnRadius()/4; // Straight length based on turn radius
+ //   angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
+ //   lengths = { lenghtFromTurnRadius , lenghtFromTurnRadius, lenghtFromTurnRadius, lenghtFromTurnRadius };
 }
 
 // StartLine
