@@ -179,11 +179,12 @@ int main(int argc, char* argv[])
 
     // Create main window (already has its own timer/gameloop)
     MainWindow* window = new MainWindow();
-
+    qDebug() << "track pointer:" << window->track;
+    qDebug() << "track centerLine size:" << (window->track ? window->track->getCenterLine().size() : -1);
     // Give viewer the track from mainwindow
-    viewer->setTrack(&window->track);
+    viewer->setTrack(window->track);
 
-    // Hook 3D viewer update into MainWindow's existing timer
+    // Hook 3D viewer update into MainWindow's existing timer`
     QObject::connect(window->timer, &QTimer::timeout, [=]() {
         viewer->updateVehicule(&window->voiture);
         });

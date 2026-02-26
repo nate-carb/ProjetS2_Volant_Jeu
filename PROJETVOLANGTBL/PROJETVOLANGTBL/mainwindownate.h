@@ -21,7 +21,7 @@ public:
     ~MainWindow();
     QTimer* timer;
     Vehicule voiture;
-    Track track;
+    Track* track = nullptr;
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -31,6 +31,10 @@ protected:
 
     void drawTrack(QPainter& painter, float scale);
     void drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color);
+
+    void drawPit(float scale, Track* track, QPainter& painter);
+
+    
 
 private slots:
     void gameLoop();

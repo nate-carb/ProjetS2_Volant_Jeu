@@ -310,7 +310,8 @@ void Track3DViewer::buildTrackMesh(Track* track)
     debugBox->addComponent(debugMesh);
     debugBox->addComponent(debugMat);
     */
-
+    
+    
     //--------------------------------------------------------------------
 	//red and white kerbs along the edges, alternating every 10 units
     //--------------------------------------------------------------------
@@ -440,6 +441,149 @@ void Track3DViewer::buildTrackMesh(Track* track)
     // Replace your old buildWall calls with:
 		buildKerb(track->getTrackEdges().left, track->getCenterLine(), true); // left kerb with normal winding
 		buildKerb(track->getTrackEdges().right, track->getCenterLine(), false); // right kerb with flipped winding to keep normals facing up
+    // ───────────────────────────────────────── ─────────────────────────────────────────
+    // ── Pit lane 3D mesh ─────────────────────────────────────────
+    // ───────────────────────────────────────── ─────────────────────────────────────────
+    if (track->hasPitLane()) {
+        PitLane pit = track->getPitLane();
+
+        // Helper lambda - same pattern as main track mesh
+        auto buildPitMesh = [&](const std::vector<QVector2D>& left,
+            const std::vector<QVector2D>& right,
+            QColor color) {
+                if (left.size() < 2 || right.size() < 2) {
+                    qDebug() << "buildPitMesh skipped - left:" << left.size() << "right:" << right.size();
+                    return;
+                }
+                if (left.size() != right.size()) {
+                    qDebug() << "buildPitMesh size mismatch - left:" << left.size() << "right:" << right.size();
+                    return;
+                }
+                if (left.size() < 2 || right.size() < 2) return;
+                size_t pn = qMin(left.size(), right.size());
+
+                QVector<float>   verts;
+                QVector<float>   normals;
+                QVector<quint32> idx;
+
+                for (size_t i = 0; i < pn; i++)
+                    verts << left[i].x() << 0.0f << left[i].y();
+                for (size_t i = 0; i < pn; i++)
+                    verts << right[i].x() << 0.0f << right[i].y();
+
+                for (size_t i = 0; i < pn * 2; i++)
+                    normals << 0.0f << 1.0f << 0.0f;
+
+                for (quint32 i = 0; i < static_cast<quint32>(pn - 1); i++) {
+                    quint32 l0 = i;
+                    quint32 l1 = i + 1;
+                    quint32 r0 = static_cast<quint32>(pn) + i;
+                    quint32 r1 = static_cast<quint32>(pn) + i + 1;
+                    idx << l0 << l1 << r0;
+                    idx << l1 << r1 << r0;
+                }
+
+                Qt3DCore::QEntity* pitEntity = new Qt3DCore::QEntity(m_rootEntity);
+                Qt3DRender::QGeometryRenderer* pitRenderer = new Qt3DRender::QGeometryRenderer(pitEntity);
+                Qt3DCore::QGeometry* pitGeom = new Qt3DCore::QGeometry(pitRenderer);
+
+                Qt3DCore::QBuffer* vb = new Qt3DCore::QBuffer(pitGeom);
+                vb->setData(QByteArray(reinterpret_cast<const char*>(verts.constData()),
+                    verts.size() * sizeof(float)));
+
+                Qt3DCore::QAttribute* posAttr = new Qt3DCore::QAttribute(pitGeom);
+                posAttr->setName(Qt3DCore::QAttribute::defaultPositionAttributeName());
+                posAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
+                posAttr->setVertexSize(3);
+                posAttr->setAttributeType(Qt3DCore::QAttribute::VertexAttribute);
+                posAttr->setBuffer(vb);
+                posAttr->setByteStride(3 * sizeof(float));
+                posAttr->setCount(static_cast<uint>(pn * 2));
+                pitGeom->addAttribute(posAttr);
+
+                Qt3DCore::QBuffer* nb = new Qt3DCore::QBuffer(pitGeom);
+                nb->setData(QByteArray(reinterpret_cast<const char*>(normals.constData()),
+                    normals.size() * sizeof(float)));
+
+                Qt3DCore::QAttribute* normAttr = new Qt3DCore::QAttribute(pitGeom);
+                normAttr->setName(Qt3DCore::QAttribute::defaultNormalAttributeName());
+                normAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
+                normAttr->setVertexSize(3);
+                normAttr->setAttributeType(Qt3DCore::QAttribute::VertexAttribute);
+                normAttr->setBuffer(nb);
+                normAttr->setByteStride(3 * sizeof(float));
+                normAttr->setCount(static_cast<uint>(pn * 2));
+                pitGeom->addAttribute(normAttr);
+
+                Qt3DCore::QBuffer* ib = new Qt3DCore::QBuffer(pitGeom);
+                ib->setData(QByteArray(reinterpret_cast<const char*>(idx.constData()),
+                    idx.size() * sizeof(quint32)));
+
+                Qt3DCore::QAttribute* idxAttr = new Qt3DCore::QAttribute(pitGeom);
+                idxAttr->setAttributeType(Qt3DCore::QAttribute::IndexAttribute);
+                idxAttr->setVertexBaseType(Qt3DCore::QAttribute::UnsignedInt);
+                idxAttr->setBuffer(ib);
+                idxAttr->setCount(static_cast<uint>(idx.size()));
+                pitGeom->addAttribute(idxAttr);
+
+                pitRenderer->setGeometry(pitGeom);
+                pitRenderer->setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
+
+                Qt3DExtras::QPhongMaterial* mat = new Qt3DExtras::QPhongMaterial(pitEntity);
+                mat->setDiffuse(color);
+                mat->setAmbient(color.darker(150));
+                mat->setShininess(5.0f);
+
+                pitEntity->addComponent(pitRenderer);
+                pitEntity->addComponent(mat);
+            };
+
+        // ── Pit lane surface (slightly lighter grey than main track) ──
+        buildPitMesh(pit.edges.left, pit.edges.right, QColor(80, 80, 80));
+        
+        // ── Entry curve surface ───────────────────────────────────────
+        // Build left/right edges for the bezier curve by offsetting perpendicular to travel
+        auto buildCurveEdges = [&](const std::vector<QVector2D>& curve)
+            -> std::pair<std::vector<QVector2D>, std::vector<QVector2D>>
+            {
+                float halfW = track->getTrackWidth() * 0.5f;
+                std::vector<QVector2D> leftEdge, rightEdge;
+
+                for (size_t i = 0; i < curve.size(); i++) {
+                    QVector2D dir;
+                    if (i == 0)
+                        dir = (curve[1] - curve[0]).normalized();
+                    else if (i == curve.size() - 1)
+                        dir = (curve[i] - curve[i - 1]).normalized();
+                    else
+                        dir = ((curve[i] - curve[i - 1]) + (curve[i + 1] - curve[i])).normalized();
+
+                    QVector2D normal = perpendicular(dir);
+                    leftEdge.push_back(curve[i] + normal * halfW);
+                    rightEdge.push_back(curve[i] - normal * halfW);
+                }
+                return { leftEdge, rightEdge };
+            };
+        
+        // ── Entry/exit curve surfaces using edges already computed in Track ──
+        buildPitMesh(pit.entryCurveEdges.left, pit.entryCurveEdges.right, QColor(80, 80, 80));
+        buildPitMesh(pit.exitCurveEdges.left, pit.exitCurveEdges.right, QColor(80, 80, 80));
+
+        //auto [entryLeft, entryRight] = buildCurveEdges(pit.entryCurve);
+        //auto [exitLeft, exitRight] = buildCurveEdges(pit.exitCurve);
+        //buildPitMesh(entryLeft, entryRight, QColor(80, 80, 80));
+        //buildPitMesh(exitLeft, exitRight, QColor(80, 80, 80));
+
+        qDebug() << "pit.edges.left:" << pit.edges.left.size();
+        qDebug() << "pit.edges.right:" << pit.edges.right.size();
+        qDebug() << "pit.centerLine:" << pit.centerLine.size();
+
+        // ── Pit lane kerbs (same red/white pattern, narrower) ────────
+        buildKerb(pit.edges.left, pit.centerLine, true);
+        buildKerb(pit.edges.right, pit.centerLine, false);
+
+            qDebug() << "Pit lane mesh built with" << pit.centerLine.size() << "points";
+        }
     /*
     // ── Track walls (barriers) ───────────────────────────────
     // Simple vertical quads extruded upward from each edge

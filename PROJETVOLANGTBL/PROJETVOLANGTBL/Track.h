@@ -24,6 +24,18 @@ struct TrackEdges {
 	std::vector<QVector2D> right;
 };
 
+struct PitLane {
+	std::vector<QVector2D> centerLine;
+	TrackEdges edges;
+	QVector2D entryPoint;  // where pit splits from main track
+	QVector2D exitPoint;   // where pit rejoins main track
+	std::vector<QVector2D> entryCurve;
+	TrackEdges entryCurveEdges;
+	std::vector<QVector2D> exitCurve;
+	TrackEdges exitCurveEdges;
+	bool isValid = false;
+};
+
 QVector2D perpendicular(QVector2D v);
 
 QVector2D move(QVector2D v, float angleDeg, float distance);
@@ -49,6 +61,11 @@ class TrackPieces
 		std::vector<float> getAngles() { return angles; };
 		std::vector<float> getLengths() { return lengths; };
 
+		void setStartIndex(int index) { startIndex = index; };
+		 int getStartIndex() { return startIndex; };
+		 void setEndIndex(int index) { endIndex = index; };
+		 int getEndIndex() { return endIndex; };
+
 	private:
 		float trackWidth = 40.0f;
 		float turnRadius = trackWidth / 2.0f; //trackWidth / 2.0f;
@@ -58,6 +75,8 @@ class TrackPieces
 		float spriteRotationOffset = 0.0f;
 		int pos;
 		int id;
+		int startIndex = -1;
+		int endIndex = -1;
 		float stepAngleDeg;
 		std::vector<float> angles;
 		std::vector<float> lengths;
@@ -112,6 +131,7 @@ class Pit : public TrackPieces
 {
 	public:
 		Pit();
+		
 };
 
 class Grandstand : public TrackPieces
@@ -128,9 +148,12 @@ class Bridges : public TrackPieces
 };
 
 
+
+
 class Track
 {
 public:
+	
 	Track();
 	Track(std::vector<int> listPieces);
 	//virtual ~Track();
@@ -151,6 +174,13 @@ public:
 	TrackEdges getTrackEdges() const { return trackEdges; };
     std::vector<int> getPiecesList() const { return piecesIntList; }
 
+	// Pit lane related functions
+	void generatePitLane(int startIndex, int endIndex);
+	PitLane getPitLane() const { return pitLane; }
+	bool hasPitLane() const { return pitLane.isValid; }
+	int getPitStartIndex() const { return pitStartIndex; }
+	int getPitEndIndex() const { return pitEndIndex; }
+
 private:
 	std::vector<TrackPieces*> pieces;
 	std::vector<QVector2D> centerLine;
@@ -162,6 +192,11 @@ private:
 	float trackWidth;
 	
 	std::vector<int> piecesIntList;
+
+	//Pit lane related members
+	PitLane pitLane;
+	int pitStartIndex = -1;  // index in centerLine where pit begins
+	int pitEndIndex = -1;  // index in centerLine where pit ends
 
 	
 	

@@ -166,6 +166,68 @@ void TrackCreator::drawTrack(QPainter& painter)
             painter.drawLine(p1, p2);
         }
     }
+    // Draw pit lane if it exists
+    if (currentTrack.hasPitLane()) {
+        PitLane pit = currentTrack.getPitLane();
+
+        // Pit lane center (orange dashed)
+        QPen pitCenterPen(QColor(255, 165, 0), 2, Qt::DashLine);
+        painter.setPen(pitCenterPen);
+        for (size_t i = 1; i < pit.centerLine.size(); i++)
+            painter.drawLine(worldToScreen(pit.centerLine[i - 1]),
+                worldToScreen(pit.centerLine[i]));
+
+        // Pit lane edges (dark orange)
+        QPen pitEdgePen(QColor(200, 100, 0), 2);
+        painter.setPen(pitEdgePen);
+        for (size_t i = 1; i < pit.edges.left.size(); i++)
+            painter.drawLine(worldToScreen(pit.edges.left[i - 1]),
+                worldToScreen(pit.edges.left[i]));
+        for (size_t i = 1; i < pit.edges.right.size(); i++)
+            painter.drawLine(worldToScreen(pit.edges.right[i - 1]),
+                worldToScreen(pit.edges.right[i]));
+
+        // Entry curve (white)
+        QPen curvePen(Qt::white, 2);
+        painter.setPen(curvePen);
+        for (size_t i = 1; i < pit.entryCurve.size(); i++)
+            painter.drawLine(worldToScreen(pit.entryCurve[i - 1]),
+                worldToScreen(pit.entryCurve[i]));
+
+        // Pit lane edges (blue)
+        QPen entryEdgePen(QColor(0, 0, 255), 2);
+        painter.setPen(entryEdgePen);
+        for (size_t i = 1; i < pit.entryCurveEdges.left.size(); i++)
+            painter.drawLine(worldToScreen(pit.entryCurveEdges.left[i - 1]),
+                worldToScreen(pit.entryCurveEdges.left[i]));
+        for (size_t i = 1; i < pit.entryCurveEdges.right.size(); i++)
+            painter.drawLine(worldToScreen(pit.entryCurveEdges.right[i - 1]),
+                worldToScreen(pit.entryCurveEdges.right[i]));
+
+        // Exit curve (white)
+        for (size_t i = 1; i < pit.exitCurve.size(); i++)
+            painter.drawLine(worldToScreen(pit.exitCurve[i - 1]),
+                worldToScreen(pit.exitCurve[i]));
+
+        // Pit lane edges (blue)
+        QPen exitEdgePen(QColor(0, 0, 255), 2);
+        painter.setPen(exitEdgePen);
+        for (size_t i = 1; i < pit.exitCurveEdges.left.size(); i++)
+            painter.drawLine(worldToScreen(pit.exitCurveEdges.left[i - 1]),
+                worldToScreen(pit.exitCurveEdges.left[i]));
+        for (size_t i = 1; i < pit.exitCurveEdges.right.size(); i++)
+            painter.drawLine(worldToScreen(pit.exitCurveEdges.right[i - 1]),
+                worldToScreen(pit.exitCurveEdges.right[i]));
+
+        // Draw connector lines from main track to pit entry/exit
+        //QPen connectorPen(Qt::white, 1, Qt::DotLine);
+        //painter.setPen(connectorPen);
+        //painter.drawLine(worldToScreen(currentTrack.getCenterLine()[currentTrack.getPitStartIndex()]),
+        //    worldToScreen(pit.entryPoint));
+        //painter.drawLine(worldToScreen(currentTrack.getCenterLine()[currentTrack.getPitEndIndex()]),
+        //    worldToScreen(pit.exitPoint));
+    }
+
     drawCar(painter);
     // Draw start position (green circle)
     QPointF startScreen = worldToScreen(QVector2D(0, 0));

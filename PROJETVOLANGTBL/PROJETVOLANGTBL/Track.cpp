@@ -1,6 +1,7 @@
 ﻿#include "Track.h"
 #include <fstream>
 #include <sstream>
+#include <QDebug>
 
 QVector2D perpendicular(QVector2D v)
 {
@@ -131,8 +132,8 @@ Straight::Straight() {
     // This makes one straight piece geometrically equivalent to one 45° curve piece
     //float totalLength = 1.0f * getTurnRadius() * std::sin(22.5f * 3.14159265f / 180.0f);
 
-    angles = { 0.0f};
-    lengths = { getTrackWidth()};
+    //angles = { 0.0f };
+    //lengths = { getTrackWidth()};
     // Match the arc length of 4 steps of a 45° turn at TURN_RADIUS
     //float unitLength = arcLengthPerStep(45.0f / 4, getTurnRadius()); // one step unit
     //float straightLength = unitLength * 2  ; // tune the multiplier to match your sprite
@@ -153,7 +154,7 @@ StartLine::StartLine() {
     id = STARTLINE;
     pos = 0;
     angles = { 0 };
-    lengths = { 20 };
+    lengths = { 10 };
 }
 
 // Garage
@@ -168,8 +169,23 @@ Garage::Garage() {
 Pit::Pit() {
     id = PIT;
     pos = 0;
-    angles = {};
-    lengths = {};
+    float step = 10.0f; // match Straight length
+    angles = { 0.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f, 
+                0.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f };
+    lengths = { step, step, step, step,
+                step, step, step, step,
+                step, step, step, step,
+                step, step, step, step,
+                step, step, step, step,
+                step, step, step, step, 
+                step, step, step, step,
+                step, step, step, step };
 }
 
 // Grandstand
@@ -186,6 +202,133 @@ Bridges::Bridges() {
     pos = 0;
     angles = {};
     lengths = {};
+}
+
+void Track::generatePitLane(int startIndex, int endIndex)
+{
+    pitStartIndex = startIndex;
+	pitEndIndex = endIndex;
+    if (pitStartIndex < 0 || pitEndIndex < 0) return;
+    if (pitEndIndex >= (int)centerLine.size()) return;
+
+    pitLane.centerLine.clear();
+    pitLane.edges.left.clear();
+    pitLane.edges.right.clear();
+    pitLane.entryCurve.clear();
+    pitLane.exitCurve.clear();
+
+    float pitOffset = trackWidth * 2.0f;
+    float halfWidth = trackWidth * 0.5f;
+    int   curveSteps = 8; // smoothness of the curve
+
+    // --- Build pit centerline (offset from main track) ---
+	int pitSize = pitEndIndex - pitStartIndex + 1;
+	int pitRatio = pitSize / 4; // how much of the pit is straight vs curved (tune as needed)
+    //qDebug()  << "Generating pit lane from index " << pitStartIndex << " to " << pitEndIndex << "Ratio" << pitRatio;
+
+    for (int i = (pitStartIndex + pitRatio); i <= (pitEndIndex - pitRatio); i++) {
+        QVector2D dir;
+        if (i == 0) {
+            dir = (centerLine[1] - centerLine[0]).normalized();
+        }
+        else if (i == (int)centerLine.size() - 1) {
+            dir = (centerLine[i] - centerLine[i - 1]).normalized();
+        }
+        else {
+            QVector2D d1 = (centerLine[i] - centerLine[i - 1]).normalized();
+            QVector2D d2 = (centerLine[i + 1] - centerLine[i]).normalized();
+            dir = (d1 + d2).normalized();
+        }
+        QVector2D normal = perpendicular(dir);
+        QVector2D pitPoint = centerLine[i] - normal * pitOffset;
+        pitLane.centerLine.push_back(pitPoint);
+        pitLane.edges.left.push_back(pitPoint + normal * halfWidth);
+        pitLane.edges.right.push_back(pitPoint - normal * halfWidth);
+    }
+
+    // --- Build curved entry (cubic bezier from main track to pit lane) ---
+    QVector2D entryStart = centerLine[pitStartIndex];
+    QVector2D entryEnd = pitLane.centerLine.front();
+
+    // Direction at entry start (along main track)
+    QVector2D entryStartDir = (centerLine[pitStartIndex + 1] - centerLine[pitStartIndex]).normalized();
+    // Direction at entry end (along pit lane)
+    QVector2D entryEndDir = (pitLane.centerLine[1] - pitLane.centerLine[0]).normalized();
+
+    // Control points: extend along the respective directions
+    float cpDist = (entryEnd - entryStart).length() * 0.5f;
+    QVector2D cp1 = entryStart + entryStartDir * cpDist;
+    QVector2D cp2 = entryEnd - entryEndDir * cpDist;
+
+    //entry curve edge building:
+    for (int i = 0; i <= curveSteps; i++) {
+        float t = (float)i / curveSteps;
+        float t2 = t * t;
+        float t3 = t2 * t;
+        float u = 1.0f - t;
+        float u2 = u * u;
+        float u3 = u2 * u;
+        QVector2D point = entryStart * u3
+            + cp1 * (3 * u2 * t)
+            + cp2 * (3 * u * t2)
+            + entryEnd * t3;
+        pitLane.entryCurve.push_back(point);
+    }
+    // Build edges AFTER the curve is complete, using actual curve direction at each point
+    for (size_t i = 0; i < pitLane.entryCurve.size(); i++) {
+        QVector2D dir;
+        if (i == 0)
+            dir = (pitLane.entryCurve[1] - pitLane.entryCurve[0]).normalized();
+        else if (i == pitLane.entryCurve.size() - 1)
+            dir = (pitLane.entryCurve[i] - pitLane.entryCurve[i - 1]).normalized();
+        else
+            dir = ((pitLane.entryCurve[i] - pitLane.entryCurve[i - 1]) +
+                (pitLane.entryCurve[i + 1] - pitLane.entryCurve[i])).normalized();
+        QVector2D normal = perpendicular(dir);
+        pitLane.entryCurveEdges.left.push_back(pitLane.entryCurve[i] + normal * halfWidth);
+        pitLane.entryCurveEdges.right.push_back(pitLane.entryCurve[i] - normal * halfWidth);
+    }
+
+
+    // --- Build curved exit (cubic bezier from pit lane back to main track) ---
+    QVector2D exitStart = pitLane.centerLine.back();
+    QVector2D exitEnd = centerLine[pitEndIndex];
+
+    QVector2D exitStartDir = (pitLane.centerLine.back() - pitLane.centerLine[pitLane.centerLine.size() - 2]).normalized();
+    QVector2D exitEndDir = (centerLine[pitEndIndex] - centerLine[pitEndIndex - 1]).normalized();
+
+    float cpDistExit = (exitEnd - exitStart).length() * 0.5f;
+    QVector2D cp3 = exitStart + exitStartDir * cpDistExit;
+    QVector2D cp4 = exitEnd - exitEndDir * cpDistExit;
+
+    for (int i = 0; i <= curveSteps; i++) {
+        float t = (float)i / curveSteps;
+        float t2 = t * t;
+        float t3 = t2 * t;
+        float u = 1.0f - t;
+        float u2 = u * u;
+        float u3 = u2 * u;
+        QVector2D point = exitStart * u3
+            + cp3 * (3 * u2 * t)
+            + cp4 * (3 * u * t2)
+            + exitEnd * t3;
+        pitLane.exitCurve.push_back(point);
+    }
+    for (size_t i = 0; i < pitLane.exitCurve.size(); i++) {
+        QVector2D dir;
+        if (i == 0)
+            dir = (pitLane.exitCurve[1] - pitLane.exitCurve[0]).normalized();
+        else if (i == pitLane.exitCurve.size() - 1)
+            dir = (pitLane.exitCurve[i] - pitLane.exitCurve[i - 1]).normalized();
+        else
+            dir = ((pitLane.exitCurve[i] - pitLane.exitCurve[i - 1]) +
+                (pitLane.exitCurve[i + 1] - pitLane.exitCurve[i])).normalized();
+        QVector2D normal = perpendicular(dir);
+        pitLane.exitCurveEdges.left.push_back(pitLane.exitCurve[i] + normal * halfWidth);
+        pitLane.exitCurveEdges.right.push_back(pitLane.exitCurve[i] - normal * halfWidth);
+    }
+
+    pitLane.isValid = true;
 }
 
 // Track implementation
@@ -243,6 +386,9 @@ void Track::calculAngLen(int index)
     case STARTLINE:
         piece = new StartLine();
         break;
+    case PIT:
+        piece = new Pit();
+		break;
     default:
         std::cerr << "Unknown piece type: " << index << std::endl;
         return;
@@ -254,12 +400,25 @@ void Track::calculAngLen(int index)
     std::vector<float> angles = piece->getAngles();
     std::vector<float> lengths = piece->getLengths();
 
+    
+    // Record where the piece starts in the centerline
+    piece->setStartIndex(centerLine.size() - 1);
+   
+
     // Generate track points
     for (size_t i = 0; i < angles.size() && i < lengths.size(); i++) {
         currentAngle += angles[i];
         currentPos = move(currentPos, currentAngle, lengths[i]);
         centerLine.push_back(currentPos);
     }
+
+    piece->setEndIndex(centerLine.size() - 1);
+    
+    if (piece->getId() == PIT) {
+        generatePitLane(piece->getStartIndex(), piece->getEndIndex()); // auto-generate parallel lane
+	}
+      
+    
 
     delete piece;
 }
