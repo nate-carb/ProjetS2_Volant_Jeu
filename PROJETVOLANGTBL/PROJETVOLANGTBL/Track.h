@@ -41,7 +41,8 @@ class TrackPieces
 		int getPos() { return pos; };
 		void setPos(int x) { pos = x; };
 		int getId() { return id; };
-		std::string spritePath;
+		QString getSpritePath() { return spritePath; };
+		float getSpriteRotationOffset() { return spriteRotationOffset; };
 		std::vector<float> getAngles() { return angles; };
 		std::vector<float> getLengths() { return lengths; };
 
@@ -49,6 +50,8 @@ class TrackPieces
 		float trackWidth = 40.0f;
 		
 	protected:
+		QString spritePath;
+		float spriteRotationOffset = 0.0f;
 		int pos;
 		int id;
 		std::vector<float> angles;
@@ -129,6 +132,7 @@ public:
 	//virtual void generateTrack() = 0;
 	void calculateTrackEdges();
 	void calculAngLen(int index);
+	
 	//virtual void displayTrack() const = 0;
 	
 	// Save/Load functions
@@ -137,13 +141,13 @@ public:
 	
 	bool isVector2DOnTrack(const QVector2D& point) const;
 	float getTrackWidth() const { return trackWidth; };
-	std::vector<TrackPieces> getPieces() const { return pieces; };
+	std::vector<TrackPieces*> getPieces() const { return pieces; };
 	std::vector<QVector2D> getCenterLine() const { return centerLine; };
 	TrackEdges getTrackEdges() const { return trackEdges; };
     std::vector<int> getPiecesList() const { return piecesIntList; }
 
 private:
-	std::vector<TrackPieces> pieces;
+	std::vector<TrackPieces*> pieces;
 	std::vector<QVector2D> centerLine;
 	TrackEdges trackEdges;
 

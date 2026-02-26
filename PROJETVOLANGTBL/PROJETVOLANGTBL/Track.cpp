@@ -55,7 +55,8 @@ TrackPieces::~TrackPieces() {}
 Virage_45right::Virage_45right() {
     id = VIRAGE_45RIGHT;
     pos = 0;
-    spritePath;
+    spritePath = "trackPieces/versionPNG/Virage45Right.png";
+    spriteRotationOffset = 0.0f;
     //angles = { 0, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 0};
     angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
     //lengths = { 0, 10, 10, 10, 10, 0 };
@@ -66,6 +67,7 @@ Virage_45right::Virage_45right() {
 Virage_45left::Virage_45left() {
     id = VIRAGE_45LEFT;
     pos = 0;
+    spritePath = "trackPieces/versionPNG/Virage45Left.png";
     //angles = {0, -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, 0 };
     angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
     //lengths = {0, 10, 10, 10, 10, 0 };
@@ -76,6 +78,8 @@ Virage_45left::Virage_45left() {
 Virage_90right::Virage_90right() {
     id = VIRAGE_90RIGHT;
     pos = 0;
+    spritePath = "trackPieces/versionPNG/Virage90Right.png";
+    spriteRotationOffset = 0.0f;
     angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
     lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
@@ -84,6 +88,8 @@ Virage_90right::Virage_90right() {
 Virage_90left::Virage_90left() {
     id = VIRAGE_90LEFT;
     pos = 0;
+    spritePath = "trackPieces/versionPNG/Virage90Left.png";
+    spriteRotationOffset = 42.5f;
     angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, - 45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
     lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
@@ -92,6 +98,8 @@ Virage_90left::Virage_90left() {
 Straight::Straight() {
     id = STRAIGHT;
     pos = 0;
+	spritePath = "trackPieces/versionPNG/Straight.png";
+    spriteRotationOffset = 0.0f;
     angles = { 0, 0, 0, 0};
     lengths = { 10, 10, 10, 10};
 }
@@ -212,6 +220,7 @@ void Track::calculAngLen(int index)
     delete piece;
 }
 
+
 void Track::calculateTrackEdges()
 {
     trackEdges.left.clear();
@@ -301,7 +310,8 @@ bool Track::loadFromFile(const std::string& filename)
     }
 
     std::string line;
-    std::vector<int> loadedPieces;
+    std::vector<int> loadedPiecesInt;
+	std::vector<TrackPieces*> loadedPieces;
     float loadedTrackWidth = 40;
     float loadedStartAngle = 0;
 
@@ -326,11 +336,36 @@ bool Track::loadFromFile(const std::string& filename)
         else if (command == "PIECES") {
             int count;
             iss >> count;
-            loadedPieces.clear();
+            loadedPiecesInt.clear();
+			loadedPieces.clear();
             for (int i = 0; i < count; i++) {
                 std::getline(file, line);
+				// Convert piece ID from string to int and store
                 int pieceId = std::stoi(line);
-                loadedPieces.push_back(pieceId);
+                loadedPiecesInt.push_back(pieceId);
+				
+                TrackPieces* piece = nullptr;;
+                switch (pieceId) {
+                case VIRAGE_45RIGHT:
+                    piece = new Virage_45right();
+                    break;
+                case VIRAGE_45LEFT:
+                    piece = new Virage_45left();
+                    break;
+                case VIRAGE_90RIGHT:
+                    piece = new Virage_90right();
+                    break;
+                case VIRAGE_90LEFT:
+                    piece = new Virage_90left();
+                    break;
+                case STRAIGHT:
+                    piece = new Straight();
+                    break;
+                case STARTLINE:
+                    piece = new StartLine();
+                    break;
+                };
+				loadedPieces.push_back(piece);
             }
         }
         else if (command == "CENTERLINE" || command == "LEFT_EDGE" || command == "RIGHT_EDGE") {
@@ -345,13 +380,14 @@ bool Track::loadFromFile(const std::string& filename)
 
     file.close();
 
-    if (loadedPieces.empty()) {
+    if (loadedPiecesInt.empty()) {
         std::cerr << "No pieces found in file" << std::endl;
         return false;
     }
 
     // Reconstruct the track from loaded pieces
-    piecesIntList = loadedPieces;
+    piecesIntList = loadedPiecesInt;
+    pieces = loadedPieces;
     trackWidth = loadedTrackWidth;
     startAngle = loadedStartAngle;
     currentAngle = startAngle;

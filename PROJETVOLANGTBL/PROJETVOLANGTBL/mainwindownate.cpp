@@ -8,13 +8,18 @@
 #include <QKeyEvent>
 #include <trackViewer.h>
 
+
+
+
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), imageX(100), imageY(100)
 {
     // Voir où le programme cherche les fichiers
     qDebug() << "Dossier de travail actuel:" << QDir::currentPath();
-    // Essayer de charger l'image
 
+	
+
+    // Essayer de charger l'image
     image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
 	image = image.scaled(60, 60, Qt::KeepAspectRatio);
 
@@ -82,7 +87,7 @@ void MainWindow::paintEvent(QPaintEvent* event)
     // Centrer la caméra sur la voiture
     painter.translate(width() / 2 - carX, height() / 2 - carY);
 
-    // ===== DESSINER LA PISTE =====
+    // ===== DESSINER LA PISTE ===== 
     drawTrack(painter, PIXELS_PER_METER);
 
     // ===== DESSINER LA VOITURE =====
@@ -152,12 +157,12 @@ void MainWindow::gameLoop()
 void MainWindow::drawTrack(QPainter& painter, float scale)
 {
     // PISTE (gris foncé)
+    
     painter.setPen(Qt::NoPen);
     painter.setBrush(QColor(50, 50, 50));
-
     std::vector<QVector2D> left = track.getTrackEdges().left;
     std::vector<QVector2D> right = track.getTrackEdges().right;
-
+    
     // Dessiner la piste comme un polygone
     QPolygonF trackPoly;
     for (const auto& p : left) {
@@ -183,6 +188,45 @@ void MainWindow::drawTrack(QPainter& painter, float scale)
     // BORDURES (rouges et blanches alternées comme en F1)
     drawCurbs(painter, left, scale, Qt::red);
     drawCurbs(painter, right, scale, Qt::red);
+    
+    // Draw sprites along center line
+    auto centerLine = track.getCenterLine();
+    auto pieces = track.getPieces();
+
+    size_t pointIndex = 0; // tracks where we are in centerLine
+
+    for (size_t i = 0; i < pieces.size(); i++) {
+        int segmentCount = pieces[i]->getLengths().size(); // how many points this piece uses
+
+        size_t startIdx = pointIndex;
+        size_t endIdx = pointIndex + segmentCount;
+
+        if (endIdx >= centerLine.size()) break;
+
+        // Use start and end of this piece for position and angle
+        QVector2D startPos = centerLine[startIdx];
+        QVector2D endPos = centerLine[endIdx];
+        QVector2D midPos = (startPos + endPos) * 0.5f; // draw sprite at center of piece
+        QVector2D dir = endPos - startPos;
+
+        float angle = atan2(dir.y(), dir.x()) * 180.0f / M_PI + pieces[i]->getSpriteRotationOffset();
+
+        QString path = pieces[i]->getSpritePath();
+        QPixmap sprite(path);
+        if (sprite.isNull()) { pointIndex += segmentCount; continue; }
+
+        float spriteScale = (track.getTrackWidth() * scale) / sprite.width();
+
+        painter.save();
+        painter.translate(midPos.x() * scale, midPos.y() * scale);
+        painter.rotate(angle);
+        painter.scale(spriteScale, spriteScale);
+        painter.drawPixmap(-sprite.width() / 2, -sprite.height() / 2, sprite);
+        painter.restore();
+
+        pointIndex += segmentCount;
+    }
+    
 }
 
 void MainWindow::drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color)

@@ -2,7 +2,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-
+/*
 MainWindowCreator::MainWindowCreator(QWidget* parent)
     : QMainWindow(parent)
 
@@ -209,3 +209,4 @@ void MainWindowCreator::onView3D()
 
     update();
 }
+*/

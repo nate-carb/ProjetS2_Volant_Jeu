@@ -99,7 +99,12 @@
     <ClCompile Include="mainWindowView.cpp" />
     <ClCompile Include="map2d.cpp" />
     <ClCompile Include="Track.cpp" />
-    <ClCompile Include="track3DViewer.cpp" />
+    <ClCompile Include="track3DViewer.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </ClCompile>
     <ClCompile Include="trackBuilder3D.cpp" />
     <ClCompile Include="trackCreator.cpp" />
     <ClCompile Include="trackPieces3D.cpp" />
@@ -109,7 +114,12 @@
     <QtUic Include="PROJETVOLANGTBL.ui" />
     <QtMoc Include="PROJETVOLANGTBL.h" />
     <ClCompile Include="PROJETVOLANGTBL.cpp" />
-    <ClCompile Include="main.cpp" />
+    <QtMoc Include="main.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera2D.h" />
