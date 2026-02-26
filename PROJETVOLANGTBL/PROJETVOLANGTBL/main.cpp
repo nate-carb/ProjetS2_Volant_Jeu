@@ -8,7 +8,7 @@
 #include <chrono>
 #include <QTimer>
 #include "mainwindownate.h"
-//#include "mainWindowCreator.h"
+#include "mainWindowCreator.h"
 #include "mainWindowView.h"
 bool isKeyPressed(int vkCode) {
     return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
@@ -189,6 +189,10 @@ int main(int argc, char* argv[])
         });
 
     window->show();
+
+	MainWindowCreator* creator = new MainWindowCreator();
+	creator->show();
+
 
     return app.exec();
 }

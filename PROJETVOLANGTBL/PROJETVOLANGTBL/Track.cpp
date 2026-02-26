@@ -50,6 +50,11 @@ bool Track::isVector2DOnTrack(const QVector2D& point) const
 // TrackPieces base class
 TrackPieces::~TrackPieces() {}
 
+// stepAngleDeg = angle turned per step, radius = turn radius
+float lenghtForStep(float stepAngleDeg, float radius) {
+    float rad = std::abs(stepAngleDeg) * (3.14159265f / 180.0f);
+    return 2.0f * radius * std::sin(rad / 2.0f);
+}
 
 // Virage_45right
 Virage_45right::Virage_45right() {
@@ -57,10 +62,16 @@ Virage_45right::Virage_45right() {
     pos = 0;
     spritePath = "trackPieces/versionPNG/Virage45Right.png";
     spriteRotationOffset = 0.0f;
+	stepAngleDeg = 45.0f / 4;
+	float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
+    angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
+	lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    /*
     //angles = { 0, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 0};
     angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
     //lengths = { 0, 10, 10, 10, 10, 0 };
     lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    */
 }
 
 // Virage_45left
@@ -68,10 +79,15 @@ Virage_45left::Virage_45left() {
     id = VIRAGE_45LEFT;
     pos = 0;
     spritePath = "trackPieces/versionPNG/Virage45Left.png";
-    //angles = {0, -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, 0 };
-    angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
-    //lengths = {0, 10, 10, 10, 10, 0 };
+    stepAngleDeg = -45.0f / 4;
+    float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
+    angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
     lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+
+    ////angles = {0, -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, 0 };
+    //angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
+    ////lengths = {0, 10, 10, 10, 10, 0 };
+    //lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
 
 // Virage_90right
@@ -80,8 +96,12 @@ Virage_90right::Virage_90right() {
     pos = 0;
     spritePath = "trackPieces/versionPNG/Virage90Right.png";
     spriteRotationOffset = 0.0f;
-    angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
-    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    stepAngleDeg = 45.0f / 8;
+    float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
+    angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
+    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    //angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
+    //lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
 
 // Virage_90left
@@ -90,8 +110,12 @@ Virage_90left::Virage_90left() {
     pos = 0;
     spritePath = "trackPieces/versionPNG/Virage90Left.png";
     spriteRotationOffset = 42.5f;
-    angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, - 45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
-    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    stepAngleDeg = -45.0f / 8;
+    float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
+    angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
+    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    //angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, - 45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
+    //lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
 
 // Straight

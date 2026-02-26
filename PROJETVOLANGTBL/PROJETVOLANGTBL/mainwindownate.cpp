@@ -25,7 +25,8 @@ MainWindow::MainWindow(QWidget* parent)
 
 	voiture = Vehicule();
     track = Track();
-	track.loadFromFile("tracks/defaultTrack1.trk");
+	//track.loadFromFile("tracks/defaultTrack1.trk");
+    track.loadFromFile("tracks/defaultTrack3.trk");
     // Vérifier si ça a marché
     if (image.isNull()) {
         qDebug() << "ERREUR: Image non chargée!";

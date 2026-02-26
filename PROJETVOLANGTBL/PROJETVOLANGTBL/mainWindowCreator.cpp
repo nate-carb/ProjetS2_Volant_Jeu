@@ -2,7 +2,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-/*
+
 MainWindowCreator::MainWindowCreator(QWidget* parent)
     : QMainWindow(parent)
 
@@ -59,13 +59,13 @@ MainWindowCreator::MainWindowCreator(QWidget* parent)
     trackControlsLayout->addWidget(loadBtn);
 
     controlLayout->addWidget(trackControlsGroup);
-
+    /*
     // Add 3D View button
     QPushButton* view3DBtn = new QPushButton("View in 3D", this);
     view3DBtn->setStyleSheet("QPushButton { background-color: #9C27B0; color: white; padding: 8px; }");
     connect(view3DBtn, &QPushButton::clicked, this, &MainWindowCreator::onView3D);
     controlLayout->addWidget(view3DBtn);
-
+    */
     // Status label
     statusLabel = new QLabel("Pieces: 0", this);
     controlLayout->addWidget(statusLabel);
@@ -192,6 +192,7 @@ void MainWindowCreator::onLoad()
         }
     }
 }
+/*
 void MainWindowCreator::onView3D()
 {
     // Save current track to temp file

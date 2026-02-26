@@ -43,17 +43,21 @@ class TrackPieces
 		int getId() { return id; };
 		QString getSpritePath() { return spritePath; };
 		float getSpriteRotationOffset() { return spriteRotationOffset; };
+
+		float getTurnRadius() { return turnRadius; };
 		std::vector<float> getAngles() { return angles; };
 		std::vector<float> getLengths() { return lengths; };
 
 	private:
 		float trackWidth = 40.0f;
-		
+		float turnRadius = trackWidth / 2.0f;
+
 	protected:
 		QString spritePath;
 		float spriteRotationOffset = 0.0f;
 		int pos;
 		int id;
+		float stepAngleDeg;
 		std::vector<float> angles;
 		std::vector<float> lengths;
 		float lengthAngleVirage = trackWidth/8 / cos(qDegreesToRadians(45.0f / 4));
