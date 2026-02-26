@@ -50,7 +50,38 @@ void Track3DViewer::setTrack(Track* track)
     buildTrackMesh(track);
     buildGround();
 }
+void Track3DViewer::updateVehicule(Vehicule* vehicule)
+{
+    m_vehicule = vehicule;
+    if (!m_carTransform) return;
 
+    float x = vehicule->getPosition().x();
+    float y = vehicule->getPosition().y();
+    float angle = vehicule->getAngle();
+
+    // Car stays at game logic position
+    m_carTransform->setTranslation(QVector3D(x, 0.0f, y)); // 0 = on the ground
+    QQuaternion rot = QQuaternion::fromAxisAndAngle(QVector3D(0, 1, 0),
+        -qRadiansToDegrees(angle));
+    m_carTransform->setRotation(rot);
+
+    // Camera is calculated SEPARATELY and never touches m_carTransform
+    if (m_firstPersonMode && m_camera) {
+        float camOffsetBack = 20.0f;
+        float camHeight = 15.0f;
+
+        float camX = x - camOffsetBack * qCos(angle);
+        float camZ = y - camOffsetBack * qSin(angle);
+
+        float lookX = x + 30.0f * qCos(angle);
+        float lookZ = y + 30.0f * qSin(angle);
+
+        m_camera->setPosition(QVector3D(camX, camHeight, camZ));
+        m_camera->setViewCenter(QVector3D(lookX, 5.0f, lookZ));
+        m_camera->setUpVector(QVector3D(0, 1, 0));
+    }
+}
+/*
 void Track3DViewer::updateVehicule(Vehicule* vehicule)
 {
     m_vehicule = vehicule;
@@ -90,7 +121,7 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
         m_camera->setUpVector(QVector3D(0, 1, 0));
     }
 }
-
+*/
 void Track3DViewer::setFirstPersonMode(bool enabled)
 {
     m_firstPersonMode = enabled;
