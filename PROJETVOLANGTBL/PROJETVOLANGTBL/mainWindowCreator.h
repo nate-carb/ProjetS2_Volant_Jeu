@@ -7,6 +7,8 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QGroupBox>
+#include <QMenu>
+#include <QToolButton>
 #include "track3DViewer.h"
 #include "TrackCreator.h"
 #include "Track.h"
@@ -28,7 +30,7 @@ private slots:
     void onClear();
     void onSave();
     void onLoad();
-    void onView3D();
+    //void onView3D();
 
 
 
@@ -36,6 +38,7 @@ private:
     TrackCreator* trackCreator;
     QLabel* statusLabel;
     void createPieceButtons(QVBoxLayout* layout);
+	int decorPiece; // Variable pour stocker le type de pièce de décor sélectionné
 };
 
 

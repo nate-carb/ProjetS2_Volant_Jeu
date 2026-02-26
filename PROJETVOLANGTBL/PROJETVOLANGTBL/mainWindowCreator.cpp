@@ -58,6 +58,7 @@ MainWindowCreator::MainWindowCreator(QWidget* parent)
     connect(loadBtn, &QPushButton::clicked, this, &MainWindowCreator::onLoad);
     trackControlsLayout->addWidget(loadBtn);
 
+
     controlLayout->addWidget(trackControlsGroup);
     /*
     // Add 3D View button
@@ -91,32 +92,54 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     connect(straightBtn, &QPushButton::clicked, [this]() { onAddPiece(STRAIGHT); });
     layout->addWidget(straightBtn);
 
-    // 45� Left
+    // 45 Left
     QPushButton* left45Btn = new QPushButton("45� Left Turn", this);
     left45Btn->setStyleSheet("QPushButton { background-color: #2196F3; color: white; padding: 8px; }");
     connect(left45Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_45LEFT); });
     layout->addWidget(left45Btn);
 
-    // 45� Right
+    // 45 Right
     QPushButton* right45Btn = new QPushButton("45� Right Turn", this);
     right45Btn->setStyleSheet("QPushButton { background-color: #2196F3; color: white; padding: 8px; }");
     connect(right45Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_45RIGHT); });
     layout->addWidget(right45Btn);
 
-    // 90� Left
+    // 90 Left
     QPushButton* left90Btn = new QPushButton("90� Left Turn", this);
     left90Btn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
     connect(left90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90LEFT); });
     layout->addWidget(left90Btn);
 
-    // 90� Right
+    // 90 Right
     QPushButton* right90Btn = new QPushButton("90� Right Turn", this);
     right90Btn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
     connect(right90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90RIGHT); });
     layout->addWidget(right90Btn);
 
 
+    // Decors
+    QPushButton* decorsBtn = new QPushButton("Add Decor piece", this);
+    decorsBtn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
+    connect(decorsBtn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90RIGHT); });
+    layout->addWidget(decorsBtn);
 
+    // In your mainwindow.cpp, where you set up your toolbar/buttons
+
+// Create the dropdown menu
+    QMenu* decorMenu = new QMenu(this);
+    decorMenu->addAction("Garage", this, [this]() { onAddPiece(GARAGE); });
+    decorMenu->addAction("Pit", this, [this]() { onAddPiece(PIT); });
+    decorMenu->addAction("Grandstand", this, [this]() { onAddPiece(GRANDSTAND); });
+    decorMenu->addAction("Bridges", this, [this]() { onAddPiece(BRIDGES); });
+
+    // Create a tool button with dropdown arrow
+    QToolButton* decorDropdown = new QToolButton(this);
+    decorDropdown->setText("▼ ");
+    decorDropdown->setMenu(decorMenu);
+    decorDropdown->setPopupMode(QToolButton::InstantPopup); // click = open menu directly
+
+    // Add it to your layout just before the decor button
+    layout->addWidget(decorDropdown);
 }
 
 void MainWindowCreator::onAddPiece(int pieceType)
