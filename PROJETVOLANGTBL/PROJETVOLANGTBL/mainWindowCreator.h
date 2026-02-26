@@ -28,7 +28,7 @@ private slots:
     void onClear();
     void onSave();
     void onLoad();
-    void onView3D();
+    //void onView3D();
 
 
 

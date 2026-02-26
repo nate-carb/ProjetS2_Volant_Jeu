@@ -86,4 +86,33 @@ int main(int argc, char* argv[])
     window.show();
     return app.exec();
 
+<<<<<<< Updated upstream
 }
+=======
+    // Create 3D viewer
+    Track3DViewer* viewer = new Track3DViewer();
+    viewer->resize(1280, 720);
+    viewer->setTitle("Racing Game 3D");
+    viewer->setFirstPersonMode(true);
+    viewer->show();
+
+    // Create main window (already has its own timer/gameloop)
+    MainWindow* window = new MainWindow();
+
+    // Give viewer the track from mainwindow
+    viewer->setTrack(&window->track);
+
+    // Hook 3D viewer update into MainWindow's existing timer
+    QObject::connect(window->timer, &QTimer::timeout, [=]() {
+        viewer->updateVehicule(&window->voiture);
+        });
+
+    window->show();
+
+    MainWindowCreator* creator = new MainWindowCreator();
+
+	creator->show();
+    return app.exec();
+}
+#include "main.moc"
+>>>>>>> Stashed changes
