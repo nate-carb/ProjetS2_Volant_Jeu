@@ -121,11 +121,6 @@ class StartLine : public TrackPieces
 		StartLine();
 };
 
-class Garage : public TrackPieces
-{
-	public:
-		Garage();
-};
 
 class Pit : public TrackPieces
 {
@@ -134,21 +129,75 @@ class Pit : public TrackPieces
 		
 };
 
-class Grandstand : public TrackPieces
-{
-	public:
-		Grandstand();
+
+
+struct DecorsInfo {
+	float angle;
+	QVector2D pos;
+	float scale = 1.0f;
+	float width;
+	float length;
+	QString modelPath;
+
 };
 
-class Bridges : public TrackPieces
+class DecorPieces 
 {
 	public:
-		Bridges();
+		DecorPieces();
+		virtual ~DecorPieces();
+		QVector2D getPos() { return info.pos; };
+		void setPos(QVector2D p) { info.pos = p; };
+		float getAngle() { return info.angle; };
+		void setAngle(float a) { info.angle = a; };
+		float getWidth() { return info.width; };
+		float getLength() { return info.length; };
 
+		// For model loading
+		QString getModelPath() { return info.modelPath; };
+		
+		float getScale() { return info.scale; };
+		void setScale(float s) { info.scale = s; };
+		//void setModelPath(QString path) { modelPath = path; };
+
+		virtual void selectModel(int modelNum) = 0; // Pure virtual function to select a model based on some criteria 
+
+protected:
+	DecorsInfo info;
+	std::vector<QString> modelList; 
 };
 
+class Grandstand : public DecorPieces
+{
+	public:
+		Grandstand(QVector2D positon, float angle);
 
+		void selectModel(int modelNum);
+		
+};
 
+class Garage : public DecorPieces
+{
+	public:
+		Garage(QVector2D positon, float angle);
+		void selectModel(int modelNum);
+};
+
+class TREES : public DecorPieces
+{
+	public:
+		TREES(QVector2D positon, float angle);
+		void randomModel(); // Assign a random tree model from a predefined set
+
+		void selectModel(int modelNum);
+	
+};
+
+class NoSpecificDecor : public DecorPieces
+{
+	public:
+		NoSpecificDecor(QVector2D positon, float angle);
+};
 
 class Track
 {
@@ -181,6 +230,10 @@ public:
 	int getPitStartIndex() const { return pitStartIndex; }
 	int getPitEndIndex() const { return pitEndIndex; }
 
+	// decor related functions
+	std::vector<DecorPieces*> getDecors() const { return decors; };
+	void addDecor(DecorPieces* decor) { decors.push_back(decor); };
+
 private:
 	std::vector<TrackPieces*> pieces;
 	std::vector<QVector2D> centerLine;
@@ -198,7 +251,8 @@ private:
 	int pitStartIndex = -1;  // index in centerLine where pit begins
 	int pitEndIndex = -1;  // index in centerLine where pit ends
 
-	
+	// decor pieces
+	std::vector<DecorPieces*> decors;
 	
 
 };

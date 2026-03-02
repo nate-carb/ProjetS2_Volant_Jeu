@@ -59,10 +59,15 @@ private:
     // Grass/ground entity
     Qt3DCore::QEntity* m_groundEntity = nullptr;
 
+	// Decor entity (for 3D model)
+	Qt3DCore::QEntity* m_decorEntity = nullptr;
+	//Qt3DCore::QTransform* m_decorTransform = nullptr;
+
     // Internal helpers
     void buildScene();
     void buildTrackMesh(Track* track);
     void buildCar();
+    void buildDecor();
     void buildGround();
 
     Qt3DCore::QEntity* createBox(Qt3DCore::QEntity* parent,
