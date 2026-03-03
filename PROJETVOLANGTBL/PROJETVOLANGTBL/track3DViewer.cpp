@@ -10,6 +10,13 @@
 #include <Qt3DExtras/QForwardRenderer>
 #include <Qt3DRender/QSceneLoader>
 #include <QUrl>
+#include <QCoreApplication>
+// for skybox
+#include <Qt3DExtras/QDiffuseMapMaterial>
+#include <Qt3DRender/QTexture>
+#include <Qt3DRender/QTextureImage>
+#include <Qt3DExtras/QSphereMesh>
+#include <Qt3DExtras/QTextureMaterial>
 
 #include <QColor>
 #include <QtMath>
@@ -22,7 +29,7 @@ Track3DViewer::Track3DViewer(QScreen* screen)
     : Qt3DExtras::Qt3DWindow(screen)
 {
     // Sky colour
-    defaultFrameGraph()->setClearColor(QColor(135, 206, 235)); // light blue sky
+    //defaultFrameGraph()->setClearColor(QColor(135, 206, 235)); // light blue sky
 
     // Root entity – everything lives under here
     m_rootEntity = new Qt3DCore::QEntity();
@@ -48,6 +55,7 @@ void Track3DViewer::setTrack(Track* track)
     }
 
     buildTrackMesh(track);
+	buildDecors(track);
     buildGround();
 }
 void Track3DViewer::updateVehicule(Vehicule* vehicule)
@@ -79,49 +87,12 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
         m_camera->setPosition(QVector3D(camX, camHeight, camZ));
         m_camera->setViewCenter(QVector3D(lookX, 5.0f, lookZ));
         m_camera->setUpVector(QVector3D(0, 1, 0));
+        
     }
+    
+    
 }
-/*
-void Track3DViewer::updateVehicule(Vehicule* vehicule)
-{
-    m_vehicule = vehicule;
 
-    if (!m_carTransform) return;
-
-    // Your 2D game uses (x, y) – we map to 3D as (x, 0, y)
-    // (Qt3D Y is up, so your 2D Y becomes 3D Z)
-    float x = vehicule->getPosition().x();
-    float y = vehicule->getPosition().y();
-    float angle = vehicule->getAngle(); // in radians
-
-    // Update car transform
-    m_carTransform->setTranslation(QVector3D(x, 5.0f, y)); // 5 = half car height
-
-    // Convert 2D angle to 3D rotation around Y axis
-    // Your angle 0 = pointing right (positive X), so we negate for Qt3D convention
-    QQuaternion rot = QQuaternion::fromAxisAndAngle(QVector3D(0, 1, 0),
-        -qRadiansToDegrees(angle));
-    m_carTransform->setRotation(rot);
-
-    // ── First-person camera ──────────────────────────────────
-    if (m_firstPersonMode && m_camera) {
-        // Camera sits just behind and above the car
-        float camOffsetBack = 20.0f;  // how far behind the car
-        float camHeight = 15.0f; // eye height
-
-        float camX = x - camOffsetBack * qCos(angle);
-        float camZ = y - camOffsetBack * qSin(angle);
-
-        // Look toward where the car is heading
-        float lookX = x + 30.0f * qCos(angle);
-        float lookZ = y + 30.0f * qSin(angle);
-
-        m_camera->setPosition(QVector3D(camX, camHeight, camZ));
-        m_camera->setViewCenter(QVector3D(lookX, 5.0f, lookZ));
-        m_camera->setUpVector(QVector3D(0, 1, 0));
-    }
-}
-*/
 void Track3DViewer::setFirstPersonMode(bool enabled)
 {
     m_firstPersonMode = enabled;
@@ -138,6 +109,9 @@ void Track3DViewer::setFirstPersonMode(bool enabled)
 // ─────────────────────────────────────────────
 void Track3DViewer::buildScene()
 {
+    defaultFrameGraph()->setClearColor(Qt::transparent);
+    // Disable frustum culling so skybox always renders
+    defaultFrameGraph()->setFrustumCullingEnabled(false);
     // ── Camera ──────────────────────────────────────────────
     m_camera = camera();
 	m_camera->lens()->setPerspectiveProjection(70.0f, 16.0f / 9.0f, 0.1f, 5000.0f); // fov, aspect, near, far
@@ -156,12 +130,51 @@ void Track3DViewer::buildScene()
     Qt3DCore::QEntity* lightEntity = new Qt3DCore::QEntity(m_rootEntity);
     Qt3DRender::QDirectionalLight* light = new Qt3DRender::QDirectionalLight(lightEntity);
     light->setColor(Qt::white);
-    light->setIntensity(1.0f);
+    light->setIntensity(0.7f);
     light->setWorldDirection(QVector3D(-0.5f, -1.0f, -0.3f));
     lightEntity->addComponent(light);
 
+    // ── Second fill light from the opposite side ───────
+    Qt3DCore::QEntity* fillLightEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* fillLight = new Qt3DRender::QDirectionalLight(fillLightEntity);
+    fillLight->setColor(Qt::white);
+    fillLight->setIntensity(0.4f);          // softer fill
+    fillLight->setWorldDirection(QVector3D(0.3f, -0.5f, 0.3f)); // opposite direction
+    fillLightEntity->addComponent(fillLight);
+
+    // ── Ambient light to lift the shadows ────────────────────
+    Qt3DCore::QEntity* ambientEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* ambientLight = new Qt3DRender::QDirectionalLight(ambientEntity);
+    ambientLight->setColor(QColor(180, 180, 180)); // soft grey
+    ambientLight->setIntensity(0.8f);
+    ambientLight->setWorldDirection(QVector3D(0.0f, -1.0f, 0.0f));
+    ambientEntity->addComponent(ambientLight);
+
     // ── Car placeholder ──────────────────────────────────────
     buildCar();
+	buildSkybox();
+}
+
+
+// ─────────────────────────────────────────────
+// Skybox setup
+// ─────────────────────────────────────────────
+
+void Track3DViewer::buildSkybox()
+{
+    // Just use QSkyboxEntity - it works in Qt6 with correct path format
+    Qt3DExtras::QSkyboxEntity* skybox = new Qt3DExtras::QSkyboxEntity(m_rootEntity);
+
+    QString basePath = "file:///" + QDir::currentPath() + "/images/skybox/cubemap1/cubemap1";
+    basePath.replace("\\", "/"); // fix Windows backslashes
+
+    qDebug() << "Skybox base path:" << basePath;
+
+    skybox->setBaseName(basePath);
+    skybox->setExtension(".png");
+    skybox->setGammaCorrectEnabled(false);
+
+    
 }
 
 // ─────────────────────────────────────────────
@@ -609,8 +622,9 @@ void Track3DViewer::buildGround()
 
 	//  Create a large plane mesh for the ground
     Qt3DExtras::QPlaneMesh* planeMesh = new Qt3DExtras::QPlaneMesh();
-    planeMesh->setWidth(4000.0f);
-    planeMesh->setHeight(4000.0f);
+	// world dimensions - large enough to cover the whole track and surroundings
+    planeMesh->setWidth(2000.0f);
+    planeMesh->setHeight(2000.0f); 
     planeMesh->setMeshResolution(QSize(2, 2));
 
 	//  Material with green colour for grass
@@ -629,58 +643,6 @@ void Track3DViewer::buildGround()
     m_groundEntity->addComponent(groundTransform);
 }
 
-// ─────────────────────────────────────────────
-// Car placeholder
-// ─────────────────────────────────────────────
-/*
-void Track3DViewer::buildCar()
-{
-    m_carEntity = new Qt3DCore::QEntity(m_rootEntity);
-
-	// Car body (main box) for the moment – we can replace this with a more detailed model later
-    Qt3DCore::QEntity* bodyEntity = new Qt3DCore::QEntity(m_carEntity);
-    Qt3DExtras::QCuboidMesh* bodyMesh = new Qt3DExtras::QCuboidMesh();
-    bodyMesh->setXExtent(18.0f);  // width
-    bodyMesh->setYExtent(5.0f);   // height
-    bodyMesh->setZExtent(30.0f);  // length
-
-	// Material with red colour for the car body
-    Qt3DExtras::QPhongMaterial* bodyMat = new Qt3DExtras::QPhongMaterial(bodyEntity);
-    bodyMat->setDiffuse(QColor(220, 30, 30));  // red car
-    bodyMat->setAmbient(QColor(120, 10, 10));
-    bodyMat->setShininess(80.0f);
-
-    bodyEntity->addComponent(bodyMesh);
-    bodyEntity->addComponent(bodyMat);
-
-    // Cabin (smaller box on top) 
-    Qt3DCore::QEntity* cabinEntity = new Qt3DCore::QEntity(m_carEntity);
-    Qt3DExtras::QCuboidMesh* cabinMesh = new Qt3DExtras::QCuboidMesh();
-    cabinMesh->setXExtent(14.0f);
-    cabinMesh->setYExtent(4.0f);
-    cabinMesh->setZExtent(16.0f);
-
-	// Cabin is positioned on top of the body, slightly towards the rear
-    Qt3DCore::QTransform* cabinTransform = new Qt3DCore::QTransform(cabinEntity);
-    cabinTransform->setTranslation(QVector3D(0, 4.5f, -2.0f));
-
-	// Material with darker red for the cabin
-    Qt3DExtras::QPhongMaterial* cabinMat = new Qt3DExtras::QPhongMaterial(cabinEntity);
-    cabinMat->setDiffuse(QColor(180, 20, 20));
-    cabinMat->setAmbient(QColor(90, 10, 10));
-
-    cabinEntity->addComponent(cabinMesh);
-    cabinEntity->addComponent(cabinMat);
-    cabinEntity->addComponent(cabinTransform);
-
-    // Transform for the whole car (updated each frame from Vehicule data)
-    m_carTransform = new Qt3DCore::QTransform(m_carEntity);
-    m_carTransform->setTranslation(QVector3D(0, 5.0f, 0));
-
-    m_carEntity->addComponent(m_carTransform);
-}
-*/
-
 //version 3d model .obj
 void Track3DViewer::buildCar()
 {
@@ -695,8 +657,9 @@ void Track3DViewer::buildCar()
 
     Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
     loader->setSource(QUrl::fromLocalFile(
-        QDir::currentPath() + "/3dModels/raceCarGreen.obj"
+        QDir::currentPath() + "/3dModels/dae/raceCarGreen.dae"
     ));
+   
 
     // Optional: scale/reorient the model
     Qt3DCore::QTransform* modelTransform = new Qt3DCore::QTransform(modelEntity);
@@ -717,36 +680,70 @@ void Track3DViewer::buildCar()
 //------------------------------------------
 //--- buildDecor - version 3d model .obj ---
 //------------------------------------------
-void Track3DViewer::buildDecor()
+void Track3DViewer::buildDecors(Track* track)
 {
-    // Parent entity - holds per-frame position/rotation
-    m_decorEntity = new Qt3DCore::QEntity(m_rootEntity);
-    //m_decorTransform = new Qt3DCore::QTransform(m_decorEntity);
-    //m_decorTransform->setTranslation(QVector3D(0, 5.0f, 0));
-    //m_decorEntity->addComponent(m_decorTransform);
+    // Remove old decor entities if they exist
+    for (Qt3DCore::QEntity* e : m_decorEntities) {
+        e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
+        delete e;
+    }
+    m_decorEntities.clear();
 
-    // Child entity - holds the scene loader
-    Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(m_carEntity);
+    if (!track) return;
 
-    Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
-    loader->setSource(QUrl::fromLocalFile(
-        QDir::currentPath() + "/3dModels/raceCarGreen.obj"
-    ));
+    const auto& decors = track->getDecors();
+    if (decors.empty()) return;
 
-    // Optional: scale/reorient the model
-    Qt3DCore::QTransform* modelTransform = new Qt3DCore::QTransform(modelEntity);
-    modelTransform->setScale(5.0f);
-    modelTransform->setRotation(QQuaternion::fromAxisAndAngle(0, 1, 0, -90));
+    for (DecorPieces* decor : decors) {
+        if (!decor) continue;
 
-    modelEntity->addComponent(loader);
-    modelEntity->addComponent(modelTransform);
+        // Parent entity for this decor - holds position/rotation
+        Qt3DCore::QEntity* decorEntity = new Qt3DCore::QEntity(m_rootEntity);
 
-    // Debug: print when loaded
-    connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
-        [](Qt3DRender::QSceneLoader::Status status) {
-            qDebug() << "Model status:" << status;
-            // Ready = 2, Error = 3
-        });
+        // Transform: position from 2D world (x,y) → 3D (x, 0, y)
+        Qt3DCore::QTransform* decorTransform = new Qt3DCore::QTransform(decorEntity);
+        float x = decor->getInfo().pos.x();
+        float y = decor->getInfo().pos.y();
+        float angle = decor->getInfo().angle;
+
+        decorTransform->setTranslation(QVector3D(x, 0.0f, y));
+        decorTransform->setRotation(
+            QQuaternion::fromAxisAndAngle(QVector3D(0, 1, 0),
+                -qRadiansToDegrees(angle)));
+        decorEntity->addComponent(decorTransform);
+
+        // Child entity holds the actual 3D model
+        Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(decorEntity);
+
+        // Add to buildDecors() before creating loader:
+        qDebug() << "App dir:" << QCoreApplication::applicationDirPath();
+        QDir sceneDir(QCoreApplication::applicationDirPath() + "/sceneparsers");
+        qDebug() << "Sceneparsers exists:" << sceneDir.exists();
+        qDebug() << "Files:" << sceneDir.entryList(QDir::Files);
+        Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
+        QString modelPath = QDir::currentPath() + decor->getInfo().modelPath;
+        loader->setSource(QUrl::fromLocalFile(modelPath));
+
+       
+        // Scale based on decor info
+        Qt3DCore::QTransform* modelTransform = new Qt3DCore::QTransform(modelEntity);
+        modelTransform->setScale3D(QVector3D(
+            decor->getInfo().width * decor->getScale(),  // match world units
+            decor->getInfo().height * decor->getScale(),
+            decor->getInfo().length * decor->getScale()));
+        modelEntity->addComponent(loader);
+        modelEntity->addComponent(modelTransform);
+
+        // Debug when each model loads
+        connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
+            [modelPath](Qt3DRender::QSceneLoader::Status status) {
+                qDebug() << "Decor model" << modelPath << "status:" << status;
+            });
+
+        m_decorEntities.push_back(decorEntity);
+    }
+
+    qDebug() << "Built" << m_decorEntities.size() << "decor entities";
 }
 
 

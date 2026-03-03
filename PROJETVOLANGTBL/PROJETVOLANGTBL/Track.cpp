@@ -370,6 +370,36 @@ void Track::generatePitLane(int startIndex, int endIndex)
 
     pitLane.isValid = true;
 }
+void Track::addDecor(int decorType, int decorIndexList)
+{
+    switch (decorType) {
+        case GRANDSTAND_INDEX:
+            decors.push_back(new Grandstand(QVector2D(50, 50), 0.0f));
+            decors.back()->selectModel(decorIndexList);
+            qDebug() << "Decor type: GRANDSTAND" ;
+            break;
+
+        case GARAGE_INDEX:
+            decors.push_back(new Garage(QVector2D(50, 50), 0.0f));
+            decors.back()->selectModel(decorIndexList);
+            qDebug() << "Decor type: GARAGE";
+            break;
+
+        case TREES_INDEX:
+            decors.push_back(new TREES(QVector2D(50, 50), 0.0f));
+            decors.back()->selectModel(decorIndexList);
+            qDebug() << "Decor type: TREES";
+            break;
+
+            //case NOSPECIFICDECOR_INDEX:
+            //    decors.push_back(new NoSpecificDecor(QVector2D(0, 0), 0.0f));
+            //    decors.back()->selectModel(decorIndexList);
+            //break;
+        default:
+            qDebug() << "Invalid decor type: " << decorType;
+            break;
+    }
+}
 //------------------------------------
 //--- Decor pieces implementations ---
 //------------------------------------
@@ -379,6 +409,7 @@ DecorPieces::DecorPieces()
 {
     info.pos = QVector2D(0, 0);
     info.angle = 0.0f;
+	info.scale = 30.0f;
 }
 
 
@@ -389,13 +420,15 @@ Grandstand::Grandstand(QVector2D p, float a)
     info.angle = a;
     info.width = 1.0f; // need to tune this based on the 3D model size
     info.length = 1.0f; // need to tune this based on the 3D model size
+	info.modelType = GRANDSTAND_INDEX;
+	info.modelIndex = 0; // Default to the first model in the list
 
     modelList = {
-        "/3dModels/grandStand.obj",
-        "/3dModels/grandStandCovered.obj",
-        "/3dModels/grandStandAwning.obj",
-		"/3dModels/grandStandRound.obj",
-		"/3dModels/grandStandCoveredRound.obj"
+        "/3dModels/dae/grandStand.dae",
+        "/3dModels/dae/grandStandCovered.dae",
+        "/3dModels/dae/grandStandAwning.dae",
+        "/3dModels/dae/grandStandRound.dae",
+        "/3dModels/dae/grandStandCoveredRound.dae"
     };
     info.modelPath = modelList[0]; // Default to the first model for the garage
 }
@@ -405,20 +438,44 @@ void Grandstand::selectModel(int modelNum)
 	//Model selection based on the provided model number. If the number is out of range, it defaults to the first model.
     if (modelNum >= 0 && modelNum < (int)modelList.size()) {
         info.modelPath = modelList[modelNum];
+		info.modelIndex = modelNum;
     }
     else {
         qDebug() << "Invalid model number for grandstand: " << modelNum;
         info.modelPath = modelList[0]; // Set to empty or a default model
-        modelNum = 0; // Default to first model if invalid
+        info.modelIndex = 0; // Default to first model if invalid
     }
-
-	if (modelNum == 3 || modelNum == 4) {
-        info.width = 1.64f; // Adjust width for rounded models
-        info.length = 1.64f; // Adjust length for rounded models
-    }
-    else {
-        info.width = 1.0f; // Adjust width for other models
-        info.length = 1.0f; // Adjust length for other models
+    switch (info.modelIndex) {
+        case 0: // grandStand.obj
+            info.width = 1.0f; // Adjust width for this model
+			info.height = 0.9f; // Adjust height for this model
+            info.length = 1.0f; // Adjust length for this model
+            break;
+        case 1: // grandStandCovered.obj
+            info.width = 1.0f; // Adjust width for this model
+            info.height = 1.19f; // Adjust height for this model
+            info.length = 1.02f; // Adjust length for this model
+            break;
+        case 2: // grandStandAwning.obj
+            info.width = 1.0f; // Adjust width for this model
+            info.height = 1.39f; // Adjust height for this model
+            info.length = 1.0f; // Adjust length for this modell
+            break;
+        case 3: // grandStandRound.obj
+            info.width = 1.64f; // Adjust width for this model
+            info.height = 0.9f; // Adjust height for this model
+            info.length = 1.64f; // Adjust length for this model
+            break;
+        case 4: // grandStandCoveredRound.obj
+            info.width = 1.64f; // Adjust width for this model
+            info.height = 1.19f; // Adjust height for this model
+            info.length = 1.64f; // Adjust length for this model
+            break;
+        default:
+			info.width = 1.0f; // Default width
+			info.height = 0.9f; // Default height
+			info.length = 1.0f; // Default length
+            break;
     }
 
 }
@@ -427,16 +484,19 @@ Garage::Garage(QVector2D p, float a)
 {
     info.pos = p;
     info.angle = a;
-    info.width = 1.0f; // need to tune this based on the 3D model size
-    info.length = 1.0f; // need to tune this based on the 3D model size
+    info.width = 1.0f;
+    info.height = 0.7f;
+    info.length = 1.1f;
+	info.modelType = GARAGE_INDEX;
+	info.modelIndex = 0; // Default to the first model in the list
+    
 
     modelList = {
-        "/3dModels/pitsGarage.obj",
-        "/3dModels/pitsGarageClosed.obj",
-        "/3dModels/pitsGarageCorner.obj"
+        "/3dModels/dae/pitsGarage.dae",
+        "/3dModels/dae/pitsGarageClosed.dae",
+        "/3dModels/dae/pitsGarageCorner.dae"
     };
     info.modelPath = modelList[0]; // Default to the first model for the garage
-	
 }
 
 void Garage::selectModel(int modelNum)
@@ -444,11 +504,35 @@ void Garage::selectModel(int modelNum)
     //Model selection based on the provided model number. If the number is out of range, it defaults to the first model.
     if (modelNum >= 0 && modelNum < (int)modelList.size()) {
         info.modelPath = modelList[modelNum];
+		info.modelIndex = modelNum;
     }
     else {
         qDebug() << "Invalid model number for grandstand: " << modelNum;
         info.modelPath = modelList[0]; // Set to empty or a default model
-        modelNum = 0; // Default to first model if invalid
+        info.modelIndex = 0; // Default to first model if invalid
+    }
+
+    switch (info.modelIndex) {
+    case 0: // pitsGarage.obj
+        info.width = 1.0f; // Adjust width for this model
+        info.height = 0.7f; // Adjust height for this model
+        info.length = 1.1f; // Adjust length for this model
+        break;
+    case 1: // pitsGarageClosed.obj
+        info.width = 1.0f; // Adjust width for this model
+        info.height = 1.7f; // Adjust height for this model
+        info.length = 1.1f; // Adjust length for this model
+        break;
+    case 2: // pitsGarageCorner.obj
+        info.width = 1.05f; // Adjust width for this model
+        info.height = 1.7f; // Adjust height for this model
+        info.length = 1.0f; // Adjust length for this modell
+        break;
+    default:
+        info.width = 1.0f; // Default width
+        info.height = 0.7f; // Default height
+        info.length = 1.1f; // Default length
+        break;
     }
 
 }
@@ -458,18 +542,20 @@ TREES::TREES(QVector2D p, float a)
     info.angle = a;
     info.width = 0.25f; // need to tune this based on the 3D model size
     info.length = 0.29f; // need to tune this based on the 3D model size
+	info.modelType = TREES_INDEX;
+	info.modelIndex = 0; // Default to the first model in the list
 
     modelList = {
-        "/3dModels/treeSmall.obj",
-        "/3dModels/treeLarge.obj"
+        "/3dModels/dae/treeSmall.dae",
+        "/3dModels/dae/treeLarge.dae"
     };
     info.modelPath = modelList[0]; // Default to the first model for the garage
 }
 
 void TREES::randomModel()
 {
-    int modelNum = rand() % modelList.size();
-    info.modelPath = modelList[modelNum];
+    info.modelIndex = rand() % modelList.size();
+	selectModel(info.modelIndex);
 }
 
 void TREES::selectModel(int modelNum)
@@ -477,19 +563,22 @@ void TREES::selectModel(int modelNum)
     //Model selection based on the provided model number. If the number is out of range, it defaults to the first model.
     if (modelNum >= 0 && modelNum < (int)modelList.size()) {
         info.modelPath = modelList[modelNum];
+		info.modelIndex = modelNum;
     }
     else {
         qDebug() << "Invalid model number for grandstand: " << modelNum;
         info.modelPath = modelList[0]; // Set to empty or a default model
-		modelNum = 0; // Default to first model if invalid
+		info.modelIndex = 0; // Default to first model if invalid
     }
-    if (modelNum == 0) {
+    if (info.modelIndex == 0) {
         info.width = 0.25f; // Adjust width for rounded models
         info.length = 0.29f; // Adjust length for rounded models
+		info.height = 1.07f; // Adjust height for rounded models
     }
     else {
         info.width = 0.36f; // Adjust width for other models
         info.length = 0.41f; // Adjust length for other models
+		info.height = 1.51f; // Adjust height for other models
     }
 
 }
@@ -658,6 +747,11 @@ bool Track::saveToFile(const std::string& filename) const
     for (int pieceId : piecesIntList) {
         file << pieceId << "\n";
     }
+	// Write decors list
+	file << "DECORS " << decors.size() << "\n";
+	for (const auto& decor : decors) {
+		file << decor->getInfo().modelType << " " << decor->getInfo().modelIndex << " " << decor->getInfo().pos.x() << " " << decor->getInfo().pos.y() << " " << decor->getInfo().angle << "\n";
+	}
 
     // Optional: Write centerline for verification
     file << "CENTERLINE " << centerLine.size() << "\n";
@@ -692,6 +786,7 @@ bool Track::loadFromFile(const std::string& filename)
     std::string line;
     std::vector<int> loadedPiecesInt;
 	std::vector<TrackPieces*> loadedPieces;
+	std::vector<DecorPieces*> loadedDecors;
     float loadedTrackWidth = 40;
     float loadedStartAngle = 0;
 
@@ -717,13 +812,13 @@ bool Track::loadFromFile(const std::string& filename)
             int count;
             iss >> count;
             loadedPiecesInt.clear();
-			loadedPieces.clear();
+            loadedPieces.clear();
             for (int i = 0; i < count; i++) {
                 std::getline(file, line);
-				// Convert piece ID from string to int and store
+                // Convert piece ID from string to int and store
                 int pieceId = std::stoi(line);
                 loadedPiecesInt.push_back(pieceId);
-				
+
                 TrackPieces* piece = nullptr;;
                 switch (pieceId) {
                 case VIRAGE_45RIGHT:
@@ -745,8 +840,43 @@ bool Track::loadFromFile(const std::string& filename)
                     piece = new StartLine();
                     break;
                 };
-				loadedPieces.push_back(piece);
+                loadedPieces.push_back(piece);
             }
+        }
+        else if (command == "DECORS") {
+
+            int count;
+            iss >> count;
+            for (int i = 0; i < count; i++) {
+                std::getline(file, line);
+                std::istringstream decorIss(line);
+                int decorType, decorIndex;
+                float posX, posY, angle;
+                decorIss >> decorType >> decorIndex >> posX >> posY >> angle;
+                DecorPieces* decor = nullptr;
+                switch (decorType) {
+                    case GRANDSTAND_INDEX:
+                        decor = new Grandstand(QVector2D(posX, posY), angle);
+                        break;
+                    case GARAGE_INDEX:
+                        decor = new Garage(QVector2D(posX, posY), angle);
+                        break;
+                    case TREES_INDEX:
+                        decor = new TREES(QVector2D(posX, posY), angle);
+                        break;
+                    //case NOSPECIFICDECOR_INDEX:
+                    //    decor = new NoSpecificDecor(QVector2D(posX, posY), angle);
+                    //    break;
+                    default:
+                        qDebug() << "Invalid decor type in file: " << decorType;
+                        continue; // skip invalid decor
+                }
+                if (decor) {
+                    decor->selectModel(decorIndex); // set the specific model based on index
+                    loadedDecors.push_back(decor);
+                }
+			}
+        
         }
         else if (command == "CENTERLINE" || command == "LEFT_EDGE" || command == "RIGHT_EDGE") {
             // Skip these sections - we'll regenerate from pieces
@@ -768,6 +898,7 @@ bool Track::loadFromFile(const std::string& filename)
     // Reconstruct the track from loaded pieces
     piecesIntList = loadedPiecesInt;
     pieces = loadedPieces;
+	decors = loadedDecors;
     trackWidth = loadedTrackWidth;
     startAngle = loadedStartAngle;
     currentAngle = startAngle;

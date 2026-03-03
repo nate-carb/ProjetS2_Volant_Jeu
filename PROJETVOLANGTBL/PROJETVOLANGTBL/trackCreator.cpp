@@ -77,8 +77,19 @@ void TrackCreator::addPiece(int pieceType)
     // Add piece to list
     piecesList.push_back(pieceType);
 
+	
     // Rebuild track with new piece
     rebuildTrack();
+}
+
+
+
+void TrackCreator::addDecor(int decor, int variant)
+{
+	currentTrack.addDecor(decor, variant);
+	update();
+    //// Rebuild track with new decor
+    //rebuildTrack();
 }
 
 void TrackCreator::clearTrack()
@@ -90,12 +101,19 @@ void TrackCreator::clearTrack()
 
 void TrackCreator::rebuildTrack()
 {
+    // Save decors before rebuilding - they belong to the layout, not the track geometry
+    std::vector<DecorPieces*> savedDecors = currentTrack.getDecors();
+
     if (piecesList.empty()) {
         currentTrack = Track();
     }
     else {
         currentTrack = Track(piecesList);
     }
+
+    // Restore decors after rebuild
+    for (DecorPieces* d : savedDecors)
+        currentTrack.addDecorDirect(d);
 
     emit trackUpdated(currentTrack);
     update();
@@ -227,7 +245,7 @@ void TrackCreator::drawTrack(QPainter& painter)
         //painter.drawLine(worldToScreen(currentTrack.getCenterLine()[currentTrack.getPitEndIndex()]),
         //    worldToScreen(pit.exitPoint));
     }
-
+	drawDecors(painter);
     drawCar(painter);
     // Draw start position (green circle)
     QPointF startScreen = worldToScreen(QVector2D(0, 0));
@@ -255,6 +273,77 @@ void TrackCreator::drawCar(QPainter& painter) {
     painter.drawEllipse(screenPos, 8, 8); //painter.drawEllipse(QPointF(carPos.x(), carPos.y()), 8, 8);
 }
 
+// Draw decors on the track (grandstands, trees, etc.)
+void TrackCreator::drawDecors(QPainter& painter)
+{
+    for (int d = 0; d < (int)currentTrack.getDecors().size(); d++) {
+        DecorPieces* decor = currentTrack.getDecors()[d];
+        if (!decor) continue;
+
+        QPointF dScreenPos = worldToScreen(decor->getInfo().pos);
+        float   angle = decor->getInfo().angle;
+        int modelType = decor->getInfo().modelType;
+
+        // Pick color and label by model type
+        QColor  decorColor;
+        QString label;
+        if (modelType == GRANDSTAND_INDEX) {
+            decorColor = QColor(128, 0, 128); label = "GS";
+			qDebug() << "(drawDecor) Grandstand decor at" << decor->getInfo().pos;
+        }
+        else if (modelType == GARAGE_INDEX) {
+            decorColor = QColor(139, 69, 19); label = "GAR";
+        }
+        else if (modelType == TREES_INDEX) {
+            decorColor = QColor(34, 139, 34);  label = "TRE";
+        }
+        else {
+            decorColor = QColor(128, 128, 128); label = "?";
+			qDebug() << "(drawDecor) Unknown decor type" << modelType << "at" << decor->getInfo().pos;
+        }
+
+        float w = decor->getInfo().width * zoom * decor->getInfo().scale;
+        float h = decor->getInfo().length * zoom * decor->getInfo().scale;
+
+        // Highlight selected decor with yellow border
+        bool isSelected = (d == selectedDecorIndex);
+
+        painter.save();
+        painter.translate(dScreenPos);
+        painter.rotate(qRadiansToDegrees(angle));
+
+        painter.setBrush(QBrush(decorColor));
+        painter.setPen(isSelected
+            ? QPen(Qt::yellow, 3)
+            : QPen(decorColor.darker(150), 1));
+        painter.drawRect(-w / 2, -h / 2, w, h);
+
+        painter.setPen(Qt::white);
+        painter.setFont(QFont("Arial", 8, QFont::Bold));
+        painter.drawText(QRectF(-w / 2, -h / 2, w, h), Qt::AlignCenter, label);
+
+        painter.restore();
+
+        // Dotted line to nearest centerline point
+        painter.setPen(QPen(decorColor, 1, Qt::DotLine));
+        painter.drawLine(dScreenPos,
+            worldToScreen(currentTrack.getCenterLine()[
+                findNearestCenterLineIndex(decor->getInfo().pos)]));
+    }
+}
+
+// Helper to find nearest centerline point to a position
+int TrackCreator::findNearestCenterLineIndex(QVector2D pos)
+{
+    const auto& cl = currentTrack.getCenterLine();
+    int nearest = 0;
+    float minDist = std::numeric_limits<float>::max();
+    for (int i = 0; i < (int)cl.size(); i++) {
+        float d = (cl[i] - pos).length();
+        if (d < minDist) { minDist = d; nearest = i; }
+    }
+    return nearest;
+}
 void TrackCreator::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
@@ -278,28 +367,49 @@ void TrackCreator::paintEvent(QPaintEvent* event)
 
 void TrackCreator::mousePressEvent(QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton && !dragging) {
+    if (event->button() == Qt::LeftButton) {
         QVector2D mousePos(event->pos());
-        QVector2D carScreenPos = QVector2D(worldToScreen(carPos));
 
-        float distance = (mousePos - carScreenPos).length();
+        // ── Check decors first ───────────────────────────────
+        for (int d = 0; d < (int)currentTrack.getDecors().size(); d++) {
+            DecorPieces* decor = currentTrack.getDecors()[d];
+            QPointF screenPos = worldToScreen(decor->getInfo().pos);
+            float dist = QVector2D(
+                event->pos().x() - screenPos.x(),
+                event->pos().y() - screenPos.y()).length();
+            float hitRadius = qMax(
+                decor->getInfo().width * zoom * decor->getInfo().scale,
+                decor->getInfo().length * zoom * decor->getInfo().scale);
 
-        if (distance <= carRadius)
-        {
-            draggingCar = true;
-            // Store offset in world coordinates
-            dragOffset = carPos - screenToWorld(event->pos());
+            if (dist < hitRadius) {
+                selectedDecorIndex = d;
+                isDraggingDecor = true;
+                update();
+                return; // decor hit - don't pan or drag car
+            }
         }
-        else
-        {
+
+        // ── Check car ────────────────────────────────────────
+        QVector2D carScreenPos = QVector2D(worldToScreen(carPos));
+        float carDist = (mousePos - carScreenPos).length();
+        if (carDist <= carRadius) {
+            draggingCar = true;
+            dragOffset = carPos - screenToWorld(event->pos());
+            return; // car hit - don't pan
+        }
+
+        // ── Nothing hit - pan the view ───────────────────────
+        if (!dragging) {
             dragging = true;
             lastMousePos = event->pos();
         }
     }
-    if (event->button() == Qt::RightButton && dragging) {
+
+    if (event->button() == Qt::RightButton) {
         dragging = false;
+        selectedDecorIndex = -1;
+        update();
     }
-    
 }
 
 void TrackCreator::mouseReleaseEvent(QMouseEvent* event)
@@ -308,6 +418,7 @@ void TrackCreator::mouseReleaseEvent(QMouseEvent* event)
         dragging = false;
     }
 	draggingCar = false;
+    isDraggingDecor = false;
 }
 
 void TrackCreator::mouseMoveEvent(QMouseEvent* event)
@@ -322,6 +433,11 @@ void TrackCreator::mouseMoveEvent(QMouseEvent* event)
         QPoint delta = event->pos() - lastMousePos;
         offset += QPointF(delta.x() / zoom, delta.y() / zoom);
         lastMousePos = event->pos();
+        update();
+    }
+    if (isDraggingDecor && selectedDecorIndex >= 0) {
+        currentTrack.getDecors()[selectedDecorIndex]->setPos(
+            screenToWorld(event->pos()));
         update();
     }
 }

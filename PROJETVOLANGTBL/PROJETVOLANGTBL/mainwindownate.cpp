@@ -28,7 +28,8 @@ MainWindow::MainWindow(QWidget* parent)
 	//track = Track();
 	//track.loadFromFile("tracks/defaultTrack1.trk");
     track = new Track();       // assigns to the MEMBER pointer
-    track->loadFromFile("tracks/test_pit.trk");
+    track->loadFromFile("tracks/track3dmodelV1.trk");
+    //track->loadFromFile("tracks/test_pit.trk");
     // Vérifier si ça a marché
     if (image.isNull()) {
         qDebug() << "ERREUR: Image non chargée!";

@@ -15,7 +15,9 @@
 #include <QVector3D>
 #include <QVector>
 #include <Qt3DRender/QMesh>
-
+#include <Qt3DExtras/QSkyboxEntity>
+#include <Qt3DRender/QCullFace>
+#include <Qt3DRender/QGeometryRenderer>
 #include "Track.h"
 #include "Vehicule.h"
 
@@ -49,6 +51,10 @@ private:
     Qt3DExtras::QFirstPersonCameraController* m_fpController = nullptr;
     bool m_firstPersonMode = true;
 
+	// Skybox
+    Qt3DExtras::QSkyboxEntity* m_skybox = nullptr;
+    Qt3DCore::QTransform* m_skyTransform = nullptr;
+    
     // Track mesh entity
     Qt3DCore::QEntity* m_trackEntity = nullptr;
 
@@ -60,15 +66,18 @@ private:
     Qt3DCore::QEntity* m_groundEntity = nullptr;
 
 	// Decor entity (for 3D model)
-	Qt3DCore::QEntity* m_decorEntity = nullptr;
+    QVector<Qt3DCore::QEntity*> m_decorEntities;
 	//Qt3DCore::QTransform* m_decorTransform = nullptr;
 
     // Internal helpers
     void buildScene();
+    void buildSkybox();
     void buildTrackMesh(Track* track);
     void buildCar();
-    void buildDecor();
+    void buildDecors(Track* track);
     void buildGround();
+    
+    
 
     Qt3DCore::QEntity* createBox(Qt3DCore::QEntity* parent,
         QVector3D size,

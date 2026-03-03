@@ -5,16 +5,22 @@
 #include <iostream>
 #include <qvector2d.h>
 
+//Track.h - Defines the Track class and related structures for representing a racing track, its pieces, and decor elements.
 #define VIRAGE_45RIGHT 1
 #define VIRAGE_45LEFT 2
 #define VIRAGE_90RIGHT 3
 #define VIRAGE_90LEFT 4
 #define STRAIGHT 5
 #define STARTLINE 6
-#define GARAGE 7
+//#define GARAGE 7
 #define PIT 8
-#define GRANDSTAND 9
-#define BRIDGES 10
+//#define GRANDSTAND 9
+//#define BRIDGES 10
+// DECORS IDs
+#define GARAGE_INDEX 1
+#define GRANDSTAND_INDEX 2
+#define TREES_INDEX 3
+#define NOSPECIFICDECOR_INDEX 4
 // * ----------------------------------------------------------
 // *  Stuctures 
 // *-----------------------------------------------------------
@@ -134,10 +140,14 @@ class Pit : public TrackPieces
 struct DecorsInfo {
 	float angle;
 	QVector2D pos;
-	float scale = 1.0f;
-	float width;
-	float length;
+	float scale;
+	float width; //in 2D and 3D x direction
+	float height; //not use in 2D, in 3D y direction
+	float length; //in 2D y direction, in 3D z direction
 	QString modelPath;
+	int modelType; // e.g., GARAGE, GRANDSTAND, TREES, NOSPECIFICDECOR
+	int modelIndex; // index in the model list for this decor type
+
 
 };
 
@@ -146,13 +156,8 @@ class DecorPieces
 	public:
 		DecorPieces();
 		virtual ~DecorPieces();
-		QVector2D getPos() { return info.pos; };
-		void setPos(QVector2D p) { info.pos = p; };
-		float getAngle() { return info.angle; };
-		void setAngle(float a) { info.angle = a; };
-		float getWidth() { return info.width; };
-		float getLength() { return info.length; };
-
+		DecorsInfo getInfo() { return info; };
+		void setPos(QVector2D p) { info.pos = p; }
 		// For model loading
 		QString getModelPath() { return info.modelPath; };
 		
@@ -232,7 +237,8 @@ public:
 
 	// decor related functions
 	std::vector<DecorPieces*> getDecors() const { return decors; };
-	void addDecor(DecorPieces* decor) { decors.push_back(decor); };
+	void addDecor(int decorType, int decorIndexList); // decorType is the type of decor (e.g., GARAGE_INDEX, GRANDSTAND_INDEX, TREES_INDEX), decorIndexList is the index in the corresponding model list for that decor type
+	void addDecorDirect(DecorPieces* d) { if (d) decors.push_back(d); }
 
 private:
 	std::vector<TrackPieces*> pieces;

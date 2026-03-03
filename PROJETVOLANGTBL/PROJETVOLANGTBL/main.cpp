@@ -7,6 +7,8 @@
 #include <QDebug>
 #include <chrono>
 #include <QTimer>
+#include <QPluginLoader>
+#include <QDir>
 #include "mainwindownate.h"
 #include "mainWindowCreator.h"
 #include "mainWindowView.h"
@@ -168,6 +170,18 @@ int main(int argc, char* argv[])
 }*/
 int main(int argc, char* argv[])
 {
+    // Force OpenGL backend - fixes QSkyboxEntity cubemap issues with D3D11
+    qputenv("QT3D_RENDERER", "opengl");
+    
+    // In buildDecors() or main():
+    qDebug() << "Scene parsers:" <<
+        QPluginLoader::staticInstances();
+
+    // Also check the plugins folder directly:
+    QDir pluginDir(QCoreApplication::applicationDirPath() + "/sceneparsers");
+    qDebug() << "Sceneparsers folder exists:" << pluginDir.exists();
+    qDebug() << "Sceneparsers files:" << pluginDir.entryList();
+
     QApplication app(argc, argv);
 
     // Create 3D viewer

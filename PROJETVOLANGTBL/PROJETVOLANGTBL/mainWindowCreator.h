@@ -9,6 +9,7 @@
 #include <QGroupBox>
 #include <QMenu>
 #include <QToolButton>
+#include <QComboBox>
 #include "track3DViewer.h"
 #include "TrackCreator.h"
 #include "Track.h"
@@ -26,6 +27,7 @@ public:
 
 private slots:
     void onAddPiece(int pieceType);
+    void onAddDecor(int decorType, int variant);
     void onUndo();
     void onClear();
     void onSave();

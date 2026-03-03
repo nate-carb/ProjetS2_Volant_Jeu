@@ -14,12 +14,18 @@ public:
     void setTrack(const Track& track);
     void updateTrack(const Track& track);
     void addPiece(int pieceType);  // Add new piece to track
+
+	void addDecor(int decor, int variant);// Add new decor piece to track
+    int  findNearestCenterLineIndex(QVector2D pos);
+
     void clearTrack();              // Clear and start over
     Track getCurrentTrack() const { return currentTrack; }
     void loadTrack(const Track& track);
     std::vector<int> getPiecesList() const { return piecesList; }\
 
+
 	QVector2D getCarPos() const { return carPos; }
+    
     
 
 signals:
@@ -35,7 +41,9 @@ protected:
 private:
     Track currentTrack;
     std::vector<int> piecesList;  // Track the pieces added
+	//std::vector<int> decorsList;  // Track the decors added
     void drawCar(QPainter& painter);
+    void drawDecors(QPainter& painter);
     // Camera/view controls
     double zoom;
     QPointF offset;
@@ -57,5 +65,8 @@ private:
     bool draggingCar = false;
     float carRadius = 4.0f;
 
-    QVector2D dragOffset;  
+    QVector2D dragOffset;
+	//decor movement
+    int  selectedDecorIndex = -1;
+    bool isDraggingDecor = false;
 };

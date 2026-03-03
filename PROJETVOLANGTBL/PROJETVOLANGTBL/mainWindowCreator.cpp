@@ -116,30 +116,64 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     connect(right90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90RIGHT); });
     layout->addWidget(right90Btn);
 
+    // 90 Right
+    QPushButton* pitBtn = new QPushButton("Pit", this);
+    pitBtn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
+    connect(pitBtn, &QPushButton::clicked, [this]() { onAddPiece(PIT); });
+    layout->addWidget(pitBtn);
 
-    // Decors
-    QPushButton* decorsBtn = new QPushButton("Add Decor piece", this);
-    decorsBtn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
-    connect(decorsBtn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90RIGHT); });
-    layout->addWidget(decorsBtn);
+    // ── Decor dropdown ──────────────────────────────────────────
+    // Separator label
+    QLabel* decorLabel = new QLabel("── Decors ──", this);
+    decorLabel->setAlignment(Qt::AlignCenter);
+    decorLabel->setStyleSheet("color: #aaa; font-size: 11px;");
+    layout->addWidget(decorLabel);
 
-    // In your mainwindow.cpp, where you set up your toolbar/buttons
+    // Grandstand submenu
+    QComboBox* grandstandCombo = new QComboBox(this);
+    grandstandCombo->addItem("Grandstand (Open)");         // index 0
+    grandstandCombo->addItem("Grandstand (Covered)");      // index 1
+    grandstandCombo->addItem("Grandstand (Awning)");       // index 2
+    grandstandCombo->addItem("Grandstand (Round)");        // index 3
+    grandstandCombo->addItem("Grandstand (Covered Round)");// index 4
+    grandstandCombo->setStyleSheet("padding: 4px;");
+    layout->addWidget(grandstandCombo);
 
-// Create the dropdown menu
-    QMenu* decorMenu = new QMenu(this);
-    decorMenu->addAction("Garage", this, [this]() { onAddPiece(GARAGE); });
-    decorMenu->addAction("Pit", this, [this]() { onAddPiece(PIT); });
-    decorMenu->addAction("Grandstand", this, [this]() { onAddPiece(GRANDSTAND); });
-    decorMenu->addAction("Bridges", this, [this]() { onAddPiece(BRIDGES); });
+    QPushButton* addGrandstandBtn = new QPushButton("Add Grandstand", this);
+    addGrandstandBtn->setStyleSheet("QPushButton { background-color: #9C27B0; color: white; padding: 8px; }");
+    connect(addGrandstandBtn, &QPushButton::clicked, [this, grandstandCombo]() {
+        onAddDecor(GRANDSTAND_INDEX, grandstandCombo->currentIndex());
+        });
+    layout->addWidget(addGrandstandBtn);
 
-    // Create a tool button with dropdown arrow
-    QToolButton* decorDropdown = new QToolButton(this);
-    decorDropdown->setText("▼ ");
-    decorDropdown->setMenu(decorMenu);
-    decorDropdown->setPopupMode(QToolButton::InstantPopup); // click = open menu directly
+    // Garage submenu
+    QComboBox* garageCombo = new QComboBox(this);
+    garageCombo->addItem("Garage (Open)");    // index 0
+    garageCombo->addItem("Garage (Closed)");  // index 1
+    garageCombo->addItem("Garage (Corner)");  // index 2
+    garageCombo->setStyleSheet("padding: 4px;");
+    layout->addWidget(garageCombo);
 
-    // Add it to your layout just before the decor button
-    layout->addWidget(decorDropdown);
+    QPushButton* addGarageBtn = new QPushButton("Add Garage", this);
+    addGarageBtn->setStyleSheet("QPushButton { background-color: #795548; color: white; padding: 8px; }");
+    connect(addGarageBtn, &QPushButton::clicked, [this, garageCombo]() {
+        onAddDecor(GARAGE_INDEX, garageCombo->currentIndex());
+        });
+    layout->addWidget(addGarageBtn);
+
+    // Trees submenu
+    QComboBox* treesCombo = new QComboBox(this);
+    treesCombo->addItem("Tree (Small)"); // index 0
+    treesCombo->addItem("Tree (Large)"); // index 1
+    treesCombo->setStyleSheet("padding: 4px;");
+    layout->addWidget(treesCombo);
+
+    QPushButton* addTreeBtn = new QPushButton("Add Tree", this);
+    addTreeBtn->setStyleSheet("QPushButton { background-color: #388E3C; color: white; padding: 8px; }");
+    connect(addTreeBtn, &QPushButton::clicked, [this, treesCombo]() {
+        onAddDecor(TREES_INDEX, treesCombo->currentIndex());
+        });
+    layout->addWidget(addTreeBtn);
 }
 
 void MainWindowCreator::onAddPiece(int pieceType)
@@ -149,6 +183,11 @@ void MainWindowCreator::onAddPiece(int pieceType)
     trackCreator->addPiece(pieceType);
 }
 
+void MainWindowCreator::onAddDecor(int decorType, int variant)
+{
+    qDebug() << "Adding decor type:" << decorType << "variant:" << variant;  // Debug output
+    trackCreator->addDecor(decorType, variant);
+}
 
 void MainWindowCreator::onUndo()
 {
