@@ -73,21 +73,45 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
         -qRadiansToDegrees(angle));
     m_carTransform->setRotation(rot);
 
-    // Camera is calculated SEPARATELY and never touches m_carTransform
+    // ── Smooth camera angle with lag ─────────────────────────
     if (m_firstPersonMode && m_camera) {
+
+        // ── Smooth camera angle with lag ─────────────────────────
+        float targetYaw = -qRadiansToDegrees(angle);
+
+        // Normalize targetYaw to -180..180 range
+        while (targetYaw > 180.0f) targetYaw -= 360.0f;
+        while (targetYaw < -180.0f) targetYaw += 360.0f;
+
+        // Normalize m_cameraYaw to -180..180 range
+        while (m_cameraYaw > 180.0f) m_cameraYaw -= 360.0f;
+        while (m_cameraYaw < -180.0f) m_cameraYaw += 360.0f;
+
+        // Handle wrap-around difference
+        float diff = targetYaw - m_cameraYaw;
+        while (diff > 180.0f) diff -= 360.0f;
+        while (diff < -180.0f) diff += 360.0f;
+
+        // Smooth lerp
+        m_cameraYaw += diff * (1.0f - m_cameraLag);
+
+        // Convert smoothed yaw back to radians for position calculation
+        float smoothAngle = qDegreesToRadians(-m_cameraYaw);
+
+        // Camera position behind and above the car
         float camOffsetBack = 20.0f;
         float camHeight = 15.0f;
 
-        float camX = x - camOffsetBack * qCos(angle);
-        float camZ = y - camOffsetBack * qSin(angle);
+        float camX = x - camOffsetBack * qCos(smoothAngle);
+        float camZ = y - camOffsetBack * qSin(smoothAngle);
 
-        float lookX = x + 30.0f * qCos(angle);
-        float lookZ = y + 30.0f * qSin(angle);
+        // Look ahead of the car
+        float lookX = x + 30.0f * qCos(smoothAngle);
+        float lookZ = y + 30.0f * qSin(smoothAngle);
 
         m_camera->setPosition(QVector3D(camX, camHeight, camZ));
         m_camera->setViewCenter(QVector3D(lookX, 5.0f, lookZ));
         m_camera->setUpVector(QVector3D(0, 1, 0));
-        
     }
     
     
@@ -126,29 +150,29 @@ void Track3DViewer::buildScene()
     m_orbitController->setLookSpeed(180.0f);
     m_orbitController->setEnabled(!m_firstPersonMode);
 
-    // ── Directional light (sun) ──────────────────────────────
-    Qt3DCore::QEntity* lightEntity = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DRender::QDirectionalLight* light = new Qt3DRender::QDirectionalLight(lightEntity);
-    light->setColor(Qt::white);
-    light->setIntensity(0.7f);
-    light->setWorldDirection(QVector3D(-0.5f, -1.0f, -0.3f));
-    lightEntity->addComponent(light);
+    // ── Key light (sun) - top right front ────────────────────
+    Qt3DCore::QEntity* keyEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* keyLight = new Qt3DRender::QDirectionalLight(keyEntity);
+    keyLight->setColor(QColor(255, 250, 240)); // warm white
+    keyLight->setIntensity(0.6f);
+    keyLight->setWorldDirection(QVector3D(-1.0f, -1.0f, 0.0).normalized());
+    keyEntity->addComponent(keyLight);
 
-    // ── Second fill light from the opposite side ───────
-    Qt3DCore::QEntity* fillLightEntity = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DRender::QDirectionalLight* fillLight = new Qt3DRender::QDirectionalLight(fillLightEntity);
-    fillLight->setColor(Qt::white);
-    fillLight->setIntensity(0.4f);          // softer fill
-    fillLight->setWorldDirection(QVector3D(0.3f, -0.5f, 0.3f)); // opposite direction
-    fillLightEntity->addComponent(fillLight);
+    // ── Fill light - top left back ────────────────────────────
+    Qt3DCore::QEntity* fillEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* fillLight = new Qt3DRender::QDirectionalLight(fillEntity);
+    fillLight->setColor(QColor(150, 170, 255)); // cool blue fill
+    fillLight->setIntensity(0.3f);
+    fillLight->setWorldDirection(QVector3D(1.0f, -0.5f, 1.0f).normalized());
+    fillEntity->addComponent(fillLight);
 
-    // ── Ambient light to lift the shadows ────────────────────
-    Qt3DCore::QEntity* ambientEntity = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DRender::QDirectionalLight* ambientLight = new Qt3DRender::QDirectionalLight(ambientEntity);
-    ambientLight->setColor(QColor(180, 180, 180)); // soft grey
-    ambientLight->setIntensity(0.8f);
-    ambientLight->setWorldDirection(QVector3D(0.0f, -1.0f, 0.0f));
-    ambientEntity->addComponent(ambientLight);
+    // ── Back light - bottom up ────────────────────────────────
+    Qt3DCore::QEntity* backEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* backLight = new Qt3DRender::QDirectionalLight(backEntity);
+    backLight->setColor(QColor(200, 200, 200)); // neutral grey
+    backLight->setIntensity(0.2f);
+    backLight->setWorldDirection(QVector3D(0.0f, 1.0f, 0.0f).normalized()); // from below
+    backEntity->addComponent(backLight);
 
     // ── Car placeholder ──────────────────────────────────────
     buildCar();
@@ -304,9 +328,10 @@ void Track3DViewer::buildTrackMesh(Track* track)
 
     // Material – grey tarmac colour
     Qt3DExtras::QPhongMaterial* material = new Qt3DExtras::QPhongMaterial(m_trackEntity);
-    material->setDiffuse(QColor(60, 60, 60));    // dark grey = tarmac
-	material->setAmbient(QColor(40, 40, 40)); // ambient is usually darker than diffuse
-    material->setShininess(5.0f);
+    //material->setDiffuse(QColor(60, 60, 60));    // dark grey = tarmac
+    material->setDiffuse(QColor(241, 242, 246));  // Kenney's exact grey
+	material->setAmbient(QColor(0, 0, 0)); // ambient is usually darker than diffuse
+    material->setShininess(0.0f);
 
 	m_trackEntity->addComponent(renderer); // add the geometry renderer to the entity
 	m_trackEntity->addComponent(material); // add the material to the entity
@@ -549,8 +574,8 @@ void Track3DViewer::buildTrackMesh(Track* track)
 
             Qt3DExtras::QPhongMaterial* mat = new Qt3DExtras::QPhongMaterial(pitEntity);
             mat->setDiffuse(color);
-            mat->setAmbient(color.darker(150));
-            mat->setShininess(5.0f);
+            mat->setAmbient(QColor(0,0,0));
+            mat->setShininess(0.0f);
 
             pitEntity->addComponent(pitRenderer);
             pitEntity->addComponent(mat);
@@ -587,7 +612,8 @@ void Track3DViewer::buildTrackMesh(Track* track)
         }
 
         // ── Single mesh - no z-fighting, no gaps ────────────────────
-        buildPitMesh(fullLeft, fullRight, QColor(60, 60, 60));
+        //buildPitMesh(fullLeft, fullRight, QColor(60, 60, 60));
+		buildPitMesh(fullLeft, fullRight, QColor(241, 242, 246)); // Kenney's exact grey
         //material->setDiffuse(QColor(60, 60, 60));    // dark grey = tarmac
         //material->setAmbient(QColor(40, 40, 40)); // ambient is usually darker than diffuse
         //material->setShininess(5.0f);
@@ -629,10 +655,11 @@ void Track3DViewer::buildGround()
 
 	//  Material with green colour for grass
     Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
-    grassMat->setDiffuse(QColor(60, 140, 60));   // green grass
+    grassMat->setDiffuse(QColor(119, 171, 86));   // Kenney's signature green
     grassMat->setAmbient(QColor(30, 80, 30));
     grassMat->setShininess(0.0f);
 
+	
     // QPlaneMesh is in XZ plane by default, centred at origin – perfect
     Qt3DCore::QTransform* groundTransform = new Qt3DCore::QTransform(m_groundEntity);
 	groundTransform->setTranslation(QVector3D(0, -1.0f, 0)); // slightly below track to avoid z-fighting with track surface

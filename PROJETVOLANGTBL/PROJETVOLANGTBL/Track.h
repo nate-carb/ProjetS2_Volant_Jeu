@@ -202,6 +202,7 @@ class NoSpecificDecor : public DecorPieces
 {
 	public:
 		NoSpecificDecor(QVector2D positon, float angle);
+		void selectModel(int modelNum);
 };
 
 class Track

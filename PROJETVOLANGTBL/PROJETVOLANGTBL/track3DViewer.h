@@ -18,6 +18,9 @@
 #include <Qt3DExtras/QSkyboxEntity>
 #include <Qt3DRender/QCullFace>
 #include <Qt3DRender/QGeometryRenderer>
+//Light
+#include <Qt3DRender/QPointLight>
+#include <Qt3DRender/QDirectionalLight>
 #include "Track.h"
 #include "Vehicule.h"
 
@@ -49,6 +52,9 @@ private:
     Qt3DRender::QCamera* m_camera = nullptr;
     Qt3DExtras::QOrbitCameraController* m_orbitController = nullptr;
     Qt3DExtras::QFirstPersonCameraController* m_fpController = nullptr;
+
+    float m_cameraYaw = 15.0f;  // current smoothed angle
+    float m_cameraLag = 0.35f; // 0.0 = instant, 1.0 = never catches up
     bool m_firstPersonMode = true;
 
 	// Skybox

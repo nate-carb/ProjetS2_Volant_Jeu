@@ -588,12 +588,32 @@ NoSpecificDecor::NoSpecificDecor(QVector2D p, float a)
     info.angle = a;
     info.width = 1.0f; // arbitrary small size for non-specific decor
     info.length = 1.0f;
+	info.modelType = NOSPECIFICDECOR_INDEX;
+	info.modelIndex = 0; // Default to the first model in the list
+
     modelList = {
         "decorPieces/NonSpecificModel1.obj",
         "decorPieces/NonSpecificModel2.obj",
         "decorPieces/NonSpecificModel3.obj"
     };
     info.modelPath = modelList[0]; // Default to the first model for the garage
+}
+void NoSpecificDecor::selectModel(int modelNum)
+{
+    //Model selection based on the provided model number. If the number is out of range, it defaults to the first model.
+    if (modelNum >= 0 && modelNum < (int)modelList.size()) {
+        info.modelPath = modelList[modelNum];
+        info.modelIndex = modelNum;
+    }
+    else {
+        qDebug() << "Invalid model number for non-specific decor: " << modelNum;
+        info.modelPath = modelList[0]; // Set to empty or a default model
+        info.modelIndex = 0; // Default to first model if invalid
+    }
+    // For non-specific decor, we can keep the size constant or add some variation if desired
+    info.width = 1.0f; // Default width
+    info.length = 1.0f; // Default length
+    info.height = 1.0f; // Default height
 }
 //---------------------------
 // ---Track implementation---
