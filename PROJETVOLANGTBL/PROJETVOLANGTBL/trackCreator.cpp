@@ -104,6 +104,7 @@ void TrackCreator::rebuildTrack()
     // Save decors before rebuilding - they belong to the layout, not the track geometry
     std::vector<DecorPieces*> savedDecors = currentTrack.getDecors();
     std::vector<BezierCurveData> savedBeziers = currentTrack.getBezierCurves();
+    std::vector<TrackSegment> savedSegs = currentTrack.getTrackSegments();
 
     if (piecesList.empty()) {
         currentTrack = Track();
@@ -111,14 +112,19 @@ void TrackCreator::rebuildTrack()
     else {
         currentTrack = Track(piecesList);
     }
+    
 
-    // Restore decors after rebuild
+    // Restore after rebuild
     for (DecorPieces* d : savedDecors)
         currentTrack.addDecorDirect(d);
     for (BezierCurveData c : savedBeziers) 
         currentTrack.addBezierCurve(c);
+    for (TrackSegment s : savedSegs)    
+        currentTrack.addTrackSegment(s);
 
+    currentTrack.buildFromSegments();
 	//currentTrack.closeTrack(); // Ensure track is closed after rebuilding
+    
 
     emit trackUpdated(currentTrack);
     update();
@@ -160,6 +166,7 @@ QPointF TrackCreator::worldToScreen(const QVector2D& worldPos)
 
 void TrackCreator::drawTrack(QPainter& painter)
 {
+    // Allow drawing if EITHER pieces OR segments exist
     if (currentTrack.getCenterLine().empty())
         return;
 
@@ -259,6 +266,7 @@ void TrackCreator::drawTrack(QPainter& painter)
         //painter.drawLine(worldToScreen(currentTrack.getCenterLine()[currentTrack.getPitEndIndex()]),
         //    worldToScreen(pit.exitPoint));
     }
+    drawTrackSegments(painter);
 	drawDecors(painter);
     drawBezierCurves(painter);
     drawCar(painter);
@@ -443,7 +451,92 @@ void TrackCreator::drawBezierCurves(QPainter& painter)
     
 
 }
+//------------------------------------------------
+// Track segment editing functions for new track editor
+// Each segment is either straight or curved, defined by its start/end points and optional control points for curves
+// ------------------------------------------------
+void TrackCreator::addCurveSegment()
+{
+    currentTrack.addCurveSegment();
+    emit trackUpdated(currentTrack);
+    update();
+}
 
+void TrackCreator::addStraightSegment()
+{
+    currentTrack.addStraightSegment();
+    emit trackUpdated(currentTrack);
+    update();
+}
+
+void TrackCreator::removeLastSegment()
+{
+    currentTrack.removeLastSegment();
+    emit trackUpdated(currentTrack);
+    update();
+}
+// drawTrackSegments - read directly from track:
+void TrackCreator::drawTrackSegments(QPainter& painter)
+{
+    // ── Draw track surface from centerLine and edges ─────────
+    const auto& cl = currentTrack.getCenterLine();
+    const auto& left = currentTrack.getTrackEdges().left;
+    const auto& right = currentTrack.getTrackEdges().right;
+
+    if (cl.size() > 1) {
+        // Left edge
+        painter.setPen(QPen(Qt::red, 2));
+        for (size_t i = 1; i < left.size(); i++)
+            painter.drawLine(worldToScreen(left[i - 1]), worldToScreen(left[i]));
+
+        // Right edge
+        painter.setPen(QPen(Qt::blue, 2));
+        for (size_t i = 1; i < right.size(); i++)
+            painter.drawLine(worldToScreen(right[i - 1]), worldToScreen(right[i]));
+
+        // Centerline
+        painter.setPen(QPen(Qt::yellow, 1, Qt::DashLine));
+        for (size_t i = 1; i < cl.size(); i++)
+            painter.drawLine(worldToScreen(cl[i - 1]), worldToScreen(cl[i]));
+    }
+    // ── Draw control handles ─────────────────────────────────
+    const auto& segs = currentTrack.getTrackSegments();
+
+    for (int si = 0; si < (int)segs.size(); si++) {
+        const TrackSegment& s = segs[si];
+        bool        isSelected = (si == m_selectedSegIndex);
+
+        // ── Reuse same drawPoint lambda as wall bezier ───────
+        auto drawPoint = [&](QVector2D wp, QColor color, int idx) {
+            QPointF sp = worldToScreen(wp);
+            bool isHovered = (si == m_selectedSegIndex &&
+                idx == m_selectedPointIndex);
+            painter.setBrush(isHovered ? Qt::white : color);
+            painter.setPen(QPen(Qt::white, 1));
+            painter.drawEllipse(sp, isHovered ? 10 : 7,
+                isHovered ? 10 : 7);
+            };
+
+        // End point always visible
+        drawPoint(s.end, QColor(0, 255, 0), 0);
+
+        // Curve handles only when selected
+        if (isSelected && s.type == TrackSegmentType::CURVE_TRACK) {
+            painter.setPen(QPen(QColor(255, 255, 0, 150), 1, Qt::DashLine));
+            painter.drawLine(worldToScreen(s.start), worldToScreen(s.cp1));
+            painter.drawLine(worldToScreen(s.end), worldToScreen(s.cp2));
+            drawPoint(s.cp1, QColor(255, 255, 0), 1);
+            drawPoint(s.cp2, QColor(255, 255, 0), 2);
+        }
+
+        // Label S or C at midpoint
+        painter.setPen(Qt::white);
+        painter.setFont(QFont("Arial", 8));
+        QPointF mid = worldToScreen((s.start + s.end) / 2.0f);
+        painter.drawText(mid + QPointF(5, -5),
+            s.type == TrackSegmentType::STRAIGHT_TRACK ? "S" : "C");
+    }
+}
 
 void TrackCreator::paintEvent(QPaintEvent* event)
 {
@@ -516,6 +609,39 @@ void TrackCreator::mousePressEvent(QMouseEvent* event)
             m_selectedCurveIndex = -1;
             m_selectedPointIndex = -1;
         }
+        // ── Check track segments ─────────────────────────────────
+        if (event->button() == Qt::LeftButton) {
+            const auto& segs = currentTrack.getTrackSegments();
+            float hitRadius = 12.0f;
+
+            for (int si = 0; si < (int)segs.size(); si++) {
+                const TrackSegment& s = segs[si];
+
+                auto checkPoint = [&](QVector2D wp, int idx) -> bool {
+                    QPointF sp = worldToScreen(wp);
+                    float   dist = QVector2D(
+                        event->pos().x() - sp.x(),
+                        event->pos().y() - sp.y()).length();
+                    if (dist < hitRadius) {
+                        m_selectedSegIndex = si;
+                        m_selectedPointIndex = idx;
+                        m_isDraggingSegment = true;
+                        update();
+                        return true;
+                    }
+                    return false;
+                    };
+
+                if (checkPoint(s.end, 0)) return;
+
+                // Curve handles only when selected
+                if (si == m_selectedSegIndex &&
+                    s.type == TrackSegmentType::CURVE_TRACK) {
+                    if (checkPoint(s.cp1, 1)) return;
+                    if (checkPoint(s.cp2, 2)) return;
+                }
+            }
+        }
         // ── Check car ────────────────────────────────────────
         QVector2D carScreenPos = QVector2D(worldToScreen(carPos));
         float carDist = (mousePos - carScreenPos).length();
@@ -551,6 +677,7 @@ void TrackCreator::mouseReleaseEvent(QMouseEvent* event)
     isDraggingDecor = false;
     isDraggingDecor = false;
     m_isDraggingBezier = false;  // no track data here, stays the same
+    m_isDraggingSegment = false;  
 }
 
 void TrackCreator::mouseMoveEvent(QMouseEvent* event)
@@ -584,6 +711,35 @@ void TrackCreator::mouseMoveEvent(QMouseEvent* event)
         case 2: c.p2 = worldPos; break;
         case 3: c.p3 = worldPos; break;
         }
+        update();
+        return;
+    }
+    // Track segment drag - same pattern as bezier wall drag
+    if (m_isDraggingSegment && m_selectedSegIndex >= 0) {
+        QVector2D worldPos = screenToWorld(event->pos());
+        TrackSegment& s =
+            currentTrack.getTrackSegmentsRef()[m_selectedSegIndex];
+
+        switch (m_selectedPointIndex) {
+        case 0: // end point
+            s.end = worldPos;
+            if (s.type == TrackSegmentType::STRAIGHT_TRACK) {
+                s.cp1 = s.start;
+                s.cp2 = s.end;
+            }
+            // Keep next segment linked
+            if (m_selectedSegIndex + 1 <
+                (int)currentTrack.getTrackSegmentsRef().size()) {
+                currentTrack.getTrackSegmentsRef()
+                    [m_selectedSegIndex + 1].start = worldPos;
+            }
+            break;
+        case 1: s.cp1 = worldPos; break;
+        case 2: s.cp2 = worldPos; break;
+        }
+
+        currentTrack.buildFromSegments();
+        emit trackUpdated(currentTrack);
         update();
         return;
     }

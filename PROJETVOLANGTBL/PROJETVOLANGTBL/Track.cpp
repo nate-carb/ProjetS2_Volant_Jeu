@@ -647,7 +647,132 @@ Track::Track(std::vector<int> listPieces)
     // Calculate edges after building centerline
     calculateTrackEdges();
 }
+//------------------------------------------------
+// --- Track building and modification methods ---
+//------------------------------------------------
+void Track::addCurveSegment()
+{
+    TrackSegment seg;
+    seg.type = TrackSegmentType::CURVE_TRACK;
 
+    if (trackSegments.empty()) {
+        seg.start = QVector2D(0, 0);
+        seg.end = QVector2D(200, 0);
+    }
+    else {
+        seg.start = trackSegments.back().end;
+        QVector2D lastDir = (trackSegments.back().end -
+            trackSegments.back().start).normalized();
+        seg.end = seg.start + lastDir * 200.0f;
+    }
+
+    QVector2D dir = (seg.end - seg.start).normalized();
+    QVector2D perp = QVector2D(-dir.y(), dir.x());
+    seg.cp1 = seg.start + dir * 0.33f * 200.0f + perp * 50.0f;
+    seg.cp2 = seg.start + dir * 0.66f * 200.0f + perp * 50.0f;
+
+    trackSegments.push_back(seg);
+    buildFromSegments(); // fills centerLine + trackEdges
+}
+
+void Track::addStraightSegment()
+{
+    TrackSegment seg;
+    seg.type = TrackSegmentType::STRAIGHT_TRACK;
+
+    if (trackSegments.empty()) {
+        seg.start = QVector2D(0, 0);
+        seg.end = QVector2D(200, 0);
+    }
+    else {
+        seg.start = trackSegments.back().end;
+        QVector2D lastDir = (trackSegments.back().end -
+            trackSegments.back().start).normalized();
+        seg.end = seg.start + lastDir * 200.0f;
+    }
+
+    seg.cp1 = seg.start;
+    seg.cp2 = seg.end;
+
+    trackSegments.push_back(seg);
+	qDebug() << "Added straight segment from" << seg.start << "to" << seg.end;
+    buildFromSegments(); // fills centerLine + trackEdges
+}
+
+void Track::removeLastSegment()
+{
+    if (trackSegments.empty()) return;
+    trackSegments.pop_back();
+    buildFromSegments(); // refills centerLine + trackEdges
+}
+
+void Track::buildFromSegments()
+{
+    // Fills the SAME centerLine and trackEdges that everything else uses
+    centerLine.clear();
+    trackEdges.left.clear();
+    trackEdges.right.clear();
+
+    if (trackSegments.empty()) return;
+
+    int steps = 20;
+
+    for (int si = 0; si < (int)trackSegments.size(); si++) {
+        const TrackSegment& seg = trackSegments[si];
+        int startI = (si == 0) ? 0 : 1;
+
+        for (int i = startI; i <= steps; i++) {
+            float t = (float)i / steps;
+            float u = 1.0f - t;
+
+            QVector2D point;
+            if (seg.type == TrackSegmentType::STRAIGHT_TRACK) {
+                point = seg.start * (1.0f - t) + seg.end * t;
+            }
+            else {
+                point = seg.start * (u * u * u)
+                    + seg.cp1 * (3 * u * u * t)
+                    + seg.cp2 * (3 * u * t * t)
+                    + seg.end * (t * t * t);
+            }
+
+            // Tangent for edge normals
+            QVector2D tangent;
+            if (i < steps) {
+                float t2 = (float)(i + 1) / steps;
+                float u2 = 1.0f - t2;
+                QVector2D next;
+                if (seg.type == TrackSegmentType::STRAIGHT_TRACK) {
+                    next = seg.start * (1.0f - t2) + seg.end * t2;
+                }
+                else {
+                    next = seg.start * (u2 * u2 * u2)
+                        + seg.cp1 * (3 * u2 * u2 * t2)
+                        + seg.cp2 * (3 * u2 * t2 * t2)
+                        + seg.end * (t2 * t2 * t2);
+                }
+                tangent = (next - point).normalized();
+            }
+            else if (!centerLine.empty()) {
+                tangent = (point - centerLine.back()).normalized();
+            }
+            else {
+                tangent = QVector2D(1, 0);
+            }
+
+            // perpendicular normal for edges
+            QVector2D normal(-tangent.y(), tangent.x());
+
+            // Push into the SAME vectors as before
+            centerLine.push_back(point);
+            trackEdges.left.push_back(point + normal * (trackWidth / 2.0f));
+            trackEdges.right.push_back(point - normal * (trackWidth / 2.0f));
+        }
+    }
+
+    qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
+        << trackEdges.left.size() << "left edge points";
+}
 void Track::calculAngLen(int index)
 {
     TrackPieces* piece = nullptr;
@@ -834,6 +959,15 @@ bool Track::saveToFile(const std::string& filename) const
     for (int pieceId : piecesIntList) {
         file << pieceId << "\n";
     }
+	// Write track segments (for reconstructing bezier curves and centerline)
+    file << "TRACK_SEGMENTS " << trackSegments.size() << "\n";
+    for (const auto& s : trackSegments) {
+        file << (int)s.type << " "
+            << s.start.x() << " " << s.start.y() << " "
+            << s.end.x() << " " << s.end.y() << " "
+            << s.cp1.x() << " " << s.cp1.y() << " "
+            << s.cp2.x() << " " << s.cp2.y() << "\n";
+    }
 	// Write decors list
 	file << "DECORS " << decors.size() << "\n";
 	for (const auto& decor : decors) {
@@ -939,6 +1073,27 @@ bool Track::loadFromFile(const std::string& filename)
                 loadedPieces.push_back(piece);
             }
         }
+        else if (command == "TRACK_SEGMENTS") {
+            int count;
+            iss >> count;
+            trackSegments.clear();
+            for (int i = 0; i < count; i++) {
+                std::getline(file, line);
+                std::istringstream segIss(line);
+                TrackSegment s;
+                int type;
+                float sx, sy, ex, ey, c1x, c1y, c2x, c2y;
+                segIss >> type >> sx >> sy >> ex >> ey
+                    >> c1x >> c1y >> c2x >> c2y;
+                s.type = (TrackSegmentType)type;
+                s.start = QVector2D(sx, sy);
+                s.end = QVector2D(ex, ey);
+                s.cp1 = QVector2D(c1x, c1y);
+                s.cp2 = QVector2D(c2x, c2y);
+                trackSegments.push_back(s);
+            }
+            buildFromSegments();
+        }
         else if (command == "DECORS") {
 
             int count;
@@ -1004,8 +1159,9 @@ bool Track::loadFromFile(const std::string& filename)
 
     file.close();
 
-    if (loadedPiecesInt.empty()) {
-        std::cerr << "No pieces found in file" << std::endl;
+	// Basic validation to ensure we have the necessary data to reconstruct the track
+    if (loadedPiecesInt.empty() && trackSegments.empty()) {
+        std::cerr << "No pieces or segments found in file" << std::endl;
         return false;
     }
 
@@ -1018,15 +1174,21 @@ bool Track::loadFromFile(const std::string& filename)
     currentAngle = startAngle;
     currentPos = QVector2D(0, 0);
 
-    centerLine.clear();
-    centerLine.push_back(currentPos);
-
-    for (int pieceId : piecesIntList) {
-        calculAngLen(pieceId);
+    if (!piecesIntList.empty()) {
+        // Piece-based track - rebuild from pieces
+        centerLine.clear();
+        centerLine.push_back(currentPos);
+        for (int pieceId : piecesIntList)
+            calculAngLen(pieceId);
+        calculateTrackEdges();
+        closeTrack();
+    }
+    else if (!trackSegments.empty()) {
+        // Segment-based track - already built during parsing
+        // just close it
+        closeTrack();
     }
 
-    calculateTrackEdges();
-    closeTrack();
     std::cout << "Track loaded successfully from: " << filename << std::endl;
     return true;
 }

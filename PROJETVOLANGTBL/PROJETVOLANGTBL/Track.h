@@ -48,6 +48,26 @@ struct BezierCurveData {
 	QVector2D p2;
 	QVector2D p3;
 };
+
+// For track generation 
+enum class TrackSegmentType { CURVE_TRACK, STRAIGHT_TRACK };
+
+// Represents a segment of the track, either a straight or a curve, with necessary data for construction and editing
+struct TrackSegment {
+	TrackSegmentType type;
+
+	// Shared - start/end positions (auto-linked)
+	QVector2D start;
+	QVector2D end;
+
+	// CURVE only - bezier control points
+	QVector2D cp1;
+	QVector2D cp2;
+
+	// STRAIGHT only - just start/end, end is draggable
+	// length is implicitly (end - start).length()
+};
+
 QVector2D perpendicular(QVector2D v);
 
 QVector2D move(QVector2D v, float angleDeg, float distance);
@@ -230,6 +250,7 @@ public:
 	
 	bool isVector2DOnTrack(const QVector2D& point) const;
 	float getTrackWidth() const { return trackWidth; };
+	void setTrackWidth(float w) { trackWidth = w; }
 	std::vector<TrackPieces*> getPieces() const { return pieces; };
 	std::vector<QVector2D> getCenterLine() const { return centerLine; };
 	TrackEdges getTrackEdges() const { return trackEdges; };
@@ -259,12 +280,23 @@ public:
 	bool isClosed() const;
 	float getClosureGap() const;
 
+	// Segment editing functions for new track editor
+	void addCurveSegment();
+	void addStraightSegment();
+	void removeLastSegment();
+	void buildFromSegments();
+	void addTrackSegment(TrackSegment s) { trackSegments.push_back(s); }
+
+	const std::vector<TrackSegment>& getTrackSegments() const { return trackSegments; }
+	std::vector<TrackSegment>& getTrackSegmentsRef() { return trackSegments; }
+	bool hasSegments() const { return !trackSegments.empty(); }
+
 private:
 	std::vector<TrackPieces*> pieces;
 	std::vector<QVector2D> centerLine;
 	TrackEdges trackEdges;
 	std::vector<BezierCurveData> bezierCurves; // Store Bezier curve data for walls
-
+	std::vector<TrackSegment> trackSegments; // Store segments for easier editing and wall generation
 	float startAngle;
 	float currentAngle;
 	QVector2D currentPos;

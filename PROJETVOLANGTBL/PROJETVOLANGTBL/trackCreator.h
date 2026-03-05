@@ -28,6 +28,9 @@ public:
     bool getBezierEditMode() const { return m_bezierEditMode; }
     void drawBezierCurves(QPainter& painter);
 
+	// track segment editing functions
+    void drawTrackSegments(QPainter& painter);
+
     void clearTrack();              // Clear and start over
     Track getCurrentTrack() const { return currentTrack; }
     void loadTrack(const Track& track);
@@ -38,6 +41,10 @@ public:
     
     void closeTrack();// Close the track by connecting end to start
     
+	// Segement editing functions for new track editor
+    void addCurveSegment();
+    void addStraightSegment();
+    void removeLastSegment();
 
 signals:
     void trackUpdated(const Track& track);
@@ -88,4 +95,10 @@ private:
     int  m_selectedPointIndex = -1; // 0=p0, 1=p1, 2=p2, 3=p3
     bool m_isDraggingBezier = false;
     bool m_bezierEditMode = false; // toggle on/off
+
+    // Track segment state
+    int  m_selectedSegIndex = -1;
+    //int  m_selectedPointIndex = -1;
+    bool m_isDraggingSegment = false;
+
 };

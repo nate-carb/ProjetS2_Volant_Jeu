@@ -86,6 +86,37 @@ MainWindowCreator::~MainWindowCreator()
 
 void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
 {
+	// ── Track Segments dropdown ──────────────────────────────────────────
+    QLabel* segLabel = new QLabel("── Track Segments ──", this);
+    segLabel->setAlignment(Qt::AlignCenter);
+    segLabel->setStyleSheet("color: #aaa; font-size: 11px;");
+    layout->addWidget(segLabel);
+
+    QPushButton* addCurveBtn = new QPushButton("Add Curve", this);
+    addCurveBtn->setStyleSheet(
+        "QPushButton { background-color: #E91E63; color: white; padding: 8px; }");
+    connect(addCurveBtn, &QPushButton::clicked, [this]() {
+		trackCreator->addCurveSegment();   
+        });
+    layout->addWidget(addCurveBtn);
+
+    QPushButton* addStraightBtn = new QPushButton("Add Straight", this);
+    addStraightBtn->setStyleSheet(
+        "QPushButton { background-color: #9C27B0; color: white; padding: 8px; }");
+    connect(addStraightBtn, &QPushButton::clicked, [this]() {
+        trackCreator->addStraightSegment();
+        
+        });
+    layout->addWidget(addStraightBtn);
+
+    QPushButton* removeLastBtn = new QPushButton("Remove Last", this);
+    removeLastBtn->setStyleSheet(
+        "QPushButton { background-color: #F44336; color: white; padding: 8px; }");
+    connect(removeLastBtn, &QPushButton::clicked, [this]() {
+		trackCreator->removeLastSegment();
+        });
+    layout->addWidget(removeLastBtn);
+	/* OLD BUTTONS for track pieces, replaced by the above ones for better user experience
     // Straight
     QPushButton* straightBtn = new QPushButton("Straight", this);
     straightBtn->setStyleSheet("QPushButton { background-color: #4CAF50; color: white; padding: 8px; }");
@@ -115,13 +146,13 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     right90Btn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
     connect(right90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90RIGHT); });
     layout->addWidget(right90Btn);
-
-    // 90 Right
+    */
+    // PIT
     QPushButton* pitBtn = new QPushButton("Pit", this);
     pitBtn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
     connect(pitBtn, &QPushButton::clicked, [this]() { onAddPiece(PIT); });
     layout->addWidget(pitBtn);
-
+    
     // ── Decor dropdown ──────────────────────────────────────────
     // Separator label
     QLabel* decorLabel = new QLabel("── Decors ──", this);
@@ -181,13 +212,13 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     bezierLabel->setStyleSheet("color: #aaa; font-size: 11px;");
     layout->addWidget(bezierLabel);
 
-    QPushButton* addCurveBtn = new QPushButton("Add Bezier Curve", this);
-    addCurveBtn->setStyleSheet(
+    QPushButton* addBezierCurveBtn = new QPushButton("Add Bezier Curve", this);
+    addBezierCurveBtn->setStyleSheet(
         "QPushButton { background-color: #00BCD4; color: white; padding: 8px; }");
-    connect(addCurveBtn, &QPushButton::clicked, [this]() {
+    connect(addBezierCurveBtn, &QPushButton::clicked, [this]() {
         trackCreator->addBezierCurveAtCenter(); // logic in TrackCreator
         });
-    layout->addWidget(addCurveBtn);
+    layout->addWidget(addBezierCurveBtn);
 
     QPushButton* editCurveBtn = new QPushButton("Toggle Edit Mode", this);
     editCurveBtn->setCheckable(true);
