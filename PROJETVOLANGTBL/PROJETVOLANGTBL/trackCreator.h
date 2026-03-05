@@ -36,6 +36,7 @@ public:
 
 	QVector2D getCarPos() const { return carPos; }
     
+    void closeTrack();// Close the track by connecting end to start
     
 
 signals:
@@ -68,6 +69,8 @@ private:
     void drawPiecePreview(QPainter& painter, int pieceType, const QVector2D& startPos, float startAngle);
     void calculateBounds(float& minX, float& maxX, float& minY, float& maxY);
     void rebuildTrack();
+
+	
     
     
     //Car on track

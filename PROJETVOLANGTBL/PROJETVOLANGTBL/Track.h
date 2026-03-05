@@ -254,6 +254,11 @@ public:
 	BezierCurveData& getBezierCurveRef(int index) { return bezierCurves[index]; }
 	bool hasBezierCurves() const { return !bezierCurves.empty(); }
 
+	// track closing function
+	void closeTrack(); // bridges gap between end and start
+	bool isClosed() const;
+	float getClosureGap() const;
+
 private:
 	std::vector<TrackPieces*> pieces;
 	std::vector<QVector2D> centerLine;

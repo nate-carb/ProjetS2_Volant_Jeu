@@ -836,11 +836,11 @@ void Track3DViewer::buildBezierWalls(Track* track)
             wallTransform->setRotation(rot);
 
             // Scale Z to match segment length
-            // X and Y stay at 1.0 to keep wall proportions
+            // Z and Y stay at 1.0 to keep wall proportions
             wallTransform->setScale3D(QVector3D(
                 segLen / wallModelLength * scale,
                 1.0f * scale,
-                1.0f * scale // stretch Z to fit segment
+                1.0f * scale // stretch X to fit segment
             ));
 
             wallEntity->addComponent(wallTransform);

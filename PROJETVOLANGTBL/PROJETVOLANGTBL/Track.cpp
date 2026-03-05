@@ -744,6 +744,73 @@ void Track::calculateTrackEdges()
     }
 }
 
+bool Track::isClosed() const
+{
+    if (centerLine.size() < 2) return false;
+    return (centerLine.back() - centerLine.front()).length() < trackWidth;
+}
+
+float Track::getClosureGap() const
+{
+    if (centerLine.size() < 2) return -1.0f;
+    return (centerLine.back() - centerLine.front()).length();
+}
+
+// Closes the track by adding a smooth bezier curve from the end back to the start
+void Track::closeTrack()
+{
+    if (isClosed()) return;
+    if (centerLine.size() < 2) return;
+
+    QVector2D start = centerLine.front();
+    QVector2D end = centerLine.back();
+
+    // Compute tangents at start and end for smooth connection
+    QVector2D startTangent = (centerLine[1] - centerLine[0]).normalized();
+    QVector2D endTangent = (centerLine.back() -
+        centerLine[centerLine.size() - 2]).normalized();
+
+    float dist = (end - start).length();
+
+    // Control points extend along tangent directions
+    QVector2D cp1 = end + endTangent * (dist * 0.4f);
+    QVector2D cp2 = start - startTangent * (dist * 0.4f);
+
+    // Sample the closing bezier and append to centerline/edges
+    int steps = 20;
+    for (int i = 1; i <= steps; i++) {
+        float t = (float)i / steps;
+        float u = 1.0f - t;
+
+        // Cubic bezier: end → cp1 → cp2 → start
+        QVector2D point = end * (u * u * u)
+            + cp1 * (3 * u * u * t)
+            + cp2 * (3 * u * t * t)
+            + start * (t * t * t);
+
+        // Tangent for edge normals
+        QVector2D tangent;
+        if (i < steps) {
+            float t2 = (float)(i + 1) / steps;
+            float u2 = 1.0f - t2;
+            QVector2D next = end * (u2 * u2 * u2)
+                + cp1 * (3 * u2 * u2 * t2)
+                + cp2 * (3 * u2 * t2 * t2)
+                + start * (t2 * t2 * t2);
+            tangent = (next - point).normalized();
+        }
+        else {
+            tangent = startTangent;
+        }
+
+        QVector2D normal(-tangent.y(), tangent.x());
+        centerLine.push_back(point);
+        trackEdges.left.push_back(point + normal * (trackWidth / 2.0f));
+        trackEdges.right.push_back(point - normal * (trackWidth / 2.0f));
+    }
+
+    qDebug() << "Track closed - gap was:" << (int)dist << "units";
+}
 
 bool Track::saveToFile(const std::string& filename) const
 {
@@ -959,7 +1026,7 @@ bool Track::loadFromFile(const std::string& filename)
     }
 
     calculateTrackEdges();
-
+    closeTrack();
     std::cout << "Track loaded successfully from: " << filename << std::endl;
     return true;
 }

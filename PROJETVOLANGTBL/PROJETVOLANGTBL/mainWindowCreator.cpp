@@ -198,6 +198,15 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         trackCreator->toggleBezierEditMode(checked); // logic in TrackCreator
         });
     layout->addWidget(editCurveBtn);
+
+    // ── Close track btn ───────────────────────────────
+    QPushButton* closeBtn = new QPushButton("Close Track", this);
+    closeBtn->setStyleSheet(
+        "QPushButton { background-color: #4CAF50; color: white; padding: 8px; }");
+    connect(closeBtn, &QPushButton::clicked, [this]() {
+        trackCreator->closeTrack(); // use TrackCreator method not Track directly
+        });
+    layout->addWidget(closeBtn);
 }
 
 void MainWindowCreator::onAddPiece(int pieceType)

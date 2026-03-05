@@ -118,9 +118,20 @@ void TrackCreator::rebuildTrack()
     for (BezierCurveData c : savedBeziers) 
         currentTrack.addBezierCurve(c);
 
+	//currentTrack.closeTrack(); // Ensure track is closed after rebuilding
+
     emit trackUpdated(currentTrack);
     update();
 }
+
+// In TrackCreator.cpp:
+void TrackCreator::closeTrack()
+{
+    currentTrack.closeTrack();
+    emit trackUpdated(currentTrack); // notify 3D viewer
+    update();                        // repaint 2D view
+}
+
 // Calculate the bounding box of the track for auto-fitting
 void TrackCreator::calculateBounds(float& minX, float& maxX, float& minY, float& maxY) 
 {
