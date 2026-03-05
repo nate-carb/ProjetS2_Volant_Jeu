@@ -174,6 +174,30 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         onAddDecor(TREES_INDEX, treesCombo->currentIndex());
         });
     layout->addWidget(addTreeBtn);
+
+    // ── Bezier curves controls ───────────────────────────────
+    QLabel* bezierLabel = new QLabel("── Bezier Curves ──", this);
+    bezierLabel->setAlignment(Qt::AlignCenter);
+    bezierLabel->setStyleSheet("color: #aaa; font-size: 11px;");
+    layout->addWidget(bezierLabel);
+
+    QPushButton* addCurveBtn = new QPushButton("Add Bezier Curve", this);
+    addCurveBtn->setStyleSheet(
+        "QPushButton { background-color: #00BCD4; color: white; padding: 8px; }");
+    connect(addCurveBtn, &QPushButton::clicked, [this]() {
+        trackCreator->addBezierCurveAtCenter(); // logic in TrackCreator
+        });
+    layout->addWidget(addCurveBtn);
+
+    QPushButton* editCurveBtn = new QPushButton("Toggle Edit Mode", this);
+    editCurveBtn->setCheckable(true);
+    editCurveBtn->setStyleSheet(
+        "QPushButton { background-color: #607D8B; color: white; padding: 8px; }"
+        "QPushButton:checked { background-color: #00BCD4; }");
+    connect(editCurveBtn, &QPushButton::toggled, [this](bool checked) {
+        trackCreator->toggleBezierEditMode(checked); // logic in TrackCreator
+        });
+    layout->addWidget(editCurveBtn);
 }
 
 void MainWindowCreator::onAddPiece(int pieceType)

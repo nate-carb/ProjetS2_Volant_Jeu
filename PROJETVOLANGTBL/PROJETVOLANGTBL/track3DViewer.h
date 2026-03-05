@@ -75,6 +75,10 @@ private:
     QVector<Qt3DCore::QEntity*> m_decorEntities;
 	//Qt3DCore::QTransform* m_decorTransform = nullptr;
 
+	// Bezier walls entities
+    void buildBezierWalls(Track* track);
+    QVector<Qt3DCore::QEntity*> m_wallEntities;
+
     // Internal helpers
     void buildScene();
     void buildSkybox();

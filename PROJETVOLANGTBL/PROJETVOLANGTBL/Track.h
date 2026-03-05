@@ -41,7 +41,13 @@ struct PitLane {
 	TrackEdges exitCurveEdges;
 	bool isValid = false;
 };
-
+// For Bezier curve calculations (WALLS)
+struct BezierCurveData {
+	QVector2D p0;
+	QVector2D p1;
+	QVector2D p2;
+	QVector2D p3;
+};
 QVector2D perpendicular(QVector2D v);
 
 QVector2D move(QVector2D v, float angleDeg, float distance);
@@ -241,10 +247,18 @@ public:
 	void addDecor(int decorType, int decorIndexList); // decorType is the type of decor (e.g., GARAGE_INDEX, GRANDSTAND_INDEX, TREES_INDEX), decorIndexList is the index in the corresponding model list for that decor type
 	void addDecorDirect(DecorPieces* d) { if (d) decors.push_back(d); }
 
+	// Curves walls related functions
+	void addBezierCurve(BezierCurveData c) { bezierCurves.push_back(c); }
+	const std::vector<BezierCurveData>& getBezierCurves() const { return bezierCurves; }
+	void clearBezierCurves() { bezierCurves.clear(); }
+	BezierCurveData& getBezierCurveRef(int index) { return bezierCurves[index]; }
+	bool hasBezierCurves() const { return !bezierCurves.empty(); }
+
 private:
 	std::vector<TrackPieces*> pieces;
 	std::vector<QVector2D> centerLine;
 	TrackEdges trackEdges;
+	std::vector<BezierCurveData> bezierCurves; // Store Bezier curve data for walls
 
 	float startAngle;
 	float currentAngle;

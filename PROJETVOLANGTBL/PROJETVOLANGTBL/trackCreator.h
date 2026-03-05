@@ -18,6 +18,16 @@ public:
 	void addDecor(int decor, int variant);// Add new decor piece to track
     int  findNearestCenterLineIndex(QVector2D pos);
 
+    
+
+    // track walls related functions
+    void addBezierCurve(QVector2D start, QVector2D end);
+    void addBezierCurveAtCenter();
+    void toggleBezierEditMode(bool enabled);
+    QVector2D evalBezier(const BezierCurveData& c, float t);
+    bool getBezierEditMode() const { return m_bezierEditMode; }
+    void drawBezierCurves(QPainter& painter);
+
     void clearTrack();              // Clear and start over
     Track getCurrentTrack() const { return currentTrack; }
     void loadTrack(const Track& track);
@@ -69,4 +79,10 @@ private:
 	//decor movement
     int  selectedDecorIndex = -1;
     bool isDraggingDecor = false;
+
+	// Bezier curve editing
+    int  m_selectedCurveIndex = -1;
+    int  m_selectedPointIndex = -1; // 0=p0, 1=p1, 2=p2, 3=p3
+    bool m_isDraggingBezier = false;
+    bool m_bezierEditMode = false; // toggle on/off
 };

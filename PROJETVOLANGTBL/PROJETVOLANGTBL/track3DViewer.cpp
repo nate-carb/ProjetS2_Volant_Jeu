@@ -56,6 +56,7 @@ void Track3DViewer::setTrack(Track* track)
 
     buildTrackMesh(track);
 	buildDecors(track);
+    buildBezierWalls(track);
     buildGround();
 }
 void Track3DViewer::updateVehicule(Vehicule* vehicule)
@@ -774,6 +775,97 @@ void Track3DViewer::buildDecors(Track* track)
 }
 
 
+//------------------------------------------
+//--- buildWalls - version 3d model .dae ---
+//------------------------------------------
+void Track3DViewer::buildBezierWalls(Track* track)
+{
+    // Clear old wall entities
+    for (Qt3DCore::QEntity* e : m_wallEntities) {
+        e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
+        delete e;
+    }
+    m_wallEntities.clear();
+
+    if (!track || !track->hasBezierCurves()) return;
+
+    const auto& curves = track->getBezierCurves();
+
+    // Helper to evaluate bezier point
+    auto evalBezier = [](const BezierCurveData& c, float t) -> QVector3D {
+        float u = 1.0f - t;
+        QVector2D p = c.p0 * (u * u * u)
+            + c.p1 * (3 * u * u * t)
+            + c.p2 * (3 * u * t * t)
+            + c.p3 * (t * t * t);
+        return QVector3D(p.x(), 0.0f, p.y());
+        };
+	float scale = 20.0f; 
+    int   segmentsPerCurve = 20;    // how many wall pieces per curve
+    float wallModelLength = 0.12 * scale; // length of your .dae wall model along Z
+
+    for (const BezierCurveData& curve : curves) {
+        for (int i = 0; i < segmentsPerCurve; i++) {
+            float t0 = (float)i / segmentsPerCurve;
+            float t1 = (float)(i + 1) / segmentsPerCurve;
+
+            QVector3D p0 = evalBezier(curve, t0);
+            QVector3D p1 = evalBezier(curve, t1);
+
+            // Segment length and direction
+            QVector3D dir = (p1 - p0);
+            float     segLen = dir.length();
+            QVector3D dirN = dir.normalized();
+
+            // Center position of this segment
+            QVector3D center = (p0 + p1) / 2.0f;
+
+            // ── Create wall entity ───────────────────────────
+            Qt3DCore::QEntity* wallEntity = new Qt3DCore::QEntity(m_rootEntity);
+
+            Qt3DCore::QTransform* wallTransform = new Qt3DCore::QTransform(wallEntity);
+
+            // Position at segment center
+            wallTransform->setTranslation(center);
+
+            // Rotate to align x axis with segment direction
+            QQuaternion rot = QQuaternion::rotationTo(
+                QVector3D(1, 0, 0), // model faces X
+                dirN                // target direction
+            );
+            wallTransform->setRotation(rot);
+
+            // Scale Z to match segment length
+            // X and Y stay at 1.0 to keep wall proportions
+            wallTransform->setScale3D(QVector3D(
+                segLen / wallModelLength * scale,
+                1.0f * scale,
+                1.0f * scale // stretch Z to fit segment
+            ));
+
+            wallEntity->addComponent(wallTransform);
+
+            // ── Load .dae model ──────────────────────────────
+            Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(wallEntity);
+            Qt3DRender::QSceneLoader* loader =
+                new Qt3DRender::QSceneLoader(modelEntity);
+
+            loader->setSource(QUrl::fromLocalFile(
+                QDir::currentPath() + "/3dModels/dae/barrierWhite.dae"));
+
+            connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
+                [i](Qt3DRender::QSceneLoader::Status status) {
+                    if (status == Qt3DRender::QSceneLoader::Error)
+                        qDebug() << "Wall segment" << i << "failed to load";
+                });
+
+            modelEntity->addComponent(loader);
+            m_wallEntities.push_back(wallEntity);
+        }
+    }
+
+    qDebug() << "Built" << m_wallEntities.size() << "wall segments";
+}
 // ─────────────────────────────────────────────
 // Helper – generic coloured box
 // ─────────────────────────────────────────────

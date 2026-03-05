@@ -103,6 +103,7 @@ void TrackCreator::rebuildTrack()
 {
     // Save decors before rebuilding - they belong to the layout, not the track geometry
     std::vector<DecorPieces*> savedDecors = currentTrack.getDecors();
+    std::vector<BezierCurveData> savedBeziers = currentTrack.getBezierCurves();
 
     if (piecesList.empty()) {
         currentTrack = Track();
@@ -114,6 +115,8 @@ void TrackCreator::rebuildTrack()
     // Restore decors after rebuild
     for (DecorPieces* d : savedDecors)
         currentTrack.addDecorDirect(d);
+    for (BezierCurveData c : savedBeziers) 
+        currentTrack.addBezierCurve(c);
 
     emit trackUpdated(currentTrack);
     update();
@@ -246,6 +249,7 @@ void TrackCreator::drawTrack(QPainter& painter)
         //    worldToScreen(pit.exitPoint));
     }
 	drawDecors(painter);
+    drawBezierCurves(painter);
     drawCar(painter);
     // Draw start position (green circle)
     QPointF startScreen = worldToScreen(QVector2D(0, 0));
@@ -344,6 +348,92 @@ int TrackCreator::findNearestCenterLineIndex(QVector2D pos)
     }
     return nearest;
 }
+
+
+// ---------------------------
+// Walls setup to use Bezier 
+// ---------------------------
+void TrackCreator::addBezierCurve(QVector2D start, QVector2D end)
+{
+    BezierCurveData c;
+    c.p0 = start;
+    c.p3 = end;
+    c.p1 = start + (end - start) * 0.33f + QVector2D(0, -50);
+    c.p2 = start + (end - start) * 0.66f + QVector2D(0, -50);
+    currentTrack.addBezierCurve(c); // write directly to track
+}
+void TrackCreator::addBezierCurveAtCenter()
+{
+    QVector2D center = screenToWorld(QPoint(width() / 2, height() / 2));
+    addBezierCurve(center - QVector2D(100, 0),
+        center + QVector2D(100, 0));
+    m_bezierEditMode = true;
+    m_selectedCurveIndex = currentTrack.getBezierCurves().size() - 1;
+    update();
+}
+
+void TrackCreator::toggleBezierEditMode(bool enabled)
+{
+    m_bezierEditMode = enabled;
+    update();
+}
+
+QVector2D TrackCreator::evalBezier(const BezierCurveData& c, float t)
+{
+    float u = 1.0f - t;
+    return c.p0 * (u * u * u)
+        + c.p1 * (3 * u * u * t)
+        + c.p2 * (3 * u * t * t)
+        + c.p3 * (t * t * t);
+}
+// drawBezierCurves - read directly from track:
+void TrackCreator::drawBezierCurves(QPainter& painter)
+{
+    const auto& curves = currentTrack.getBezierCurves(); // read from track
+    for (int ci = 0; ci < (int)curves.size(); ci++) {
+        const BezierCurveData& c = curves[ci];
+
+        // ── Draw the curve ───────────────────────────────────
+        QPen curvePen(QColor(0, 200, 255), 2);
+        painter.setPen(curvePen);
+        QPointF prev = worldToScreen(c.p0);
+        for (int i = 1; i <= 40; i++) {
+            float t = i / 40.0f;
+            QPointF curr = worldToScreen(evalBezier(c, t));
+            painter.drawLine(prev, curr);
+            prev = curr;
+        }
+        bool isSelected = (ci == m_selectedCurveIndex);
+        if (isSelected || m_bezierEditMode) {
+            // ── Draw control lines ───────────────────────────
+            QPen linePen(QColor(255, 255, 0, 120), 1, Qt::DashLine);
+            painter.setPen(linePen);
+            painter.drawLine(worldToScreen(c.p0), worldToScreen(c.p1));
+            painter.drawLine(worldToScreen(c.p3), worldToScreen(c.p2));
+
+            // ── Draw control points ──────────────────────────
+            // p0 and p3 = endpoints (green)
+            // p1 and p2 = handles (yellow)
+            auto drawPoint = [&](QVector2D wp, QColor color, int idx) {
+                QPointF sp = worldToScreen(wp);
+                bool isHovered = (ci == m_selectedCurveIndex &&
+                    idx == m_selectedPointIndex);
+                painter.setBrush(isHovered ? Qt::white : color);
+                painter.setPen(QPen(Qt::white, 1));
+                painter.drawEllipse(sp, isHovered ? 10 : 7, isHovered ? 10 : 7);
+                };
+
+            drawPoint(c.p0, QColor(0, 255, 0), 0);
+            drawPoint(c.p1, QColor(255, 255, 0), 1);
+            drawPoint(c.p2, QColor(255, 255, 0), 2);
+            drawPoint(c.p3, QColor(0, 255, 0), 3);
+        }
+    }
+    
+
+}
+
+
 void TrackCreator::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
@@ -388,7 +478,33 @@ void TrackCreator::mousePressEvent(QMouseEvent* event)
                 return; // decor hit - don't pan or drag car
             }
         }
+        // ── Check bezier control points first ───────────────────
+        if (m_bezierEditMode && event->button() == Qt::LeftButton) {
+            float hitRadius = 12.0f;
+            const auto& curves = currentTrack.getBezierCurves(); // READ FROM TRACK
 
+            for (int ci = 0; ci < (int)curves.size(); ci++) {
+                const BezierCurveData& c = curves[ci];
+                QVector2D pts[4] = { c.p0, c.p1, c.p2, c.p3 };
+
+                for (int pi = 0; pi < 4; pi++) {
+                    QPointF sp = worldToScreen(pts[pi]);
+                    float dist = QVector2D(
+                        event->pos().x() - sp.x(),
+                        event->pos().y() - sp.y()).length();
+
+                    if (dist < hitRadius) {
+                        m_selectedCurveIndex = ci;
+                        m_selectedPointIndex = pi;
+                        m_isDraggingBezier = true;
+                        update();
+                        return;
+                    }
+                }
+            }
+            m_selectedCurveIndex = -1;
+            m_selectedPointIndex = -1;
+        }
         // ── Check car ────────────────────────────────────────
         QVector2D carScreenPos = QVector2D(worldToScreen(carPos));
         float carDist = (mousePos - carScreenPos).length();
@@ -403,6 +519,8 @@ void TrackCreator::mousePressEvent(QMouseEvent* event)
             dragging = true;
             lastMousePos = event->pos();
         }
+
+        
     }
 
     if (event->button() == Qt::RightButton) {
@@ -410,6 +528,7 @@ void TrackCreator::mousePressEvent(QMouseEvent* event)
         selectedDecorIndex = -1;
         update();
     }
+    
 }
 
 void TrackCreator::mouseReleaseEvent(QMouseEvent* event)
@@ -419,6 +538,8 @@ void TrackCreator::mouseReleaseEvent(QMouseEvent* event)
     }
 	draggingCar = false;
     isDraggingDecor = false;
+    isDraggingDecor = false;
+    m_isDraggingBezier = false;  // no track data here, stays the same
 }
 
 void TrackCreator::mouseMoveEvent(QMouseEvent* event)
@@ -439,6 +560,21 @@ void TrackCreator::mouseMoveEvent(QMouseEvent* event)
         currentTrack.getDecors()[selectedDecorIndex]->setPos(
             screenToWorld(event->pos()));
         update();
+    }
+    // mouseMoveEvent - write directly to track:
+    if (m_isDraggingBezier && m_selectedCurveIndex >= 0
+        && m_selectedPointIndex >= 0) {
+        QVector2D worldPos = screenToWorld(event->pos());
+        // Get reference to curve in track directly
+        BezierCurveData& c = currentTrack.getBezierCurveRef(m_selectedCurveIndex);
+        switch (m_selectedPointIndex) {
+        case 0: c.p0 = worldPos; break;
+        case 1: c.p1 = worldPos; break;
+        case 2: c.p2 = worldPos; break;
+        case 3: c.p3 = worldPos; break;
+        }
+        update();
+        return;
     }
 }
 

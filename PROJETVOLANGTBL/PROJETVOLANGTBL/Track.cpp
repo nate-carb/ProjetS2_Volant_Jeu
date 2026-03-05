@@ -773,6 +773,15 @@ bool Track::saveToFile(const std::string& filename) const
 		file << decor->getInfo().modelType << " " << decor->getInfo().modelIndex << " " << decor->getInfo().pos.x() << " " << decor->getInfo().pos.y() << " " << decor->getInfo().angle << "\n";
 	}
 
+    // Write bezier curves for walls
+    file << "BEZIER_CURVES " << bezierCurves.size() << "\n";
+    for (const auto& c : bezierCurves) {
+        file << c.p0.x() << " " << c.p0.y() << " "
+            << c.p1.x() << " " << c.p1.y() << " "
+            << c.p2.x() << " " << c.p2.y() << " "
+            << c.p3.x() << " " << c.p3.y() << "\n";
+    }
+
     // Optional: Write centerline for verification
     file << "CENTERLINE " << centerLine.size() << "\n";
     for (const auto& point : centerLine) {
@@ -898,6 +907,24 @@ bool Track::loadFromFile(const std::string& filename)
 			}
         
         }
+        else if (command == "BEZIER_CURVES") {
+            int count;
+            iss >> count;
+            bezierCurves.clear();
+            for (int i = 0; i < count; i++) {
+                std::getline(file, line);
+                std::istringstream bezierIss(line);
+                BezierCurveData c;
+                float x0, y0, x1, y1, x2, y2, x3, y3;
+                bezierIss >> x0 >> y0 >> x1 >> y1 >> x2 >> y2 >> x3 >> y3;
+                c.p0 = QVector2D(x0, y0);
+                c.p1 = QVector2D(x1, y1);
+                c.p2 = QVector2D(x2, y2);
+                c.p3 = QVector2D(x3, y3);
+                bezierCurves.push_back(c);
+            }
+        }
+
         else if (command == "CENTERLINE" || command == "LEFT_EDGE" || command == "RIGHT_EDGE") {
             // Skip these sections - we'll regenerate from pieces
             int count;
