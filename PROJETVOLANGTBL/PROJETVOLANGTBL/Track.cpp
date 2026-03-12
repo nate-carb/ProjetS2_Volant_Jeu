@@ -800,11 +800,63 @@ void Track::buildFromSegments()
             int segEndIndex = centerLine.size() - 1;
             generatePitLane(segStartIndex, segEndIndex);
         }
+        else {
+			createCheckpointAtSegment(); // place checkpoint at the end of this segment
+        }
     }
 
     qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
         << trackEdges.left.size() << "left edge points";
 }
+void Track::createStartLine()
+{
+    Checkpoint temp;
+    temp.centerlineIndex = 0; // place start line at the very beginning of the track
+    temp.leftEdgeIndex = 0;
+    temp.rightEdgeIndex = 0;
+    temp.angle = startAngle; // use track's starting angle for orientation
+	checkpoints.push_back(temp);
+}
+//--------------------
+// --- Checkpoint  ---
+//--------------------
+void Track::createCheckpointAtSegment()
+{
+    Checkpoint temp;
+	temp.centerlineIndex = centerLine.size() - 1; // place checkpoint at the end of the current track
+	temp.leftEdgeIndex = trackEdges.left.size() - 1;
+	temp.rightEdgeIndex = trackEdges.right.size() - 1;
+	temp.angle = currentAngle; // use current track angle for checkpoint orientation
+	checkpoints.push_back(temp);
+
+}
+// Checks if the car is within a certain distance (threshold) of the line segment defined by pointA and pointB. This is used to determine if the car has crossed a checkpoint.
+bool Track::isCarBetweenPoints(const QVector2D& carPos,
+    const QVector2D& pointA,
+    const QVector2D& pointB,
+    float threshold) const
+{
+    // Vector from A to B (the checkpoint line)
+    QVector2D AB = pointB - pointA;
+    QVector2D AP = carPos - pointA;
+
+    float ab2 = QVector2D::dotProduct(AB, AB);
+    if (ab2 == 0.0f) return false;
+
+    // Project car onto the line AB
+    float t = QVector2D::dotProduct(AP, AB) / ab2;
+
+    // t must be between 0 and 1 to be between the two points
+    if (t < 0.0f || t > 1.0f) return false;
+
+    // Distance from car to the line
+    QVector2D closest = pointA + AB * t;
+    float dist = (carPos - closest).length();
+
+    return dist <= threshold;
+}
+
+
 void Track::calculAngLen(int index)
 {
     TrackPieces* piece = nullptr;
@@ -1035,6 +1087,11 @@ bool Track::saveToFile(const std::string& filename) const
         file << point.x() << " " << point.y() << "\n";
     }
 
+    file << "CHECKPOINTS " << checkpoints.size() << "\n";
+    for (const auto& checkpoint : checkpoints) {
+        file << checkpoint.centerlineIndex << " " << checkpoint.leftEdgeIndex << " " << checkpoint.rightEdgeIndex << " " << checkpoint.angle << "\n";
+    }
+
     file.close();
     std::cout << "Track saved successfully to: " << filename << std::endl;
     return true;
@@ -1052,6 +1109,7 @@ bool Track::loadFromFile(const std::string& filename)
     std::vector<int> loadedPiecesInt;
 	std::vector<TrackPieces*> loadedPieces;
 	std::vector<DecorPieces*> loadedDecors;
+	std::vector<Checkpoint> loadedCheckpoints;
     float loadedTrackWidth = 40;
     float loadedStartAngle = 0;
 
@@ -1181,6 +1239,18 @@ bool Track::loadFromFile(const std::string& filename)
                 bezierCurves.push_back(c);
             }
         }
+        else if (command == "CHECKPOINTS") {
+            int count;
+            iss >> count;
+            loadedCheckpoints.clear();
+            for (int i = 0; i < count; i++) {
+                std::getline(file, line);
+                std::istringstream checkpointIss(line);
+                Checkpoint cp;
+                checkpointIss >> cp.centerlineIndex >> cp.leftEdgeIndex >> cp.rightEdgeIndex >> cp.angle;
+                loadedCheckpoints.push_back(cp);
+            }
+		}
 
         else if (command == "CENTERLINE" || command == "LEFT_EDGE" || command == "RIGHT_EDGE") {
             // Skip these sections - we'll regenerate from pieces
@@ -1204,6 +1274,7 @@ bool Track::loadFromFile(const std::string& filename)
     piecesIntList = loadedPiecesInt;
     pieces = loadedPieces;
 	decors = loadedDecors;
+	checkpoints = loadedCheckpoints;
     trackWidth = loadedTrackWidth;
     startAngle = loadedStartAngle;
     currentAngle = startAngle;

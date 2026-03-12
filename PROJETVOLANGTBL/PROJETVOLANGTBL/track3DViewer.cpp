@@ -155,7 +155,7 @@ void Track3DViewer::buildScene()
     Qt3DCore::QEntity* keyEntity = new Qt3DCore::QEntity(m_rootEntity);
     Qt3DRender::QDirectionalLight* keyLight = new Qt3DRender::QDirectionalLight(keyEntity);
     keyLight->setColor(QColor(255, 250, 240)); // warm white
-    keyLight->setIntensity(0.6f);
+	keyLight->setIntensity(0.4f); // main light old : 0.6f
     keyLight->setWorldDirection(QVector3D(-1.0f, -1.0f, 0.0).normalized());
     keyEntity->addComponent(keyLight);
 
@@ -163,7 +163,7 @@ void Track3DViewer::buildScene()
     Qt3DCore::QEntity* fillEntity = new Qt3DCore::QEntity(m_rootEntity);
     Qt3DRender::QDirectionalLight* fillLight = new Qt3DRender::QDirectionalLight(fillEntity);
     fillLight->setColor(QColor(150, 170, 255)); // cool blue fill
-    fillLight->setIntensity(0.3f);
+	fillLight->setIntensity(0.4f); // secondary light old : 0.3f
     fillLight->setWorldDirection(QVector3D(1.0f, -0.5f, 1.0f).normalized());
     fillEntity->addComponent(fillLight);
 
@@ -171,7 +171,7 @@ void Track3DViewer::buildScene()
     Qt3DCore::QEntity* backEntity = new Qt3DCore::QEntity(m_rootEntity);
     Qt3DRender::QDirectionalLight* backLight = new Qt3DRender::QDirectionalLight(backEntity);
     backLight->setColor(QColor(200, 200, 200)); // neutral grey
-    backLight->setIntensity(0.2f);
+	backLight->setIntensity(0.3f); // rim light old : 0.2f
     backLight->setWorldDirection(QVector3D(0.0f, 1.0f, 0.0f).normalized()); // from below
     backEntity->addComponent(backLight);
 
@@ -472,7 +472,14 @@ void Track3DViewer::buildTrackMesh(Track* track)
                 mat->setDiffuse(color);
                 mat->setAmbient(color.darker(150));
                 mat->setShininess(20.0f);
-
+                
+                //Qt3DExtras::QPhongMaterial* trackMat = new Qt3DExtras::QPhongMaterial(m_trackEntity);
+                //QColor trackColor(241, 242, 246);
+                //trackMat->setDiffuse(trackColor);
+                //trackMat->setAmbient(trackColor.darker(200)); // 50% darker
+                //trackMat->setSpecular(QColor(0, 0, 0));
+                //trackMat->setShininess(0.0f);
+                //m_trackEntity->addComponent(trackMat);
                 entity->addComponent(renderer);
                 entity->addComponent(mat);
             };
@@ -577,7 +584,14 @@ void Track3DViewer::buildTrackMesh(Track* track)
             mat->setDiffuse(color);
             mat->setAmbient(QColor(0,0,0));
             mat->setShininess(0.0f);
-
+            
+            //Qt3DExtras::QPhongMaterial* pitMat = new Qt3DExtras::QPhongMaterial(m_trackEntity);
+            //QColor pitColor(color); // Kenney's grey
+            //pitMat->setDiffuse(pitColor);
+            //pitMat->setAmbient(pitColor.darker(200)); // 50% darker
+            //pitMat->setSpecular(QColor(0, 0, 0));
+            //pitMat->setShininess(0.0f);
+            //m_trackEntity->addComponent(pitMat);
             pitEntity->addComponent(pitRenderer);
             pitEntity->addComponent(mat);
         };
@@ -659,7 +673,12 @@ void Track3DViewer::buildGround()
     grassMat->setDiffuse(QColor(119, 171, 86));   // Kenney's signature green
     grassMat->setAmbient(QColor(30, 80, 30));
     grassMat->setShininess(0.0f);
-
+    //Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
+    //QColor grassColor(119, 171, 86);
+    //grassMat->setDiffuse(grassColor);
+    //grassMat->setAmbient(grassColor.darker(200));
+    //grassMat->setSpecular(QColor(0, 0, 0));
+    //grassMat->setShininess(0.0f);
 	
     // QPlaneMesh is in XZ plane by default, centred at origin – perfect
     Qt3DCore::QTransform* groundTransform = new Qt3DCore::QTransform(m_groundEntity);
@@ -688,6 +707,7 @@ void Track3DViewer::buildCar()
         QDir::currentPath() + "/3dModels/dae/raceCarGreen.dae"
     ));
    
+   
 
     // Optional: scale/reorient the model
     Qt3DCore::QTransform* modelTransform = new Qt3DCore::QTransform(modelEntity);
@@ -697,11 +717,35 @@ void Track3DViewer::buildCar()
     modelEntity->addComponent(loader);
     modelEntity->addComponent(modelTransform);
 
-    // Debug: print when loaded
+    //// Debug: print when loaded
+    //connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
+    //    [](Qt3DRender::QSceneLoader::Status status) {
+    //        qDebug() << "Model status:" << status;
+    //        // Ready = 2, Error = 3
+    //    });
     connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
-        [](Qt3DRender::QSceneLoader::Status status) {
+        [modelEntity](Qt3DRender::QSceneLoader::Status status) {
             qDebug() << "Model status:" << status;
-            // Ready = 2, Error = 3
+            if (status != Qt3DRender::QSceneLoader::Ready) return;
+
+            // Make car materials flat/cartoon like Kenney style
+            QList<Qt3DExtras::QPhongMaterial*> mats =
+                modelEntity->findChildren<Qt3DExtras::QPhongMaterial*>();
+
+            for (Qt3DExtras::QPhongMaterial* mat : mats) {
+                mat->setShininess(0.0f);
+                mat->setSpecular(QColor(0, 0, 0));
+
+                // Boost ambient to 80% of diffuse for flat cartoon look
+                QColor diff = mat->diffuse();
+                mat->setAmbient(QColor(
+                    diff.red() * 0.8f,
+                    diff.green() * 0.8f,
+                    diff.blue() * 0.8f
+                ));
+            }
+
+            qDebug() << "Car materials flattened -" << mats.size() << "materials found";
         });
 }
 
@@ -762,12 +806,29 @@ void Track3DViewer::buildDecors(Track* track)
         modelEntity->addComponent(loader);
         modelEntity->addComponent(modelTransform);
 
-        // Debug when each model loads
+        //// Debug when each model loads
+        //connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
+        //    [modelPath](Qt3DRender::QSceneLoader::Status status) {
+        //        qDebug() << "Decor model" << modelPath << "status:" << status;
+        //    });
         connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
-            [modelPath](Qt3DRender::QSceneLoader::Status status) {
-                qDebug() << "Decor model" << modelPath << "status:" << status;
-            });
+            [modelEntity](Qt3DRender::QSceneLoader::Status status) {
+                if (status != Qt3DRender::QSceneLoader::Ready) return;
 
+                QList<Qt3DExtras::QPhongMaterial*> mats =
+                    modelEntity->findChildren<Qt3DExtras::QPhongMaterial*>();
+
+                for (Qt3DExtras::QPhongMaterial* mat : mats) {
+                    mat->setShininess(0.0f);
+                    mat->setSpecular(QColor(0, 0, 0));
+                    QColor diff = mat->diffuse();
+                    mat->setAmbient(QColor(
+                        diff.red() * 0.8f,
+                        diff.green() * 0.8f,
+                        diff.blue() * 0.8f
+                    ));
+                }
+            });
         m_decorEntities.push_back(decorEntity);
     }
 
@@ -853,12 +914,29 @@ void Track3DViewer::buildBezierWalls(Track* track)
             loader->setSource(QUrl::fromLocalFile(
                 QDir::currentPath() + "/3dModels/dae/barrierWhite.dae"));
 
+            //connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
+            //    [i](Qt3DRender::QSceneLoader::Status status) {
+            //        if (status == Qt3DRender::QSceneLoader::Error)
+            //            qDebug() << "Wall segment" << i << "failed to load";
+            //    });
             connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
-                [i](Qt3DRender::QSceneLoader::Status status) {
-                    if (status == Qt3DRender::QSceneLoader::Error)
-                        qDebug() << "Wall segment" << i << "failed to load";
-                });
+                [modelEntity](Qt3DRender::QSceneLoader::Status status) {
+                    if (status != Qt3DRender::QSceneLoader::Ready) return;
 
+                    QList<Qt3DExtras::QPhongMaterial*> mats =
+                        modelEntity->findChildren<Qt3DExtras::QPhongMaterial*>();
+
+                    for (Qt3DExtras::QPhongMaterial* mat : mats) {
+                        mat->setShininess(0.0f);
+                        mat->setSpecular(QColor(0, 0, 0));
+                        QColor diff = mat->diffuse();
+                        mat->setAmbient(QColor(
+                            diff.red() * 0.8f,
+                            diff.green() * 0.8f,
+                            diff.blue() * 0.8f
+                        ));
+                    }
+                });
             modelEntity->addComponent(loader);
             m_wallEntities.push_back(wallEntity);
         }

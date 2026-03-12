@@ -15,6 +15,10 @@ TrackCreator::TrackCreator(QWidget* parent)
 
     // Initialize with empty track
     clearTrack();
+    void createStartLine(); // Create a start line segment at the beginning of the track, aligned with the first segment's direction
+	emit trackUpdated(currentTrack); // Notify that the track has been initialized
+    update();
+    
 }
 
 void TrackCreator::loadTrack(const Track& track)
@@ -267,6 +271,7 @@ void TrackCreator::drawTrack(QPainter& painter)
         //    worldToScreen(pit.exitPoint));
     }
     drawTrackSegments(painter);
+    drawCheckpoints(painter);
 	drawDecors(painter);
     drawBezierCurves(painter);
     drawCar(painter);
@@ -399,7 +404,27 @@ void TrackCreator::rotateDecorExact(float angle)
 	update();
 }
 
-
+void TrackCreator::drawCheckpoints(QPainter& painter)
+{
+    const auto& checkpoints = currentTrack.getCheckpoints();
+     QPen cpPen(Qt::cyan, 2);
+     painter.setPen(cpPen);
+	 // Draw lines between left and right edges at each checkpoint
+     for (const auto& cp : checkpoints) {
+         QVector2D p1 = QVector2D(
+             currentTrack.getTrackEdges().left[cp.leftEdgeIndex].x(),
+			 currentTrack.getTrackEdges().left[cp.leftEdgeIndex].y()
+         );
+		 QVector2D p2 = QVector2D(
+             currentTrack.getTrackEdges().right[cp.rightEdgeIndex].x(),
+			 currentTrack.getTrackEdges().right[cp.rightEdgeIndex].y()
+         );
+         painter.drawLine(
+             worldToScreen(p1),
+			 worldToScreen(p2) // left and right edge points of checkpoint
+		 );
+	 }
+}
 // ---------------------------
 // Walls setup to use Bezier 
 // ---------------------------
