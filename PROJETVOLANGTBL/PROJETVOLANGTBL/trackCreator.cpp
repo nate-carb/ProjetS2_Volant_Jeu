@@ -500,6 +500,13 @@ void TrackCreator::addStraightSegment()
     update();
 }
 
+void TrackCreator::addPitSegment()
+{
+    currentTrack.addPitSegment();
+    emit trackUpdated(currentTrack);
+    update();
+}
+
 void TrackCreator::removeLastSegment()
 {
     currentTrack.removeLastSegment();

@@ -261,8 +261,8 @@ public:
     std::vector<int> getPiecesList() const { return piecesIntList; }
 
 	// Pit lane related functions
-	//void generatePitLane(int startIndex, int endIndex);
-	void generatePitLane();
+	void generatePitLane(int startIndex, int endIndex);
+	//void generatePitLane();
 	PitLane getPitLane() const { return pitLane; }
 	bool hasPitLane() const { return pitLane.isValid; }
 	int getPitStartIndex() const { return pitStartIndex; }
@@ -291,6 +291,8 @@ public:
 	void addCurveSegment();
 	void addStraightSegment();
 	void removeLastSegment();
+
+	void addPitSegment();// Add a pit segment at the end of the track (for testing, can be improved to insert at specific location)
 	void buildFromSegments();
 	void addTrackSegment(TrackSegment s) { trackSegments.push_back(s); }
 
