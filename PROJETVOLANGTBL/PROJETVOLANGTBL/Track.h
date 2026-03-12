@@ -22,6 +22,9 @@
 #define GRANDSTAND_INDEX 2
 #define TREES_INDEX 3
 #define NOSPECIFICDECOR_INDEX 4
+
+
+
 // * ----------------------------------------------------------
 // *  Stuctures 
 // *-----------------------------------------------------------
@@ -30,13 +33,14 @@ struct TrackEdges {
 	std::vector<QVector2D> left;
 	std::vector<QVector2D> right;
 };
-struct Checkpoint {
-	int centerlineIndex; // index of the checkpoint on the centerline, can be a float for interpolation between points
-	int leftEdgeIndex; // corresponding index on the left edge
-	int rightEdgeIndex; // corresponding index on the right edge
-	float angle; // in radians, for orienting the checkpoint
-	
+struct CheckpointData {
+	QVector2D left;   // left edge point
+	QVector2D right;  // right edge point
+	QVector2D forward; // ADD - direction along track at this checkpoint
+	int centerLineIndex = -1;
+	bool triggered = false;
 };
+
 struct PitLane {
 	std::vector<QVector2D> centerLine;
 	TrackEdges edges;
@@ -180,9 +184,8 @@ struct DecorsInfo {
 	QString modelPath;
 	int modelType; // e.g., GARAGE, GRANDSTAND, TREES, NOSPECIFICDECOR
 	int modelIndex; // index in the model list for this decor type
-
-
 };
+
 
 class DecorPieces 
 {
@@ -206,6 +209,18 @@ class DecorPieces
 protected:
 	DecorsInfo info;
 	std::vector<QString> modelList; 
+};
+
+class CheckpointDecor : public DecorPieces
+{
+	public:
+		CheckpointDecor(QVector2D positon, float angle);
+		void selectModel(int modelNum);
+	private:
+		int centerlineIndex; // index of the checkpoint on the centerline, can be a float for interpolation between points
+		int leftEdgeIndex; // corresponding index on the left edge
+		int rightEdgeIndex; // corresponding index on the right edge
+
 };
 
 class Grandstand : public DecorPieces
@@ -305,9 +320,11 @@ public:
 	
 
 	// Checkpoint related functions
-	void createStartLine(); // Create a start line segment at the beginning of the track, aligned with the first segment's direction
+	//void createStartLine(); // Create a start line segment at the beginning of the track, aligned with the first segment's direction
 	void createCheckpointAtSegment(); // Create a checkpoint at the end of the specified segment
-	std::vector<Checkpoint> getCheckpoints() const { return checkpoints; }
+	const std::vector<CheckpointData>& getCheckpoints() const { return checkpoints; }
+	std::vector<CheckpointData>& getCheckpointsRef() { return checkpoints; }
+	
 	// tools for checkpoints and start and gameplay
 	bool isCarBetweenPoints(const QVector2D& carPos,
 		const QVector2D& pointA,
@@ -324,7 +341,8 @@ private:
 	TrackEdges trackEdges;
 	std::vector<BezierCurveData> bezierCurves; // Store Bezier curve data for walls
 	std::vector<TrackSegment> trackSegments; // Store segments for easier editing and wall generation
-	std::vector<Checkpoint> checkpoints; // Store edges for checkpoints
+	std::vector<CheckpointData> checkpoints; // Store edges for checkpoints
+	 // Path to the 3D model used for checkpoints
 	float currentAngle;
 	QVector2D currentPos;
 	float trackWidth;

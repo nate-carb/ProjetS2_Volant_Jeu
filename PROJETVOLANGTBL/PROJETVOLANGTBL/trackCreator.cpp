@@ -406,24 +406,22 @@ void TrackCreator::rotateDecorExact(float angle)
 
 void TrackCreator::drawCheckpoints(QPainter& painter)
 {
-    const auto& checkpoints = currentTrack.getCheckpoints();
-     QPen cpPen(Qt::cyan, 2);
-     painter.setPen(cpPen);
-	 // Draw lines between left and right edges at each checkpoint
-     for (const auto& cp : checkpoints) {
-         QVector2D p1 = QVector2D(
-             currentTrack.getTrackEdges().left[cp.leftEdgeIndex].x(),
-			 currentTrack.getTrackEdges().left[cp.leftEdgeIndex].y()
-         );
-		 QVector2D p2 = QVector2D(
-             currentTrack.getTrackEdges().right[cp.rightEdgeIndex].x(),
-			 currentTrack.getTrackEdges().right[cp.rightEdgeIndex].y()
-         );
-         painter.drawLine(
-             worldToScreen(p1),
-			 worldToScreen(p2) // left and right edge points of checkpoint
-		 );
-	 }
+    const auto& cps = currentTrack.getCheckpoints();
+
+    for (int i = 0; i < (int)cps.size(); i++) {
+        const CheckpointData& cp = cps[i];
+
+        // Draw line between left and right edge
+        painter.setPen(QPen(QColor(255, 200, 0), 2, Qt::DashLine));
+        painter.drawLine(worldToScreen(cp.left), worldToScreen(cp.right));
+
+        // Draw number at center
+        QVector2D center = (cp.left + cp.right) / 2.0f;
+        QPointF   sc = worldToScreen(center);
+        painter.setPen(Qt::white);
+        painter.setFont(QFont("Arial", 8, QFont::Bold));
+        painter.drawText(sc + QPointF(3, -3), QString::number(i));
+    }
 }
 // ---------------------------
 // Walls setup to use Bezier 

@@ -53,10 +53,11 @@ void Track3DViewer::setTrack(Track* track)
         delete m_trackEntity;
         m_trackEntity = nullptr;
     }
-
+    qDebug() << "setTrack called - checkpoints:" << track->getCheckpoints().size();
     buildTrackMesh(track);
 	buildDecors(track);
     buildBezierWalls(track);
+	buildCheckpoints(track);
     buildGround();
 }
 void Track3DViewer::updateVehicule(Vehicule* vehicule)
@@ -690,6 +691,86 @@ void Track3DViewer::buildGround()
     m_groundEntity->addComponent(groundTransform);
 }
 
+void Track3DViewer::buildCheckpoints(Track* track)
+{
+    for (Qt3DCore::QEntity* e : m_checkpointEntities) {
+        e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
+        delete e;
+    }
+    m_checkpointEntities.clear();
+
+    if (!track) return;
+
+    const auto& cps = track->getCheckpoints();
+    
+    for (int i = 0; i < (int)cps.size(); i++) {
+        const CheckpointData& cp = cps[i];
+        
+        Qt3DCore::QEntity* cpEntity = new Qt3DCore::QEntity(m_rootEntity);
+
+        // Position at center between left and right edge
+        QVector2D center2D = (cp.left + cp.right) / 2.0f;
+        float     width = (cp.right - cp.left).length();
+        
+        // Direction along checkpoint line for rotation
+        float angle = qRadiansToDegrees(atan2(cp.forward.y(), cp.forward.x()));
+        
+        qDebug() << "Checkpoint" << i
+            << "center:" << center2D
+            << "width:" << width
+            << "angle:" << angle
+            << "left:" << cp.left
+            << "right:" << cp.right;
+        // Transform
+        Qt3DCore::QTransform* transform = new Qt3DCore::QTransform(cpEntity);
+        transform->setTranslation(QVector3D(center2D.x(), 0.0f, center2D.y()));
+        transform->setRotation(QQuaternion::fromAxisAndAngle(0, 1, 0, angle));
+        // Scale to match the track
+		float scale = 40.0f; // base scale to match your .dae model size (tune as needed)
+        transform->setScale3D(QVector3D(
+            1.87f * scale, // tune 20.0f to match your .dae model width
+            0.93f * scale,
+            0.33f * scale
+        ));
+        cpEntity->addComponent(transform);
+
+        
+        Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(cpEntity);
+        Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
+
+        connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
+            [modelEntity, i](Qt3DRender::QSceneLoader::Status status) {
+                qDebug() << "Checkpoint" << i << "status:" << status;
+                // 0=None, 1=Loading, 2=Ready, 3=Error
+                if (status == Qt3DRender::QSceneLoader::Error) {
+                    qDebug() << "Checkpoint" << i << "FAILED TO LOAD";
+                    return;
+                }
+                if (status != Qt3DRender::QSceneLoader::Ready) return;
+
+                QList<Qt3DExtras::QPhongMaterial*> mats =
+                    modelEntity->findChildren<Qt3DExtras::QPhongMaterial*>();
+                qDebug() << "Checkpoint" << i << "loaded -" << mats.size() << "materials";
+
+                for (Qt3DExtras::QPhongMaterial* mat : mats) {
+                    mat->setShininess(0.0f);
+                    mat->setSpecular(QColor(0, 0, 0));
+                    QColor diff = mat->diffuse();
+                    mat->setAmbient(diff.darker(200));
+                }
+            });
+
+        modelEntity->addComponent(loader);
+
+        // Load .dae model
+        
+        QString modelPath = QDir::currentPath() + "/3dModels/dae/overheadRoundColored.dae";
+        qDebug() << "Loading checkpoint from:" << modelPath;
+        loader->setSource(QUrl::fromLocalFile(modelPath));
+
+        m_checkpointEntities.push_back(cpEntity);
+    }
+}
 //version 3d model .obj
 void Track3DViewer::buildCar()
 {
@@ -708,7 +789,6 @@ void Track3DViewer::buildCar()
     ));
    
    
-
     // Optional: scale/reorient the model
     Qt3DCore::QTransform* modelTransform = new Qt3DCore::QTransform(modelEntity);
     modelTransform->setScale(5.0f);
@@ -944,6 +1024,7 @@ void Track3DViewer::buildBezierWalls(Track* track)
 
     qDebug() << "Built" << m_wallEntities.size() << "wall segments";
 }
+
 // ─────────────────────────────────────────────
 // Helper – generic coloured box
 // ─────────────────────────────────────────────

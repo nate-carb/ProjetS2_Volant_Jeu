@@ -75,6 +75,9 @@ private:
     QVector<Qt3DCore::QEntity*> m_decorEntities;
 	//Qt3DCore::QTransform* m_decorTransform = nullptr;
 
+	// Checkpoint entities
+    QVector<Qt3DCore::QEntity*> m_checkpointEntities;
+
 	// Bezier walls entities
     void buildBezierWalls(Track* track);
     QVector<Qt3DCore::QEntity*> m_wallEntities;
@@ -86,6 +89,8 @@ private:
     void buildCar();
     void buildDecors(Track* track);
     void buildGround();
+    void buildCheckpoints(Track* track);
+	
     
     
 
