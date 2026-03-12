@@ -9,7 +9,7 @@
 #include <trackViewer.h>
 #include <QPainterPath>
 
-
+const float PIXELS_PER_METER = 5.0f;
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), imageX(100), imageY(100)
@@ -231,6 +231,7 @@ void MainWindow::paintEvent(QPaintEvent* event)
         painter.setFont(QFont("Arial", 14, QFont::Bold));
         painter.drawText(20, 120, "PIT STOP - Appuyez sur Enter pour partir !");
     }
+	drawMinimap(painter);
 }
 
 // Cette fonction capte les clics de souris
@@ -469,7 +470,125 @@ void MainWindow::drawPit(float scale, Track* track, QPainter& painter)
         drawCurbs(painter, pit.edges.left, scale, Qt::red);
         drawCurbs(painter, pit.edges.right, scale, Qt::red);
     }
+}
+    
+void MainWindow::drawMinimap(QPainter& painter)
+{
+    if (!track || track->getCenterLine().empty()) return;
 
+    // ── Dimensions et position de la mini-map ────────────────
+    const int MAP_W = 180;
+    const int MAP_H = 180;
+    const int MARGIN = 15;
+    QRectF minimapRect(
+        width() - MAP_W - MARGIN,
+        height() - MAP_H - MARGIN,
+        MAP_W, MAP_H
+    );
+
+    // ── Calculer les bounds de la piste ──────────────────────
+    float minX = 1e9f, maxX = -1e9f;
+    float minY = 1e9f, maxY = -1e9f;
+
+    auto checkPoint = [&](const QVector2D& p) {
+        minX = std::min(minX, p.x()); maxX = std::max(maxX, p.x());
+        minY = std::min(minY, p.y()); maxY = std::max(maxY, p.y());
+        };
+    for (const auto& p : track->getCenterLine())       checkPoint(p);
+    for (const auto& p : track->getTrackEdges().left)  checkPoint(p);
+    for (const auto& p : track->getTrackEdges().right) checkPoint(p);
+
+    // Ajouter une marge autour de la piste
+    float padding = (maxX - minX) * 0.05f;
+    minX -= padding; maxX += padding;
+    minY -= padding; maxY += padding;
+
+    float rangeX = maxX - minX;
+    float rangeY = maxY - minY;
+    if (rangeX <= 0 || rangeY <= 0) return;
+
+    // ── Fonction de projection monde → mini-map ──────────────
+    auto toMinimap = [&](const QVector2D& p) -> QPointF {
+        float nx = (p.x() - minX) / rangeX;
+        float ny = (p.y() - minY) / rangeY;
+        return QPointF(
+            minimapRect.left() + nx * minimapRect.width(),
+            minimapRect.top() + ny * minimapRect.height()
+        );
+        };
+
+    // ── Fond semi-transparent ─────────────────────────────────
+    painter.setBrush(QColor(0, 0, 0, 160));
+    painter.setPen(QPen(QColor(255, 255, 255, 80), 1));
+    painter.drawRoundedRect(minimapRect, 8, 8);
+
+    // ── Clipping pour rester dans la mini-map ────────────────
+    painter.save();
+    QPainterPath clipPath;
+    clipPath.addRoundedRect(minimapRect, 8, 8);
+    painter.setClipPath(clipPath);
+
+    // ── Dessiner la surface de la piste (polygone rempli) ────
+    const auto& left = track->getTrackEdges().left;
+    const auto& right = track->getTrackEdges().right;
+
+    if (left.size() >= 2 && right.size() >= 2) {
+        QPolygonF trackPoly;
+        for (const auto& p : left)
+            trackPoly << toMinimap(p);
+        for (int i = (int)right.size() - 1; i >= 0; i--)
+            trackPoly << toMinimap(right[i]);
+
+        painter.setBrush(QColor(80, 80, 80, 220));
+        painter.setPen(Qt::NoPen);
+        painter.drawPolygon(trackPoly);
+    }
+
+    // ── Dessiner la pit lane ──────────────────────────────────
+    if (track->hasPitLane()) {
+        PitLane pit = track->getPitLane();
+
+        // Surface de la pit lane
+        if (!pit.edges.left.empty() && !pit.edges.right.empty()) {
+            QPolygonF pitPoly;
+            for (const auto& p : pit.edges.left)
+                pitPoly << toMinimap(p);
+            for (int i = (int)pit.edges.right.size() - 1; i >= 0; i--)
+                pitPoly << toMinimap(pit.edges.right[i]);
+
+            painter.setBrush(QColor(100, 100, 120, 220));
+            painter.setPen(Qt::NoPen);
+            painter.drawPolygon(pitPoly);
+        }
+
+        // Courbes d'entrée/sortie
+        auto drawCurveEdges = [&](const std::vector<QVector2D>& edgeL,
+            const std::vector<QVector2D>& edgeR) {
+                if (edgeL.empty() || edgeR.empty()) return;
+                QPolygonF poly;
+                for (const auto& p : edgeL)  poly << toMinimap(p);
+                for (int i = (int)edgeR.size() - 1; i >= 0; i--)
+                    poly << toMinimap(edgeR[i]);
+                painter.setBrush(QColor(100, 100, 120, 220));
+                painter.setPen(Qt::NoPen);
+                painter.drawPolygon(poly);
+            };
+        drawCurveEdges(pit.entryCurveEdges.left, pit.entryCurveEdges.right);
+        drawCurveEdges(pit.exitCurveEdges.left, pit.exitCurveEdges.right);
+    }
+
+    // ── Ligne centrale (pointillés blancs fins) ───────────────
+    const auto& center = track->getCenterLine();
+    painter.setPen(QPen(QColor(255, 255, 255, 80), 1, Qt::DashLine));
+    // ===== POINT DU JOUEUR =====
+    float nx = (voiture.getPosition().x() - minX) / (maxX - minX);
+    float ny = (voiture.getPosition().y() - minY) / (maxY - minY);
+    QPointF carMiniPos(
+        minimapRect.left() + nx * minimapRect.width(),
+        minimapRect.top() + ny * minimapRect.height()
+    );
+    painter.setBrush(Qt::red);
+    painter.setPen(Qt::NoPen);
+    painter.drawEllipse(carMiniPos, 3, 3);
 
 }
-

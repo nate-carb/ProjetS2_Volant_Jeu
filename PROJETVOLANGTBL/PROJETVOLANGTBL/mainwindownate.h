@@ -36,7 +36,7 @@ protected:
     QTimer* weatherTimer;  // pour changer la météo automatiquement
 
     void drawPit(float scale, Track* track, QPainter& painter);
-
+    void drawMinimap(QPainter& painter);
     
 
 private slots:
