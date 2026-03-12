@@ -7,6 +7,7 @@
 #include "Vehicule.h"
 #include <QKeyEvent>
 #include <trackViewer.h>
+#include <QPainterPath>
 
 
 
@@ -40,6 +41,11 @@ MainWindow::MainWindow(QWidget* parent)
         qDebug() << "SUCCESS! Taille:" << image.size();
     }
 
+    // Timer qui change la m�t�o toutes les 10 secondes
+    weatherTimer = new QTimer(this);
+    connect(weatherTimer, &QTimer::timeout, this, &MainWindow1::changeWeather);
+    weatherTimer->start(10000);  // 10 secondes
+
     resize(800, 600);
 
     // Crée un timer
@@ -54,8 +60,22 @@ MainWindow::MainWindow(QWidget* parent)
     lastFrameTime = QTime::currentTime();
 }
 
-MainWindow::~MainWindow()
+MainWindow1::~MainWindow1()
 {
+}
+
+void MainWindow1::changeWeather()
+{
+    // Cycle SUNNY -> RAINY -> STORMY -> SUNNY
+    if (currentWeather == Vehicule::SUNNY)
+        currentWeather = Vehicule::RAINY;
+    else if (currentWeather == Vehicule::RAINY)
+        currentWeather = Vehicule::STORMY;
+    else
+        currentWeather = Vehicule::SUNNY;
+
+    voiture.setWeather(currentWeather);
+    qDebug() << "M�t�o chang�e !";
 }
 
 // Cette fonction dessine l'image
@@ -95,16 +115,125 @@ void MainWindow::paintEvent(QPaintEvent* event)
     // ===== DESSINER LA PISTE ===== 
     drawTrack(painter, PIXELS_PER_METER);
 
+    // ===== PITLANE =====
+    painter.setBrush(QColor(50, 50, 50));
+    painter.setPen(Qt::NoPen);
+    painter.drawPath(pitStop.getPitLanePath(PIXELS_PER_METER));
+
+    // Rebords rouges/blancs sur les 4 c�t�s
+    QPainterPath path = pitStop.getPitLanePath(PIXELS_PER_METER);
+    QPolygonF poly = path.toFillPolygon();
+
+    std::vector<QVector2D> edgeTop, edgeBot, edgeRight;
+
+    for (int i = 0; i <= 10; i++) {
+        float t = i / 10.0f;
+        edgeTop.push_back(QVector2D(
+            poly[0].x() + t * (poly[3].x() - poly[0].x()),
+            poly[0].y() + t * (poly[3].y() - poly[0].y())
+        ));
+        edgeBot.push_back(QVector2D(
+            poly[1].x() + t * (poly[2].x() - poly[1].x()),
+            poly[1].y() + t * (poly[2].y() - poly[1].y())
+        ));
+        edgeRight.push_back(QVector2D(
+            poly[3].x() + t * (poly[2].x() - poly[3].x()),
+            poly[3].y() + t * (poly[2].y() - poly[3].y())
+        ));
+    }
+
+    drawCurbs(painter, edgeTop, 1.0f, Qt::red);
+    drawCurbs(painter, edgeBot, 1.0f, Qt::red);
+    drawCurbs(painter, edgeRight, 1.0f, Qt::red);
+
+    // ===== PIT STOP BOX (jaune, plus gros) =====
+    painter.setBrush(Qt::NoBrush);  // transparent � l'int�rieur
+    painter.setPen(QPen(Qt::white, 2));
+    painter.drawRect(pitStop.getRect());
+    painter.setPen(Qt::white);
+    painter.setFont(QFont("Arial", 8, QFont::Bold));
+    painter.drawText(pitStop.getRect(), Qt::AlignCenter, "PIT\nSTOP");
+
     // ===== DESSINER LA VOITURE =====
     painter.save();
     painter.translate(carX, carY);
     painter.rotate(voiture.getAngle() * 180.0 / M_PI);
     painter.drawPixmap(-image.width() / 2, -image.height() / 2, image);
     painter.restore();
+
+    // ===== HUD (fixe � l'�cran) =====
+    painter.resetTransform();
+    painter.setClipRect(rect());  // <-- force le clipping sur toute la fen�tre
+    painter.setClipping(true);
+
+    // ===== PLUIE =====
+    if (currentWeather == Vehicule::RAINY || currentWeather == Vehicule::STORMY) {
+        int numDrops = (currentWeather == Vehicule::STORMY) ? 150 : 75;
+        float penWidth = (currentWeather == Vehicule::STORMY) ? 2.5f : 1.5f;
+        painter.setPen(QPen(QColor(150, 150, 255, 150), penWidth));
+        srand(QTime::currentTime().msec());
+        for (int i = 0; i < numDrops; i++) {
+            int x = rand() % width();
+            int y = rand() % height();
+            int length = (currentWeather == Vehicule::STORMY) ? 20 : 12;
+            painter.drawLine(x, y, x - 3, y + length);
+        }
+    }
+
+    // ===== COULEUR M�T�O =====
+    QString weatherText;
+    QColor weatherColor;
+    switch (currentWeather) {
+    case Vehicule::RAINY:
+        weatherText = "Pluie";
+        weatherColor = QColor(100, 150, 255);
+        break;
+    case Vehicule::STORMY:
+        weatherText = "Tempete";
+        weatherColor = QColor(150, 100, 255);
+        break;
+    default:
+        weatherText = "Ensoleille";
+        weatherColor = QColor(255, 220, 0);
+        break;
+    }
+
+    // ===== FOND HUD =====
+    painter.setBrush(QColor(0, 0, 0, 150));
+    painter.setPen(Qt::NoPen);
+    painter.drawRect(10, 10, 170, 115);
+
+    // ===== TEXTE HUD =====
+    painter.setPen(Qt::white);
+    painter.setFont(QFont("Arial", 12));
+    painter.drawText(20, 35, QString("Carburant: %1%").arg((int)voiture.getCarburant()));
+
+    painter.setPen(QColor(0, 200, 255));
+    painter.drawText(20, 60, QString("NOS: %1%").arg((int)voiture.getNos()));
+
+    painter.setPen(weatherColor);
+    painter.drawText(20, 85, QString("Meteo: %1").arg(weatherText));
+
+    // Couleur selon l'usure
+    float wear = voiture.getTireWear();
+    QColor tireColor;
+    if (wear > 60)       tireColor = Qt::green;
+    else if (wear > 30)  tireColor = QColor(255, 165, 0);  // orange
+    else                 tireColor = Qt::red;
+
+    painter.setPen(tireColor);
+    painter.drawText(20, 108, QString("Pneus: %1%").arg((int)wear));
+
+    // ===== MESSAGE PIT STOP =====
+    if (inPitStop) {
+        painter.setPen(Qt::green);
+        painter.setFont(QFont("Arial", 14, QFont::Bold));
+        painter.drawText(20, 120, "PIT STOP - Appuyez sur Enter pour partir !");
+    }
 }
 
 // Cette fonction capte les clics de souris
-void MainWindow::mousePressEvent(QMouseEvent* event)
+void MainWindow1::mousePressEvent(QMouseEvent* event)
 {
     // Met à jour les coordonnées
     imageX = event->pos().x() - image.width() / 2;
@@ -114,25 +243,29 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
     update();
 }
 
-void MainWindow::keyPressEvent(QKeyEvent* event)
+void MainWindow1::keyPressEvent(QKeyEvent* event)
 {
     if (event->key() == Qt::Key_W) keyW = true;
     if (event->key() == Qt::Key_A) keyA = true;
     if (event->key() == Qt::Key_S) keyS = true;
     if (event->key() == Qt::Key_D) keyD = true;
+    if (event->key() == Qt::Key_Space) keySpace = true;
+    if (event->key() == Qt::Key_Return) keyEnter = true;
 }
 
-void MainWindow::keyReleaseEvent(QKeyEvent* event)
+void MainWindow1::keyReleaseEvent(QKeyEvent* event)
 {
     if (event->key() == Qt::Key_W) keyW = false;
     if (event->key() == Qt::Key_A) keyA = false;
     if (event->key() == Qt::Key_S) keyS = false;
     if (event->key() == Qt::Key_D) keyD = false;
+    if (event->key() == Qt::Key_Space) keySpace = false;
+    if (event->key() == Qt::Key_Return) keyEnter = false;
 }
 
 
 
-void MainWindow::gameLoop()
+void MainWindow1::gameLoop()
 {
     QTime currentTime = QTime::currentTime();
     int msElapsed = lastFrameTime.msecsTo(currentTime);  // Millisecondes écoulées
@@ -141,25 +274,52 @@ void MainWindow::gameLoop()
 
     voiture.setAccel(keyW ? 1.0f : 0.0f);
     voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    voiture.setBoosting(keySpace);
 
     if (keyA && !keyD) voiture.setSteering(-1.0f);
     else if (keyD && !keyA) voiture.setSteering(1.0f);
     else voiture.setSteering(0.0f);
-    if (track->isVector2DOnTrack(voiture.getPosition())) {
-		voiture.is_on_grass = false;
-		voiture.is_on_track = true;
+    // Sur la piste OU dans la pitlane OU dans le pit stop
+    const float PIXELS_PER_METER = 5.0f;
+    int carXpx = (int)(voiture.getPosition().x() * PIXELS_PER_METER);
+    int carYpx = (int)(voiture.getPosition().y() * PIXELS_PER_METER);
+
+    bool onTrack = track.isVector2DOnTrack(voiture.getPosition());
+    bool onPitLane = pitStop.getPitLanePath(PIXELS_PER_METER)
+        .contains(QPointF(carXpx, carYpx));
+    bool onPit = pitStop.getRect().contains(carXpx, carYpx);
+
+    voiture.is_on_grass = !(onTrack || onPitLane || onPit);
+    voiture.is_on_track = !voiture.is_on_grass;
+
+    //M�canique de pitstop
+    int carX = (int)(voiture.getPosition().x() * PIXELS_PER_METER);
+    int carY = (int)(voiture.getPosition().y() * PIXELS_PER_METER);
+    inPitStop = pitStop.contains(carX, carY);
+
+    if (!inPitStop) pitStop.resetLeaving();
+
+    if (inPitStop && !pitStop.isLeaving() && !keyEnter) {
+        float carburant = voiture.getCarburant();
+        float nos = voiture.getNos();
+        float tireWear = voiture.getTireWear();
+        pitStop.recharge(deltaTime, carburant, nos, tireWear);
+        voiture.setCarburant(carburant);
+        voiture.setNos(nos);
+        voiture.setTireWear(tireWear);
+        update();
+        return;
     }
-    else {
-		voiture.is_on_grass = true;
-		voiture.is_on_track = false;
-    }
+
+    if (inPitStop && keyEnter) pitStop.setLeaving(true);
+
     // ===== UPDATE PHYSIQUE =====
     voiture.update(deltaTime);
 
     update();
 }
 
-void MainWindow::drawTrack(QPainter& painter, float scale)
+void MainWindow1::drawTrack(QPainter& painter, float scale)
 {
     // PISTE (gris foncé)
     
@@ -236,7 +396,7 @@ void MainWindow::drawTrack(QPainter& painter, float scale)
     
 }
 
-void MainWindow::drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color)
+void MainWindow1::drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color)
 {
     QPen curbPen(color, 8);
     painter.setPen(curbPen);
