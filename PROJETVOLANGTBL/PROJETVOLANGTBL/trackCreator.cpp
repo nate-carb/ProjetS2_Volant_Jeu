@@ -341,6 +341,9 @@ void TrackCreator::drawDecors(QPainter& painter)
             : QPen(decorColor.darker(150), 1));
         painter.drawRect(-w / 2, -h / 2, w, h);
 
+		painter.setPen(QPen(Qt::red, 1));
+		painter.drawLine(0, 0, 0, -h / 2); // Draw small red line at decor center for angle reference
+
         painter.setPen(Qt::white);
         painter.setFont(QFont("Arial", 8, QFont::Bold));
         painter.drawText(QRectF(-w / 2, -h / 2, w, h), Qt::AlignCenter, label);
@@ -366,6 +369,24 @@ int TrackCreator::findNearestCenterLineIndex(QVector2D pos)
         if (d < minDist) { minDist = d; nearest = i; }
     }
     return nearest;
+}
+
+void TrackCreator::rotateDecorRelative(int decorIndex, float angle)
+{
+    if (decorIndex < 0 || decorIndex >= (int)currentTrack.getDecors().size())
+        return;
+    DecorPieces* decor = currentTrack.getDecors()[decorIndex];
+    decor->setAngle(decor->getInfo().angle + angle);
+	update();
+}
+
+void TrackCreator::rotateDecorExact(int decorIndex, float angle)
+{
+    if (decorIndex < 0 || decorIndex >= (int)currentTrack.getDecors().size())
+        return;
+	DecorPieces* decor = currentTrack.getDecors()[decorIndex];
+	decor->setAngle(angle);
+	update();
 }
 
 

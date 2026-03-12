@@ -1,5 +1,6 @@
 #include "mainWindowCreator.h"
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QMessageBox>
 
 
@@ -205,6 +206,50 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         onAddDecor(TREES_INDEX, treesCombo->currentIndex());
         });
     layout->addWidget(addTreeBtn);
+
+    // ── Decor angle controls ─────────────────────────────────
+    QLabel* angleLabel = new QLabel("── Decor Angle ──", this);
+    angleLabel->setAlignment(Qt::AlignCenter);
+    angleLabel->setStyleSheet("color: #aaa; font-size: 11px;");
+    layout->addWidget(angleLabel);
+
+    QHBoxLayout* angleLayout = new QHBoxLayout();
+
+    QPushButton* exactAngleBtn = new QPushButton("Set Angle", this);
+    exactAngleBtn->setStyleSheet(
+        "QPushButton { background-color: #FF5722; color: white; padding: 6px; font-size: 10px; }");
+    connect(exactAngleBtn, &QPushButton::clicked, [this]() {
+        bool ok;
+        double angle = QInputDialog::getDouble(this, "Set Exact Angle",
+            "Angle (degrees):", 0.0, -360.0, 360.0, 1, &ok);
+        if (ok) {
+			trackCreator->rotateDecorExact(0, angle); //set selected decor angle to user input (exact)
+            qDebug() << "Set exact angle:" << angle;
+        }
+        });
+    angleLayout->addWidget(exactAngleBtn);
+
+    QPushButton* relAngleBtn = new QPushButton("Rotate", this);
+    relAngleBtn->setStyleSheet(
+        "QPushButton { background-color: #FF9800; color: white; padding: 6px; font-size: 10px; }");
+    connect(relAngleBtn, &QPushButton::clicked, [this]() {
+		trackCreator->rotateDecorRelative(0, 5); //rotate selected decor by 5 degrees (relative)
+            
+        qDebug() << "Rotate by:" << 5;
+        
+        });
+    angleLayout->addWidget(relAngleBtn);
+
+    QPushButton* resetAngleBtn = new QPushButton("Reset", this);
+    resetAngleBtn->setStyleSheet(
+        "QPushButton { background-color: #607D8B; color: white; padding: 6px; font-size: 10px; }");
+    connect(resetAngleBtn, &QPushButton::clicked, [this]() {
+		trackCreator->rotateDecorExact(0, 0); //reset selected decor angle to 0 degrees (exact) 
+        qDebug() << "Reset angle";
+        });
+    angleLayout->addWidget(resetAngleBtn);
+
+    layout->addLayout(angleLayout);
 
     // ── Bezier curves controls ───────────────────────────────
     QLabel* bezierLabel = new QLabel("── Bezier Curves ──", this);

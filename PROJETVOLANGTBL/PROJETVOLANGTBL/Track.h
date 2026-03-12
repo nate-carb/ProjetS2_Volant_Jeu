@@ -191,6 +191,9 @@ class DecorPieces
 		void setScale(float s) { info.scale = s; };
 		//void setModelPath(QString path) { modelPath = path; };
 
+		// Angle is in degrees
+		void setAngle(float a) { info.angle = a; };
+
 		virtual void selectModel(int modelNum) = 0; // Pure virtual function to select a model based on some criteria 
 
 protected:

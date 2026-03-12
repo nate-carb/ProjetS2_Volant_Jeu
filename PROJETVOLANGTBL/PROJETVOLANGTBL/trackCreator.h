@@ -15,9 +15,12 @@ public:
     void updateTrack(const Track& track);
     void addPiece(int pieceType);  // Add new piece to track
 
+	// decor related functions
 	void addDecor(int decor, int variant);// Add new decor piece to track
     int  findNearestCenterLineIndex(QVector2D pos);
-
+	// decor movement functions
+	void rotateDecorRelative(int decorIndex, float angle); // Rotate decor by angle (relative)
+	void rotateDecorExact(int decorIndex, float angle); // Rotate decor to exact angle
     
 
     // track walls related functions
