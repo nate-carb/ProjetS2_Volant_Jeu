@@ -38,6 +38,21 @@ public:
 	void setBreaking(float b) { breaking = b; }
     bool is_on_track = true; // pour gérer les différents types de terrain
     bool is_on_grass = false;
+
+    float getNos() const { return nos; }
+    void setNos(float n) { nos = n; }
+
+    void setBoosting(bool b) { boosting = b; }
+    bool isBoosting() const { return boosting; }
+
+    enum Weather { SUNNY, RAINY, STORMY };
+
+    void setWeather(Weather w) { weather = w; }
+    Weather getWeather() const { return weather; }
+
+    float getTireWear() const { return tireWear; }
+    void setTireWear(float t) { tireWear = t; }
+
 private:
     QVector2D vitesse;
     QVector2D position;
@@ -48,4 +63,8 @@ private:
     float breaking;  // 0 à 1 
     float carburant; // en pourcentage
     float angularVelocity;    // vitesse de rotation
+    float nos;          // réservoir de NOS, 0 à 100%
+    bool boosting;      // est-ce-qu'on boost live ou non
+    Weather weather = SUNNY;
+    float tireWear;  // 0 à 100, 100 = pneus neufs, 0 = pneus morts
 };

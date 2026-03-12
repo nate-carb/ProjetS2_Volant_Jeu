@@ -7,11 +7,6 @@
 #include <QElapsedTimer>
 #include <QTimer>
 #include <QTime>
-#include <Track.h>
-#include "PitStop.h"
-#include <QPixmap>
-#include <map>
-
 
 class MainWindow : public QMainWindow
 {
@@ -20,9 +15,6 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
-    QTimer* timer;
-    Vehicule voiture;
-    Track* track = nullptr;
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -30,29 +22,17 @@ protected:
     void keyPressEvent(QKeyEvent* event) override;
 	void keyReleaseEvent(QKeyEvent* event) override;
 
-    void drawTrack(QPainter& painter, float scale);
-    void drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color);
-    Vehicule::Weather currentWeather = Vehicule::SUNNY;
-    QTimer* weatherTimer;  // pour changer la m√©t√©o automatiquement
-
-    void drawPit(float scale, Track* track, QPainter& painter);
-
-    
-
 private slots:
     void gameLoop();
-    void changeWeather();
 
 private:
-    
-
     QPixmap image;  // Ton image PNG
     float imageX;     // Position X
     float imageY;     // Position Y
- //   Vehicule voiture; 
-	//Track track; // Piste de course
-    float deltaTime;             // Temps en secondes depuis derni√®re frame
-	//QTimer* timer;          // Timer pour la boucle de jeu
+    Vehicule voiture; 
+            
+    float deltaTime;             // Temps en secondes depuis derniËre frame
+	QTimer* timer;          // Timer pour la boucle de jeu
     QTime lastFrameTime; //Temos deouis derniere frame
     bool keyW = false;
     bool keyA = false;
@@ -60,9 +40,10 @@ private:
     bool keyD = false;
     bool keySpace = false;
     bool keyEnter = false;
-    PitStop pitStop;
-    bool inPitStop;
-    bool keyP = false;
+    QRect pitStop;          // zone du pit stop
+    bool inPitStop;         // est-ce-que lnotre char est dans le pit stop
+    bool pitStopReady;      // recharge terminÈe, peut partir
+    bool leavingPitStop = false;
 };
 
 #endif
