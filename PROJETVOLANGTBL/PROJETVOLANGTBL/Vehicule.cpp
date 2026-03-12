@@ -93,7 +93,7 @@ void Vehicule::update(float deltaTime)
 {
     if (carburant <= 0) return;
 
-    const float maxAcceleration = 35.0f;
+    const float maxAcceleration = 45.0f; // ajuster vitesse max
     const float drag_on_track = 0.999f;
     const float drag_on_grass = 0.96;
     // ===== PARAMÈTRES DE CONDUITE =====
@@ -126,12 +126,12 @@ void Vehicule::update(float deltaTime)
 
     if (speedValue > 0.1f)
     {
-        float speedNorm = std::clamp(speedValue / 80.0f, 0.0f, 1.0f);
+        float speedNorm = std::clamp(speedValue / 100.0f, 0.0f, 1.0f); // ajuster turning rate a 100
 
         // courbe en cloche (0 ? 1 ? 0)
         float bell = 4.0f * speedNorm * (1.0f - speedNorm);
 
-        const float minTurnFactor = 0.20f;  // tourne encore à haute vitesse
+        const float minTurnFactor = 0.35f;  // tourne encore à haute vitesse
         float turnFactor = minTurnFactor + bell * (1.0f - minTurnFactor);
 
         float rotationAmount = steering * turnFactor * 2.5f * deltaTime;
