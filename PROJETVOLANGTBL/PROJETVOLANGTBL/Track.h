@@ -51,7 +51,7 @@ struct BezierCurveData {
 };
 
 // For track generation 
-enum class TrackSegmentType { CURVE_TRACK, STRAIGHT_TRACK };
+enum class TrackSegmentType { CURVE_TRACK, STRAIGHT_TRACK, PIT_TRACK };
 
 // Represents a segment of the track, either a straight or a curve, with necessary data for construction and editing
 struct TrackSegment {
@@ -261,11 +261,14 @@ public:
     std::vector<int> getPiecesList() const { return piecesIntList; }
 
 	// Pit lane related functions
-	void generatePitLane(int startIndex, int endIndex);
+	//void generatePitLane(int startIndex, int endIndex);
+	void generatePitLane();
 	PitLane getPitLane() const { return pitLane; }
 	bool hasPitLane() const { return pitLane.isValid; }
 	int getPitStartIndex() const { return pitStartIndex; }
 	int getPitEndIndex() const { return pitEndIndex; }
+	void setPitStartIndex(int index) { pitStartIndex = index; }
+	void setPitEndIndex(int index) { pitEndIndex = index; }
 
 	// decor related functions
 	std::vector<DecorPieces*> getDecors() const { return decors; };

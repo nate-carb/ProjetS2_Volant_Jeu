@@ -77,7 +77,7 @@ void TrackCreator::addPiece(int pieceType)
     // Add piece to list
     piecesList.push_back(pieceType);
 
-	
+    
     // Rebuild track with new piece
     rebuildTrack();
 }

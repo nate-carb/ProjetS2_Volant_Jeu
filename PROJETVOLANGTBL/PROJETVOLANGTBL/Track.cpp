@@ -182,10 +182,12 @@ Pit::Pit() {
 }
 
 
-void Track::generatePitLane(int startIndex, int endIndex)
+//void Track::generatePitLane(int startIndex, int endIndex)
+void Track::generatePitLane()
 {
-    pitStartIndex = startIndex;
-    pitEndIndex = endIndex;
+    //pitStartIndex = startIndex;
+    //pitEndIndex = endIndex;
+
     if (pitStartIndex < 0 || pitEndIndex < 0) return;
     if (pitEndIndex >= (int)centerLine.size()) return;
 
@@ -769,7 +771,11 @@ void Track::buildFromSegments()
             trackEdges.right.push_back(point - normal * (trackWidth / 2.0f));
         }
     }
-
+    //// Generate pit lane for pit segments using correct indices
+    //if (seg.type == TrackSegmentType::PIT_TRACK) {
+    //    int segEndIndex = centerLine.size() - 1;
+    //    generatePitLane(segStartIndex, segEndIndex);
+    //}
     qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
         << trackEdges.left.size() << "left edge points";
 }
@@ -813,8 +819,9 @@ void Track::calculAngLen(int index)
 
     
     // Record where the piece starts in the centerline
+    
+
     piece->setStartIndex(centerLine.size() - 1);
-   
 
     // Generate track points
     for (size_t i = 0; i < angles.size() && i < lengths.size(); i++) {
@@ -825,8 +832,10 @@ void Track::calculAngLen(int index)
 
     piece->setEndIndex(centerLine.size() - 1);
     
+
     if (piece->getId() == PIT) {
-        generatePitLane(piece->getStartIndex(), piece->getEndIndex()); // auto-generate parallel lane
+        //generatePitLane(piece->getStartIndex(), piece->getEndIndex()); // auto-generate parallel lane
+		generatePitLane(); // auto-generate parallel lane
 	}
       
     
