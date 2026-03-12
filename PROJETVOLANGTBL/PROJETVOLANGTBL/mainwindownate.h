@@ -63,6 +63,8 @@ private:
     PitStop pitStop;
     bool inPitStop;
     bool keyP = false;
+    bool keyShiftUp = false; // E
+    bool keyShiftDown = false; // Q
 };
 
 #endif

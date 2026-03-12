@@ -92,8 +92,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="camera2D.cpp" />
-    <ClCompile Include="GameEngine.cpp" />
+    <ClCompile Include="devmenu.cpp" />
     <ClCompile Include="mainwindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -127,6 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera2D.h" />
+    <QtMoc Include="devmenu.h" />
     <ClInclude Include="GameEngine.h" />
     <QtMoc Include="mainwindownate.h" />
     <QtMoc Include="mainWindowView.h" />

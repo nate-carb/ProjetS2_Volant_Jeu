@@ -57,126 +57,91 @@ void Vehicule::update(float deltaTime)
 {
     if (carburant <= 0) return;
 
-    const float maxAcceleration = 45.0f; // ajuster vitesse max
-    const float drag_on_track = 0.999f;
-    const float drag_on_grass = 0.96f;
-    // ===== PARAMÈTRES DE CONDUITE =====
-    const float maxTurnSpeed = 4.0f;      // rad/s
-    const float turnResponsiveness = 8.0f;
-
-    // 1) ACCÉLÉRATION agit sur la vitesse SCALAIRE
-
+    // 1) ACCÉLÉRATION avec gear
     if (accel > 0) {
-        speed += maxAcceleration * accel * deltaTime;
+        if (speed < gearMinSpeed[gear]) {
+            speed -= 5.0f * deltaTime;
+            speed = std::max(speed, 0.0f);
+        }
+        else {
+            speed += maxAcceleration * accel * deltaTime;
+        }
     }
 
-    // 2) NOS boost la vitesse du véhicule
-    const float nosForce = 50.0f;       // force du boost (on peut ajuster en consequece apres tests)
-    const float nosDrain = 15.0f;       //consommation de nos/seconde
+    // 2) NOS
     if (boosting && nos > 0.0f) {
         speed += nosForce * deltaTime;
         nos -= nosDrain * deltaTime;
-        nos = std::max(nos, 0.0f);      //empeche que le nos aille sous 0
+        nos = std::max(nos, 0.0f);
     }
-
-    const float nosRegen = 2.0f;        // % par seconde (on peut ajuster en consequece apres tests)
-
     if (!boosting && nos < 100.0f) {
         nos += nosRegen * deltaTime;
-        nos = std::min(nos, 100.0f);        // empêche que le nos dépasse 100
+        nos = std::min(nos, 100.0f);
     }
 
-    // Réduit la vitesse max selon l'usure
-    float maxSpeed = 200.0f + (tireWear / 100.0f) * 100.0f;
-    if (boosting && nos > 0.0f) {
-        maxSpeed *= 1.25f;  // 125% de la vitesse max quand NOS actif
-    }
-    if (speed > maxSpeed) {
-        speed = maxSpeed;
-    }
+    // 3) Brider à la vitesse max du gear
+    float maxSpeed = gearMaxSpeed[gear];
+    if (boosting && nos > 0.0f) maxSpeed *= 1.25f;
+    speed = std::min(speed, maxSpeed);
 
-    // 3) FREINAGE agit sur speed
+    // 4) FREINAGE
     if (breaking > 0) {
-        speed *= (1.0f - breaking * 0.01f);
-        speed = speed - 0.3f;
-		speed = std::max(speed, 0.0f);
-    }
-        
-    // 3) FRICTION naturelle
-    if (is_on_grass) {
-        speed *= drag_on_grass;
-    }
-    else if (is_on_track) {
-        speed *= drag_on_track;
+        speed *= (1.0f - breaking * brakeForce);
+        speed -= brakeDecel * breaking * deltaTime;
+        speed = std::max(speed, 0.0f);
     }
 
-    // 5) STEERING -> angular velocity (dépend de la vitesse)
+    // 5) FRICTION
+    speed *= is_on_grass ? dragOnGrass : dragOnTrack;
+
+    // 6) STEERING
     float speedValue = vitesse.length();
-
-    if (speedValue > 0.1f)
-    {
-        float speedNorm = std::clamp(speedValue / 100.0f, 0.0f, 1.0f); // ajuster turning rate a 100
-
-        // courbe en cloche (0 ? 1 ? 0)
+    if (speedValue > 0.1f) {
+        float speedNorm = std::clamp(speedValue / 100.0f, 0.0f, 1.0f);
         float bell = 4.0f * speedNorm * (1.0f - speedNorm);
-
-        const float minTurnFactor = 0.35f;  // tourne encore à haute vitesse
-        float turnFactor = minTurnFactor + bell * (1.0f - minTurnFactor);
+        float turnFactor = minTurnFactor + bell * (maxTurnFactor - minTurnFactor);
 
         float wetFactor = 1.0f;
-        if (weather == RAINY)  wetFactor = 0.9f;   // tourne moins bien
-        if (weather == STORMY) wetFactor = 0.8f;  // glisse beaucoup
+        if (weather == RAINY)  wetFactor = 0.9f;
+        if (weather == STORMY) wetFactor = 0.8f;
 
-        float rotationAmount = steering * turnFactor * 2.5f * wetFactor * deltaTime;
+        float rotationAmount = steering * turnFactor * wetFactor * deltaTime;
 
         float cs = std::cos(rotationAmount);
         float sn = std::sin(rotationAmount);
-
         float vx = vitesse.x();
         float vy = vitesse.y();
 
-        // rotation du vecteur vitesse
         vitesse.setX(vx * cs - vy * sn);
         vitesse.setY(vx * sn + vy * cs);
         angle = std::atan2(vitesse.y(), vitesse.x());
     }
 
-    // 5) Reconstruit la vitesse à partir de l’angle
+    // 7) Reconstruit vitesse depuis angle
     vitesse.setX(std::cos(angle) * speed);
     vitesse.setY(std::sin(angle) * speed);
 
-    // 7) Position
-
+    // 8) Position
     position.setX(position.x() + vitesse.x() * deltaTime);
     position.setY(position.y() + vitesse.y() * deltaTime);
 
-    // 8) Carburant
+    // 9) Carburant
+    if (speed > 0.1f)        carburant -= 0.5f * deltaTime;
+    if (accel > 0 || boosting) carburant -= 0.01f * deltaTime;
+    carburant = std::max(carburant, 0.0f);
+
+    // 10) RPM
+    float targetRpm = minRpm + (speed / gearMaxSpeed[gear]) * maxRpm;
+    rpm += (targetRpm - rpm) * 0.1f;
+    rpm = std::clamp(rpm, minRpm, maxRpm);
+
+    // 11) Usure pneus
     if (speed > 0.1f) {
-        carburant -= 0.5f * deltaTime;         // consommation de base en mouvement
-    }
-    if (accel > 0 || boosting) {
-        carburant -= 0.01f * deltaTime;        // consommation en accel et boost
-    }
-
-    carburant = std::max(carburant, 0.0f);  // empêche d'aller sous 0
-
-    qDebug() << "Mon angle : " << angle << " et ma vitesse : " << getSpeed() << " m/s" << " et ma position : (" << position.x() << ", " << position.y() << ")";
-	qDebug() << "Surface: " << (is_on_grass ? "Herbe" : (is_on_track ? "Piste" : "Autre"));
-    qDebug() << "| Carburant:" << (int)carburant << "%"
-        << "| NOS:" << (int)nos << "%";
-
-    // USURE DES PNEUS
-    const float wearRate = 0.5f;  // usure par seconde, ajuste au goût
-    if (speed > 0.1f) {
-        tireWear -= wearRate * deltaTime;
+        tireWear -= 0.5f * deltaTime;
         tireWear = std::max(tireWear, 0.0f);
     }
-
-    
 }
 
-
-float Vehicule::getSpeed() const
-{
+float Vehicule::getSpeed() const {
     return vitesse.length();
 }
