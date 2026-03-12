@@ -223,7 +223,7 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         double angle = QInputDialog::getDouble(this, "Set Exact Angle",
             "Angle (degrees):", 0.0, -360.0, 360.0, 1, &ok);
         if (ok) {
-			trackCreator->rotateDecorExact(0, angle); //set selected decor angle to user input (exact)
+			trackCreator->rotateDecorExact(angle); //set selected decor angle to user input (exact)
             qDebug() << "Set exact angle:" << angle;
         }
         });
@@ -233,7 +233,7 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     relAngleBtn->setStyleSheet(
         "QPushButton { background-color: #FF9800; color: white; padding: 6px; font-size: 10px; }");
     connect(relAngleBtn, &QPushButton::clicked, [this]() {
-		trackCreator->rotateDecorRelative(0, 5); //rotate selected decor by 5 degrees (relative)
+		trackCreator->rotateDecorRelative(5); //rotate selected decor by 5 degrees (relative)
             
         qDebug() << "Rotate by:" << 5;
         
@@ -244,7 +244,7 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     resetAngleBtn->setStyleSheet(
         "QPushButton { background-color: #607D8B; color: white; padding: 6px; font-size: 10px; }");
     connect(resetAngleBtn, &QPushButton::clicked, [this]() {
-		trackCreator->rotateDecorExact(0, 0); //reset selected decor angle to 0 degrees (exact) 
+		trackCreator->rotateDecorExact(0); //reset selected decor angle to 0 degrees (exact) 
         qDebug() << "Reset angle";
         });
     angleLayout->addWidget(resetAngleBtn);

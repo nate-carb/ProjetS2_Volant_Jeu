@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <qvector2d.h>
+#include <QtMath>
 
 //Track.h - Defines the Track class and related structures for representing a racing track, its pieces, and decor elements.
 #define VIRAGE_45RIGHT 1
@@ -192,7 +193,7 @@ class DecorPieces
 		//void setModelPath(QString path) { modelPath = path; };
 
 		// Angle is in degrees
-		void setAngle(float a) { info.angle = a; };
+		void setAngle(float a) { info.angle = qDegreesToRadians(a); };
 
 		virtual void selectModel(int modelNum) = 0; // Pure virtual function to select a model based on some criteria 
 

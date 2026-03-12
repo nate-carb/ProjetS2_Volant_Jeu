@@ -371,21 +371,31 @@ int TrackCreator::findNearestCenterLineIndex(QVector2D pos)
     return nearest;
 }
 
-void TrackCreator::rotateDecorRelative(int decorIndex, float angle)
+void TrackCreator::rotateDecorRelative(float angle)
 {
-    if (decorIndex < 0 || decorIndex >= (int)currentTrack.getDecors().size())
+   
+	if (selectedDecorIndex < 0) {
         return;
-    DecorPieces* decor = currentTrack.getDecors()[decorIndex];
-    decor->setAngle(decor->getInfo().angle + angle);
+    }
+    DecorPieces* decor = currentTrack.getDecors()[selectedDecorIndex];
+	//qDebug() << "(rotateDecorRelative) Current angle:" << decor->getInfo().angle << "Adding relative angle:" << angle;
+	float newAngle = qRadiansToDegrees(decor->getInfo().angle) + angle;
+
+	if (newAngle >= 360.0f) newAngle -= 360.0f;
+
+    decor->setAngle(newAngle);
+    emit trackUpdated(currentTrack);
 	update();
 }
 
-void TrackCreator::rotateDecorExact(int decorIndex, float angle)
+void TrackCreator::rotateDecorExact(float angle)
 {
-    if (decorIndex < 0 || decorIndex >= (int)currentTrack.getDecors().size())
+    if (selectedDecorIndex < 0) {
         return;
-	DecorPieces* decor = currentTrack.getDecors()[decorIndex];
+    }
+	DecorPieces* decor = currentTrack.getDecors()[selectedDecorIndex];
 	decor->setAngle(angle);
+    emit trackUpdated(currentTrack);
 	update();
 }
 
