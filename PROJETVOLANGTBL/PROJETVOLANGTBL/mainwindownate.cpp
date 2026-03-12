@@ -11,7 +11,6 @@
 
 
 
-
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), imageX(100), imageY(100)
 {
@@ -33,6 +32,8 @@ MainWindow::MainWindow(QWidget* parent)
     //track->loadFromFile("tracks/track3dmodelV1.trk");
     //track->loadFromFile("tracks/test_pit.trk");
     // Vérifier si ça a marché
+    pitStop.placeNearTrack(track->getCenterLine(), 5.0f, 150.0f, track->getTrackWidth());
+   
     if (image.isNull()) {
         qDebug() << "ERREUR: Image non chargée!";
         qDebug() << "Le fichier existe?" << QFile::exists("images/car.PNG");
@@ -43,7 +44,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Timer qui change la m�t�o toutes les 10 secondes
     weatherTimer = new QTimer(this);
-    connect(weatherTimer, &QTimer::timeout, this, &MainWindow1::changeWeather);
+    connect(weatherTimer, &QTimer::timeout, this, &MainWindow::changeWeather);
     weatherTimer->start(10000);  // 10 secondes
 
     resize(800, 600);
@@ -60,11 +61,11 @@ MainWindow::MainWindow(QWidget* parent)
     lastFrameTime = QTime::currentTime();
 }
 
-MainWindow1::~MainWindow1()
+MainWindow::~MainWindow()
 {
 }
 
-void MainWindow1::changeWeather()
+void MainWindow::changeWeather()
 {
     // Cycle SUNNY -> RAINY -> STORMY -> SUNNY
     if (currentWeather == Vehicule::SUNNY)
@@ -233,7 +234,7 @@ void MainWindow::paintEvent(QPaintEvent* event)
 }
 
 // Cette fonction capte les clics de souris
-void MainWindow1::mousePressEvent(QMouseEvent* event)
+void MainWindow::mousePressEvent(QMouseEvent* event)
 {
     // Met à jour les coordonnées
     imageX = event->pos().x() - image.width() / 2;
@@ -243,7 +244,7 @@ void MainWindow1::mousePressEvent(QMouseEvent* event)
     update();
 }
 
-void MainWindow1::keyPressEvent(QKeyEvent* event)
+void MainWindow::keyPressEvent(QKeyEvent* event)
 {
     if (event->key() == Qt::Key_W) keyW = true;
     if (event->key() == Qt::Key_A) keyA = true;
@@ -253,7 +254,7 @@ void MainWindow1::keyPressEvent(QKeyEvent* event)
     if (event->key() == Qt::Key_Return) keyEnter = true;
 }
 
-void MainWindow1::keyReleaseEvent(QKeyEvent* event)
+void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
     if (event->key() == Qt::Key_W) keyW = false;
     if (event->key() == Qt::Key_A) keyA = false;
@@ -265,7 +266,7 @@ void MainWindow1::keyReleaseEvent(QKeyEvent* event)
 
 
 
-void MainWindow1::gameLoop()
+void MainWindow::gameLoop()
 {
     QTime currentTime = QTime::currentTime();
     int msElapsed = lastFrameTime.msecsTo(currentTime);  // Millisecondes écoulées
@@ -284,7 +285,7 @@ void MainWindow1::gameLoop()
     int carXpx = (int)(voiture.getPosition().x() * PIXELS_PER_METER);
     int carYpx = (int)(voiture.getPosition().y() * PIXELS_PER_METER);
 
-    bool onTrack = track.isVector2DOnTrack(voiture.getPosition());
+    bool onTrack = track->isVector2DOnTrack(voiture.getPosition());
     bool onPitLane = pitStop.getPitLanePath(PIXELS_PER_METER)
         .contains(QPointF(carXpx, carYpx));
     bool onPit = pitStop.getRect().contains(carXpx, carYpx);
@@ -319,7 +320,7 @@ void MainWindow1::gameLoop()
     update();
 }
 
-void MainWindow1::drawTrack(QPainter& painter, float scale)
+void MainWindow::drawTrack(QPainter& painter, float scale)
 {
     // PISTE (gris foncé)
     
@@ -396,7 +397,7 @@ void MainWindow1::drawTrack(QPainter& painter, float scale)
     
 }
 
-void MainWindow1::drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color)
+void MainWindow::drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color)
 {
     QPen curbPen(color, 8);
     painter.setPen(curbPen);
