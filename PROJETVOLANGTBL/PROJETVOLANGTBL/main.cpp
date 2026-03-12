@@ -199,7 +199,7 @@ int main(int argc, char* argv[])
     viewer->setTrack(window->track);
 
     // Hook 3D viewer update into MainWindow's existing timer`
-}
+
     QObject::connect(window->timer, &QTimer::timeout, [=]() {
         viewer->updateVehicule(&window->voiture);
         });
