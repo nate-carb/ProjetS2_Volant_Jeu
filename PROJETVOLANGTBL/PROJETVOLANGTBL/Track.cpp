@@ -183,10 +183,10 @@ Pit::Pit() {
 
 
 //void Track::generatePitLane(int startIndex, int endIndex)
-void Track::generatePitLane()
+void Track::generatePitLane(int startIndex, int endIndex)
 {
-    //pitStartIndex = startIndex;
-    //pitEndIndex = endIndex;
+    pitStartIndex = startIndex;
+    pitEndIndex = endIndex;
 
     if (pitStartIndex < 0 || pitEndIndex < 0) return;
     if (pitEndIndex >= (int)centerLine.size()) return;
@@ -708,9 +708,32 @@ void Track::removeLastSegment()
     buildFromSegments(); // refills centerLine + trackEdges
 }
 
+// Adds a pit segment that extends from the last track segment, ensuring it's long enough for a pit lane. The actual pit lane geometry is generated in buildFromSegments() when it processes this segment type.
+void Track::addPitSegment()
+{
+    TrackSegment seg;
+    seg.type = TrackSegmentType::PIT_TRACK;
+
+    if (trackSegments.empty()) {
+        seg.start = QVector2D(0, 0);
+        seg.end = QVector2D(400, 0); // pit lane needs to be longer than normal straight
+    }
+    else {
+        seg.start = trackSegments.back().end;
+        QVector2D lastDir = (trackSegments.back().end -
+            trackSegments.back().start).normalized();
+        seg.end = seg.start + lastDir * 400.0f;
+    }
+
+    seg.cp1 = seg.start;
+    seg.cp2 = seg.end;
+
+    trackSegments.push_back(seg);
+    buildFromSegments();
+}
+
 void Track::buildFromSegments()
 {
-    // Fills the SAME centerLine and trackEdges that everything else uses
     centerLine.clear();
     trackEdges.left.clear();
     trackEdges.right.clear();
@@ -723,12 +746,16 @@ void Track::buildFromSegments()
         const TrackSegment& seg = trackSegments[si];
         int startI = (si == 0) ? 0 : 1;
 
+        // Record pit start index BEFORE adding points
+        int segStartIndex = centerLine.size();
+
         for (int i = startI; i <= steps; i++) {
             float t = (float)i / steps;
             float u = 1.0f - t;
 
             QVector2D point;
-            if (seg.type == TrackSegmentType::STRAIGHT_TRACK) {
+            if (seg.type == TrackSegmentType::STRAIGHT_TRACK ||
+                seg.type == TrackSegmentType::PIT_TRACK) {
                 point = seg.start * (1.0f - t) + seg.end * t;
             }
             else {
@@ -738,13 +765,13 @@ void Track::buildFromSegments()
                     + seg.end * (t * t * t);
             }
 
-            // Tangent for edge normals
             QVector2D tangent;
             if (i < steps) {
                 float t2 = (float)(i + 1) / steps;
                 float u2 = 1.0f - t2;
                 QVector2D next;
-                if (seg.type == TrackSegmentType::STRAIGHT_TRACK) {
+                if (seg.type == TrackSegmentType::STRAIGHT_TRACK ||
+                    seg.type == TrackSegmentType::PIT_TRACK) {
                     next = seg.start * (1.0f - t2) + seg.end * t2;
                 }
                 else {
@@ -762,20 +789,19 @@ void Track::buildFromSegments()
                 tangent = QVector2D(1, 0);
             }
 
-            // perpendicular normal for edges
             QVector2D normal(-tangent.y(), tangent.x());
-
-            // Push into the SAME vectors as before
             centerLine.push_back(point);
             trackEdges.left.push_back(point + normal * (trackWidth / 2.0f));
             trackEdges.right.push_back(point - normal * (trackWidth / 2.0f));
         }
+
+        // Generate pit lane for pit segments using correct indices
+        if (seg.type == TrackSegmentType::PIT_TRACK) {
+            int segEndIndex = centerLine.size() - 1;
+            generatePitLane(segStartIndex, segEndIndex);
+        }
     }
-    //// Generate pit lane for pit segments using correct indices
-    //if (seg.type == TrackSegmentType::PIT_TRACK) {
-    //    int segEndIndex = centerLine.size() - 1;
-    //    generatePitLane(segStartIndex, segEndIndex);
-    //}
+
     qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
         << trackEdges.left.size() << "left edge points";
 }
@@ -834,8 +860,8 @@ void Track::calculAngLen(int index)
     
 
     if (piece->getId() == PIT) {
-        //generatePitLane(piece->getStartIndex(), piece->getEndIndex()); // auto-generate parallel lane
-		generatePitLane(); // auto-generate parallel lane
+        generatePitLane(piece->getStartIndex(), piece->getEndIndex()); // auto-generate parallel lane
+		//generatePitLane(); // auto-generate parallel lane
 	}
       
     

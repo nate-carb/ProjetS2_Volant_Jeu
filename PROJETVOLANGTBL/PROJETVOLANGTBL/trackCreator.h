@@ -47,6 +47,7 @@ public:
 	// Segement editing functions for new track editor
     void addCurveSegment();
     void addStraightSegment();
+	void addPitSegment();
     void removeLastSegment();
 
 signals:
