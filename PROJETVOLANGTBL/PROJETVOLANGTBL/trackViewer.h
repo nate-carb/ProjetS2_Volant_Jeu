@@ -14,6 +14,7 @@ public:
     explicit TrackViewer(QWidget* parent = nullptr);
     void loadTrack(const Track& track);
     void setTrack(const Track& track);
+    void drawSpriteTrack(QPainter& painter);
     void updateTrack(const Track& track);
 	Track getCurrentTrack() const { return currentTrack; }
 

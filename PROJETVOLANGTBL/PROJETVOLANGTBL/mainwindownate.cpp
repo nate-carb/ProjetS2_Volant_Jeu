@@ -1,4 +1,4 @@
-#include "mainwindownate.h"
+﻿#include "mainwindownate.h"
 
 #include <QPainter>
 #include <QMouseEvent>
@@ -8,21 +8,32 @@
 #include <QKeyEvent>
 #include <trackViewer.h>
 
+
+
+
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), imageX(100), imageY(100)
 {
-    // Voir o� le programme cherche les fichiers
+    // Voir où le programme cherche les fichiers
     qDebug() << "Dossier de travail actuel:" << QDir::currentPath();
-    // Essayer de charger l'image
 
+	
+
+    // Essayer de charger l'image
     image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
 	image = image.scaled(60, 60, Qt::KeepAspectRatio);
-	voiture = Vehicule();
-    track = Track();
-	track.loadFromFile("tracks/defaultTrack1.trk");
-    // V�rifier si �a a march�
+
+	//Vehicule* voiture = new Vehicule;
+    voiture = Vehicule();
+	//track = Track();
+	//track.loadFromFile("tracks/defaultTrack1.trk");
+    track = new Track();       // assigns to the MEMBER pointer
+    track->loadFromFile("tracks/segTest1.trk");
+    //track->loadFromFile("tracks/track3dmodelV1.trk");
+    //track->loadFromFile("tracks/test_pit.trk");
+    // Vérifier si ça a marché
     if (image.isNull()) {
-        qDebug() << "ERREUR: Image non charg�e!";
+        qDebug() << "ERREUR: Image non chargée!";
         qDebug() << "Le fichier existe?" << QFile::exists("images/car.PNG");
     }
     else {
@@ -31,13 +42,13 @@ MainWindow::MainWindow(QWidget* parent)
 
     resize(800, 600);
 
-    // Cr�e un timer
+    // Crée un timer
     timer = new QTimer(this);
 
-    // CONNECTE le timer � ta fonction gameLoop
+    // CONNECTE le timer à ta fonction gameLoop
     connect(timer, &QTimer::timeout, this, &MainWindow::gameLoop);
 
-    // D�MARRE le timer - d�clenche toutes les 16ms
+    // DÉMARRE le timer - déclenche toutes les 16ms
     timer->start(8);  // 16 millisecondes ? 60 fois par seconde
 
     lastFrameTime = QTime::currentTime();
@@ -56,10 +67,10 @@ MainWindow::~MainWindow()
 //    float y = voiture.getPosition().y()*PIXELS_PER_METER;
 //    float angle = voiture.getAngle();  // en radians
 //
-//    painter.translate(x, y);                 // va � la position de la voiture
-//    painter.rotate(angle * 180.0 / M_PI);   // Qt veut des degr�s
+//    painter.translate(x, y);                 // va à la position de la voiture
+//    painter.rotate(angle * 180.0 / M_PI);   // Qt veut des degrés
 //
-//    // Dessine l'image centr�e sur (0,0)
+//    // Dessine l'image centrée sur (0,0)
 //    painter.drawPixmap(-image.width() / 2,
 //        -image.height() / 2,
 //        image);
@@ -74,14 +85,14 @@ void MainWindow::paintEvent(QPaintEvent* event)
 
     const float PIXELS_PER_METER = 5.0f;
 
-    // ===== CAM�RA QUI SUIT LA VOITURE =====
+    // ===== CAMÉRA QUI SUIT LA VOITURE =====
     float carX = voiture.getPosition().x() * PIXELS_PER_METER;
     float carY = voiture.getPosition().y() * PIXELS_PER_METER;
 
-    // Centrer la cam�ra sur la voiture
+    // Centrer la caméra sur la voiture
     painter.translate(width() / 2 - carX, height() / 2 - carY);
 
-    // ===== DESSINER LA PISTE =====
+    // ===== DESSINER LA PISTE ===== 
     drawTrack(painter, PIXELS_PER_METER);
 
     // ===== DESSINER LA VOITURE =====
@@ -95,11 +106,11 @@ void MainWindow::paintEvent(QPaintEvent* event)
 // Cette fonction capte les clics de souris
 void MainWindow::mousePressEvent(QMouseEvent* event)
 {
-    // Met � jour les coordonn�es
+    // Met à jour les coordonnées
     imageX = event->pos().x() - image.width() / 2;
     imageY = event->pos().y() - image.height() / 2;
 
-    // Redemande � Qt de redessiner
+    // Redemande à Qt de redessiner
     update();
 }
 
@@ -124,7 +135,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 void MainWindow::gameLoop()
 {
     QTime currentTime = QTime::currentTime();
-    int msElapsed = lastFrameTime.msecsTo(currentTime);  // Millisecondes �coul�es
+    int msElapsed = lastFrameTime.msecsTo(currentTime);  // Millisecondes écoulées
     deltaTime = msElapsed / 1000.0f;  // Convertit en secondes
     lastFrameTime = currentTime;  // Sauvegarde pour la prochaine frame
 
@@ -134,7 +145,7 @@ void MainWindow::gameLoop()
     if (keyA && !keyD) voiture.setSteering(-1.0f);
     else if (keyD && !keyA) voiture.setSteering(1.0f);
     else voiture.setSteering(0.0f);
-    if (track.isVector2DOnTrack(voiture.getPosition())) {
+    if (track->isVector2DOnTrack(voiture.getPosition())) {
 		voiture.is_on_grass = false;
 		voiture.is_on_track = true;
     }
@@ -150,13 +161,13 @@ void MainWindow::gameLoop()
 
 void MainWindow::drawTrack(QPainter& painter, float scale)
 {
-    // PISTE (gris fonc�)
+    // PISTE (gris foncé)
+    
     painter.setPen(Qt::NoPen);
     painter.setBrush(QColor(50, 50, 50));
-
-    std::vector<QVector2D> left = track.getTrackEdges().left;
-    std::vector<QVector2D> right = track.getTrackEdges().right;
-
+    std::vector<QVector2D> left = track->getTrackEdges().left;
+    std::vector<QVector2D> right = track->getTrackEdges().right;
+    
     // Dessiner la piste comme un polygone
     QPolygonF trackPoly;
     for (const auto& p : left) {
@@ -167,11 +178,11 @@ void MainWindow::drawTrack(QPainter& painter, float scale)
     }
     painter.drawPolygon(trackPoly);
 
-    // LIGNE CENTRALE (pointill�s blancs)
+    // LIGNE CENTRALE (pointillés blancs)
     QPen centerPen(Qt::white, 2, Qt::DashLine);
     painter.setPen(centerPen);
 
-    std::vector<QVector2D> center = track.getCenterLine();
+    std::vector<QVector2D> center = track->getCenterLine();
     for (size_t i = 1; i < center.size(); i++) {
         painter.drawLine(
             QPointF(center[i - 1].x() * scale, center[i - 1].y() * scale),
@@ -179,9 +190,50 @@ void MainWindow::drawTrack(QPainter& painter, float scale)
         );
     }
 
-    // BORDURES (rouges et blanches altern�es comme en F1)
+    // BORDURES (rouges et blanches alternées comme en F1)
     drawCurbs(painter, left, scale, Qt::red);
     drawCurbs(painter, right, scale, Qt::red);
+	drawPit(scale, track, painter);
+
+    // Draw sprites along center line
+    auto centerLine = track->getCenterLine();
+    auto pieces = track->getPieces();
+
+    size_t pointIndex = 0; // tracks where we are in centerLine
+
+    for (size_t i = 0; i < pieces.size(); i++) {
+        if (!pieces[i]) { pointIndex++; continue; }  
+        int segmentCount = pieces[i]->getLengths().size(); // how many points this piece uses
+
+        size_t startIdx = pointIndex;
+        size_t endIdx = pointIndex + segmentCount;
+
+        if (endIdx >= centerLine.size()) break;
+
+        // Use start and end of this piece for position and angle
+        QVector2D startPos = centerLine[startIdx];
+        QVector2D endPos = centerLine[endIdx];
+        QVector2D midPos = (startPos + endPos) * 0.5f; // draw sprite at center of piece
+        QVector2D dir = endPos - startPos;
+
+        float angle = atan2(dir.y(), dir.x()) * 180.0f / M_PI + pieces[i]->getSpriteRotationOffset();
+
+        QString path = pieces[i]->getSpritePath();
+        QPixmap sprite(path);
+        if (sprite.isNull()) { pointIndex += segmentCount; continue; }
+
+        float spriteScale = (track->getTrackWidth() * scale) / sprite.width();
+
+        painter.save();
+        painter.translate(midPos.x() * scale, midPos.y() * scale);
+        painter.rotate(angle);
+        painter.scale(spriteScale, spriteScale);
+        painter.drawPixmap(-sprite.width() / 2, -sprite.height() / 2, sprite);
+        painter.restore();
+
+        pointIndex += segmentCount;
+    }
+    
 }
 
 void MainWindow::drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color)
@@ -204,3 +256,59 @@ void MainWindow::drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge
         );
     }
 }
+
+void MainWindow::drawPit(float scale, Track* track, QPainter& painter)
+{
+    // After drawCurbs calls, before sprite drawing:
+
+// ── PIT LANE ──────────────────────────────────────────
+    if (track->hasPitLane()) {
+        PitLane pit = track->getPitLane();
+
+        // Pit lane surface
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(80, 80, 80));
+
+        QPolygonF pitPoly;
+        for (const auto& p : pit.edges.left)
+            pitPoly << QPointF(p.x() * scale, p.y() * scale);
+        for (int i = pit.edges.right.size() - 1; i >= 0; i--)
+            pitPoly << QPointF(pit.edges.right[i].x() * scale, pit.edges.right[i].y() * scale);
+        painter.drawPolygon(pitPoly);
+
+        // Entry curve surface
+        if (!pit.entryCurveEdges.left.empty()) {
+            QPolygonF entryPoly;
+            for (const auto& p : pit.entryCurveEdges.left)
+                entryPoly << QPointF(p.x() * scale, p.y() * scale);
+            for (int i = pit.entryCurveEdges.right.size() - 1; i >= 0; i--)
+                entryPoly << QPointF(pit.entryCurveEdges.right[i].x() * scale, pit.entryCurveEdges.right[i].y() * scale);
+            painter.drawPolygon(entryPoly);
+        }
+
+        // Exit curve surface
+        if (!pit.exitCurveEdges.left.empty()) {
+            QPolygonF exitPoly;
+            for (const auto& p : pit.exitCurveEdges.left)
+                exitPoly << QPointF(p.x() * scale, p.y() * scale);
+            for (int i = pit.exitCurveEdges.right.size() - 1; i >= 0; i--)
+                exitPoly << QPointF(pit.exitCurveEdges.right[i].x() * scale, pit.exitCurveEdges.right[i].y() * scale);
+            painter.drawPolygon(exitPoly);
+        }
+
+        // Pit center line (orange dashed)
+        QPen pitCenterPen(QColor(255, 165, 0), 2, Qt::DashLine);
+        painter.setPen(pitCenterPen);
+        for (size_t i = 1; i < pit.centerLine.size(); i++)
+            painter.drawLine(
+                QPointF(pit.centerLine[i - 1].x() * scale, pit.centerLine[i - 1].y() * scale),
+                QPointF(pit.centerLine[i].x() * scale, pit.centerLine[i].y() * scale));
+
+        // Pit curbs
+        drawCurbs(painter, pit.edges.left, scale, Qt::red);
+        drawCurbs(painter, pit.edges.right, scale, Qt::red);
+    }
+
+
+}
+
