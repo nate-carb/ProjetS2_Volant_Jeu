@@ -416,6 +416,8 @@ DecorPieces::DecorPieces()
 
 
 
+
+
 Grandstand::Grandstand(QVector2D p, float a)
 {
     info.pos = p;
@@ -737,6 +739,7 @@ void Track::buildFromSegments()
     centerLine.clear();
     trackEdges.left.clear();
     trackEdges.right.clear();
+	checkpoints.clear();
 
     if (trackSegments.empty()) return;
 
@@ -800,11 +803,78 @@ void Track::buildFromSegments()
             int segEndIndex = centerLine.size() - 1;
             generatePitLane(segStartIndex, segEndIndex);
         }
+        else {
+			createCheckpointAtSegment(); // place checkpoint at the end of this segment
+        }
     }
 
     qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
         << trackEdges.left.size() << "left edge points";
 }
+//void Track::createStartLine()
+//{
+//    Checkpoint temp;
+//    temp.centerlineIndex = 0; // place start line at the very beginning of the track
+//    temp.leftEdgeIndex = 0;
+//    temp.rightEdgeIndex = 0;
+//
+//    temp.angle = startAngle; // use track's starting angle for orientation
+//	checkpoints.push_back(temp);
+//}
+
+//--------------------
+// --- Checkpoint  ---
+//--------------------
+void Track::createCheckpointAtSegment()
+{
+    if (centerLine.empty()) return;
+    if (trackEdges.left.empty()) return;
+
+    int clIndex = centerLine.size() - 1;
+
+    // Get forward direction from last two centerline points
+    QVector2D forward;
+    if (clIndex > 0)
+        forward = (centerLine[clIndex] - centerLine[clIndex - 1]).normalized();
+    else
+        forward = QVector2D(1, 0);
+
+    CheckpointData cp;
+    cp.left = trackEdges.left[clIndex];
+    cp.right = trackEdges.right[clIndex];
+    cp.forward = forward; // SAVE direction
+    cp.centerLineIndex = clIndex;
+    cp.triggered = false;
+
+    checkpoints.push_back(cp);
+}
+// Checks if the car is within a certain distance (threshold) of the line segment defined by pointA and pointB. This is used to determine if the car has crossed a checkpoint.
+bool Track::isCarBetweenPoints(const QVector2D& carPos,
+    const QVector2D& pointA,
+    const QVector2D& pointB,
+    float threshold) const
+{
+    // Vector from A to B (the checkpoint line)
+    QVector2D AB = pointB - pointA;
+    QVector2D AP = carPos - pointA;
+
+    float ab2 = QVector2D::dotProduct(AB, AB);
+    if (ab2 == 0.0f) return false;
+
+    // Project car onto the line AB
+    float t = QVector2D::dotProduct(AP, AB) / ab2;
+
+    // t must be between 0 and 1 to be between the two points
+    if (t < 0.0f || t > 1.0f) return false;
+
+    // Distance from car to the line
+    QVector2D closest = pointA + AB * t;
+    float dist = (carPos - closest).length();
+
+    return dist <= threshold;
+}
+
+
 void Track::calculAngLen(int index)
 {
     TrackPieces* piece = nullptr;
@@ -1035,6 +1105,13 @@ bool Track::saveToFile(const std::string& filename) const
         file << point.x() << " " << point.y() << "\n";
     }
 
+    file << "CHECKPOINTS " << checkpoints.size() << "\n";
+    for (const auto& cp : checkpoints) {
+        file << cp.left.x() << " " << cp.left.y() << " "
+            << cp.right.x() << " " << cp.right.y() << " "
+            << cp.centerLineIndex << "\n";
+    }
+
     file.close();
     std::cout << "Track saved successfully to: " << filename << std::endl;
     return true;
@@ -1052,6 +1129,7 @@ bool Track::loadFromFile(const std::string& filename)
     std::vector<int> loadedPiecesInt;
 	std::vector<TrackPieces*> loadedPieces;
 	std::vector<DecorPieces*> loadedDecors;
+	
     float loadedTrackWidth = 40;
     float loadedStartAngle = 0;
 
@@ -1181,6 +1259,22 @@ bool Track::loadFromFile(const std::string& filename)
                 bezierCurves.push_back(c);
             }
         }
+        else if (command == "CHECKPOINTS") {
+            int count;
+            iss >> count;
+            checkpoints.clear();
+            for (int i = 0; i < count; i++) {
+                std::getline(file, line);
+                std::istringstream cpIss(line);
+                CheckpointData cp;
+                float lx, ly, rx, ry;
+                cpIss >> lx >> ly >> rx >> ry >> cp.centerLineIndex;
+                cp.left = QVector2D(lx, ly);
+                cp.right = QVector2D(rx, ry);
+                cp.triggered = false;
+                checkpoints.push_back(cp);
+            }
+        }
 
         else if (command == "CENTERLINE" || command == "LEFT_EDGE" || command == "RIGHT_EDGE") {
             // Skip these sections - we'll regenerate from pieces
@@ -1204,6 +1298,7 @@ bool Track::loadFromFile(const std::string& filename)
     piecesIntList = loadedPiecesInt;
     pieces = loadedPieces;
 	decors = loadedDecors;
+	
     trackWidth = loadedTrackWidth;
     startAngle = loadedStartAngle;
     currentAngle = startAngle;
@@ -1227,4 +1322,5 @@ bool Track::loadFromFile(const std::string& filename)
     std::cout << "Track loaded successfully from: " << filename << std::endl;
     return true;
 }
+
 

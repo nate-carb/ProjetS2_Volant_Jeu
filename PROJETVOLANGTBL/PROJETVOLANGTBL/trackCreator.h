@@ -66,6 +66,7 @@ private:
 	//std::vector<int> decorsList;  // Track the decors added
     void drawCar(QPainter& painter);
     void drawDecors(QPainter& painter);
+	void drawCheckpoints(QPainter& painter);
     // Camera/view controls
     double zoom;
     QPointF offset;
