@@ -25,9 +25,12 @@ protected:
 
     void drawTrack(QPainter& painter, float scale);
     void drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color);
+    Vehicule::Weather currentWeather = Vehicule::SUNNY;
+    QTimer* weatherTimer;  // pour changer la météo automatiquement
 
 private slots:
     void gameLoop();
+    void changeWeather();
 
 private:
     QPixmap image;  // Ton image PNG

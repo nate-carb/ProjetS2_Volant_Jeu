@@ -17,12 +17,15 @@ bool PitStop::contains(int carX, int carY)
     return zone.contains(carX, carY);
 }
 
-void PitStop::recharge(float deltaTime, float& carburant, float& nos)
+void PitStop::recharge(float deltaTime, float& carburant, float& nos, float& tireWear)
 {
     carburant = std::min(carburant + rechargeRate * deltaTime, 100.0f);
     nos = std::min(nos + rechargeRate * deltaTime, 100.0f);
+    tireWear = std::min(tireWear + rechargeRate * deltaTime, 100.0f);  // répare les pneus
 
-    qDebug() << "[PIT STOP] Recharge en cours | Carburant:" << (int)carburant << "% | NOS:" << (int)nos << "%";
+    qDebug() << "[PIT STOP] Carburant:" << (int)carburant
+        << "% | NOS:" << (int)nos
+        << "% | Pneus:" << (int)tireWear << "%";
 }
 
 void PitStop::placeNearTrack(const std::vector<QVector2D>& centerLine, float scale, float offset, float trackWidth)
@@ -40,9 +43,9 @@ void PitStop::placeNearTrack(const std::vector<QVector2D>& centerLine, float sca
     pitLaneDir = dir;
     pitLaneNormal = normal;
 
-    float laneHalfLen = 50.0f;   // demi-longueur du trapèze
+    float laneHalfLen = 100.0f;   // demi-longueur du trapèze
     float laneDepth = 35.0f;   // profondeur vers la droite
-    float laneTopHalf = 20.0f;   // demi-largeur du côté court (côté piste)
+    float laneTopHalf = 75.0f;   // demi-largeur du côté court (côté piste)
 
     // Bord droit de la piste
     QVector2D trackRightEdge = point + normal * (trackWidth / 2.0f);
@@ -61,8 +64,8 @@ void PitStop::placeNearTrack(const std::vector<QVector2D>& centerLine, float sca
 
     // Pit stop au centre du trapèze, un peu plus grand
     QVector2D center = (trapeze[0] + trapeze[1] + trapeze[2] + trapeze[3]) / 4.0f;
-    int px = (int)(center.x() * scale) - 35;
-    int py = (int)(center.y() * scale) - 25;
+    int px = (int)(center.x() * scale);
+    int py = (int)(center.y() * scale);
     zone = QRect(px - 45, py - 30, 90, 60);  // encore plus grand
 }
 

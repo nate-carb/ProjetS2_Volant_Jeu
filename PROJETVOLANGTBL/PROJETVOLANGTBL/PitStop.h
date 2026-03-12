@@ -13,7 +13,7 @@ public:
     ~PitStop();
 
     bool contains(int carX, int carY);
-    void recharge(float deltaTime, float& carburant, float& nos);
+    void recharge(float deltaTime, float& carburant, float& nos, float& tireWear);
     void placeNearTrack(const std::vector<QVector2D>& centerLine, float scale, float offset = 150.0f, float trackWidth = 40.0f);
 
     QRect getRect() const { return zone; }

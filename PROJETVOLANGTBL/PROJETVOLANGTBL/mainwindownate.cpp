@@ -16,7 +16,7 @@ MainWindow1::MainWindow1(QWidget* parent)
     qDebug() << "Dossier de travail actuel:" << QDir::currentPath();
     // Essayer de charger l'image
 
-    image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
+    image = QPixmap("images/car.PNG");  
 	image = image.scaled(60, 60, Qt::KeepAspectRatio);
 	voiture = Vehicule();
     track = Track();
@@ -30,6 +30,11 @@ MainWindow1::MainWindow1(QWidget* parent)
     else {
         qDebug() << "SUCCESS! Taille:" << image.size();
     }
+
+    // Timer qui change la météo toutes les 10 secondes
+    weatherTimer = new QTimer(this);
+    connect(weatherTimer, &QTimer::timeout, this, &MainWindow1::changeWeather);
+    weatherTimer->start(10000);  // 10 secondes
 
     resize(800, 600);
 
@@ -49,23 +54,20 @@ MainWindow1::~MainWindow1()
 {
 }
 
-// Cette fonction dessine l'image
-//void MainWindow::paintEvent(QPaintEvent* event)
-//{
-//    QPainter painter(this);
-//    const float PIXELS_PER_METER = 5.0f;
-//    float x = voiture.getPosition().x()*PIXELS_PER_METER;
-//    float y = voiture.getPosition().y()*PIXELS_PER_METER;
-//    float angle = voiture.getAngle();  // en radians
-//
-//    painter.translate(x, y);                 // va à la position de la voiture
-//    painter.rotate(angle * 180.0 / M_PI);   // Qt veut des degrés
-//
-//    // Dessine l'image centrée sur (0,0)
-//    painter.drawPixmap(-image.width() / 2,
-//        -image.height() / 2,
-//        image);
-//}
+void MainWindow1::changeWeather()
+{
+    // Cycle SUNNY -> RAINY -> STORMY -> SUNNY
+    if (currentWeather == Vehicule::SUNNY)
+        currentWeather = Vehicule::RAINY;
+    else if (currentWeather == Vehicule::RAINY)
+        currentWeather = Vehicule::STORMY;
+    else
+        currentWeather = Vehicule::SUNNY;
+
+    voiture.setWeather(currentWeather);
+    qDebug() << "Météo changée !";
+}
+
 void MainWindow1::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
@@ -86,7 +88,7 @@ void MainWindow1::paintEvent(QPaintEvent* event)
     // ===== DESSINER LA PISTE =====
     drawTrack(painter, PIXELS_PER_METER);
 
-    // ===== PITLANE TRAPÈZE =====
+    // ===== PITLANE =====
     painter.setBrush(QColor(50, 50, 50));
     painter.setPen(Qt::NoPen);
     painter.drawPath(pitStop.getPitLanePath(PIXELS_PER_METER));
@@ -118,10 +120,10 @@ void MainWindow1::paintEvent(QPaintEvent* event)
     drawCurbs(painter, edgeRight, 1.0f, Qt::red);
 
     // ===== PIT STOP BOX (jaune, plus gros) =====
-    painter.setBrush(QColor(255, 220, 0));
-    painter.setPen(QPen(Qt::black, 2));
+    painter.setBrush(Qt::NoBrush);  // transparent à l'intérieur
+    painter.setPen(QPen(Qt::white, 2));
     painter.drawRect(pitStop.getRect());
-    painter.setPen(Qt::black);
+    painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 8, QFont::Bold));
     painter.drawText(pitStop.getRect(), Qt::AlignCenter, "PIT\nSTOP");
 
@@ -132,28 +134,74 @@ void MainWindow1::paintEvent(QPaintEvent* event)
     painter.drawPixmap(-image.width() / 2, -image.height() / 2, image);
     painter.restore();
 
-    // ===== HUD (fixe à l'écran) ===== <-- AJOUTE ICI
+    // ===== HUD (fixe à l'écran) =====
     painter.resetTransform();
+    painter.setClipRect(rect());  // <-- force le clipping sur toute la fenêtre
+    painter.setClipping(true);
 
-    // Fond semi-transparent
+    // ===== PLUIE =====
+    if (currentWeather == Vehicule::RAINY || currentWeather == Vehicule::STORMY) {
+        int numDrops = (currentWeather == Vehicule::STORMY) ? 150 : 75;
+        float penWidth = (currentWeather == Vehicule::STORMY) ? 2.5f : 1.5f;
+        painter.setPen(QPen(QColor(150, 150, 255, 150), penWidth));
+        srand(QTime::currentTime().msec());
+        for (int i = 0; i < numDrops; i++) {
+            int x = rand() % width();
+            int y = rand() % height();
+            int length = (currentWeather == Vehicule::STORMY) ? 20 : 12;
+            painter.drawLine(x, y, x - 3, y + length);
+        }
+    }
+
+    // ===== COULEUR MÉTÉO =====
+    QString weatherText;
+    QColor weatherColor;
+    switch (currentWeather) {
+    case Vehicule::RAINY:
+        weatherText = "Pluie";
+        weatherColor = QColor(100, 150, 255);
+        break;
+    case Vehicule::STORMY:
+        weatherText = "Tempete";
+        weatherColor = QColor(150, 100, 255);
+        break;
+    default:
+        weatherText = "Ensoleille";
+        weatherColor = QColor(255, 220, 0);
+        break;
+    }
+
+    // ===== FOND HUD =====
     painter.setBrush(QColor(0, 0, 0, 150));
     painter.setPen(Qt::NoPen);
-    painter.drawRect(10, 10, 170, 75);
+    painter.drawRect(10, 10, 170, 115);
 
-    // Carburant
+    // ===== TEXTE HUD =====
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 12));
-    painter.drawText(20, 32, QString("Carburant: %1%").arg((int)voiture.getCarburant()));
+    painter.drawText(20, 35, QString("Carburant: %1%").arg((int)voiture.getCarburant()));
 
-    // NOS
     painter.setPen(QColor(0, 200, 255));
-    painter.drawText(20, 57, QString("NOS: %1%").arg((int)voiture.getNos()));
+    painter.drawText(20, 60, QString("NOS: %1%").arg((int)voiture.getNos()));
 
-    // Message pit stop
+    painter.setPen(weatherColor);
+    painter.drawText(20, 85, QString("Meteo: %1").arg(weatherText));
+
+    // Couleur selon l'usure
+    float wear = voiture.getTireWear();
+    QColor tireColor;
+    if (wear > 60)       tireColor = Qt::green;
+    else if (wear > 30)  tireColor = QColor(255, 165, 0);  // orange
+    else                 tireColor = Qt::red;
+
+    painter.setPen(tireColor);
+    painter.drawText(20, 108, QString("Pneus: %1%").arg((int)wear));
+
+    // ===== MESSAGE PIT STOP =====
     if (inPitStop) {
         painter.setPen(Qt::green);
         painter.setFont(QFont("Arial", 14, QFont::Bold));
-        painter.drawText(20, 95, "PIT STOP - Entrée pour partir !");
+        painter.drawText(20, 120, "PIT STOP - Appuyez sur Enter pour partir !");
     }
 }
 
@@ -227,9 +275,11 @@ void MainWindow1::gameLoop()
     if (inPitStop && !pitStop.isLeaving() && !keyEnter) {
         float carburant = voiture.getCarburant();
         float nos = voiture.getNos();
-        pitStop.recharge(deltaTime, carburant, nos);
+        float tireWear = voiture.getTireWear();
+        pitStop.recharge(deltaTime, carburant, nos, tireWear);
         voiture.setCarburant(carburant);
         voiture.setNos(nos);
+        voiture.setTireWear(tireWear);
         update();
         return;
     }
