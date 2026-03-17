@@ -1109,6 +1109,7 @@ bool Track::saveToFile(const std::string& filename) const
     for (const auto& cp : checkpoints) {
         file << cp.left.x() << " " << cp.left.y() << " "
             << cp.right.x() << " " << cp.right.y() << " "
+            << cp.forward.x() << " " << cp.forward.y() << " "  
             << cp.centerLineIndex << "\n";
     }
 
@@ -1267,10 +1268,11 @@ bool Track::loadFromFile(const std::string& filename)
                 std::getline(file, line);
                 std::istringstream cpIss(line);
                 CheckpointData cp;
-                float lx, ly, rx, ry;
-                cpIss >> lx >> ly >> rx >> ry >> cp.centerLineIndex;
+                float lx, ly, rx, ry, fx, fy;
+                cpIss >> lx >> ly >> rx >> ry >> fx >> fy >> cp.centerLineIndex;
                 cp.left = QVector2D(lx, ly);
                 cp.right = QVector2D(rx, ry);
+                cp.forward = QVector2D(fx, fy);
                 cp.triggered = false;
                 checkpoints.push_back(cp);
             }

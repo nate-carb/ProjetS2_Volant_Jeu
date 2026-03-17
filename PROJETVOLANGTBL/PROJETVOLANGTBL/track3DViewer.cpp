@@ -710,32 +710,57 @@ void Track3DViewer::buildCheckpoints(Track* track)
 
         // Position at center between left and right edge
         QVector2D center2D = (cp.left + cp.right) / 2.0f;
-        float     width = (cp.right - cp.left).length();
         
-        // Direction along checkpoint line for rotation
-        float angle = qRadiansToDegrees(atan2(cp.forward.y(), cp.forward.x()));
         
-        qDebug() << "Checkpoint" << i
-            << "center:" << center2D
-            << "width:" << width
-            << "angle:" << angle
-            << "left:" << cp.left
-            << "right:" << cp.right;
+		// Calculate forward direction from left to right edge and derive rotation angle
+        QVector3D fwdAxis(cp.forward.x(), 0.0f, cp.forward.y());
+        QVector3D upAxis(0.0f, 1.0f, 0.0f);
+        QVector3D rightAxis = QVector3D::crossProduct(upAxis, fwdAxis).normalized();
+
         // Transform
         Qt3DCore::QTransform* transform = new Qt3DCore::QTransform(cpEntity);
+        //transform->setTranslation(QVector3D(center2D.x(), 0.0f, center2D.y()));
         transform->setTranslation(QVector3D(center2D.x(), 0.0f, center2D.y()));
-        transform->setRotation(QQuaternion::fromAxisAndAngle(0, 1, 0, angle));
-        // Scale to match the track
-		float scale = 40.0f; // base scale to match your .dae model size (tune as needed)
-        transform->setScale3D(QVector3D(
-            1.87f * scale, // tune 20.0f to match your .dae model width
+		transform->setRotation(Qt3DCore::QTransform::fromAxes(rightAxis, upAxis, fwdAxis));
+        //transform->setRotation(QQuaternion::fromAxisAndAngle(0, 1, 0, angle));
+        //transform->setRotationY(angle);
+        float scale = 40.0f; // base scale to match your .dae model size (tune as needed) 
+		transform->setScale(40.0f);
+		//qDebug() << "Checkpoint" << i << "transform:" << transform->translation() << transform->rotationY();
+        cpEntity->addComponent(transform);
+
+        // Offset entity to shift model's left-corner origin to center
+        Qt3DCore::QEntity* offsetEntity = new Qt3DCore::QEntity(cpEntity);
+        Qt3DCore::QTransform* offsetTransform = new Qt3DCore::QTransform(offsetEntity);
+
+        // Shift by -0.5 along the model's local X axis (left->right direction)
+        // Tune the -0.5f multiplier if the model width in its local space != 1.0
+        // model dimensions : x = 1.87f , y = 0.93f , z = 0.33f a
+        offsetTransform->setTranslation(QVector3D(-1.87f / 2, 0.0f, 0.0f));
+        
+        offsetEntity->addComponent(offsetTransform);
+
+        // Attach loader to offsetEntity instead of directly to cpEntity
+        Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(offsetEntity); // <-- parent changed
+        
+		// We want to load the model with its local origin at the left edge, so we create an offset parent entity to shift it by half the width
+        /*
+        Qt3DCore::QEntity* offsetEntity = new Qt3DCore::QEntity(cpEntity);
+        Qt3DCore::QTransform* offsetTransform = new Qt3DCore::QTransform(offsetEntity);
+        offsetTransform->setScale3D(QVector3D(
+            1.87f * scale,
             0.93f * scale,
             0.33f * scale
         ));
-        cpEntity->addComponent(transform);
-
-        
-        Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(cpEntity);
+		qDebug() << "Rotations Checkpoints before: " << offsetTransform->rotationY(); // rotate the offset entity so the model faces the correct direction
+        //offsetTransform->setRotationY(angle);
+        qDebug() << "Rotations Checkpoints after: " << offsetTransform->rotationY(); // rotate the offset entity so the model faces the correct direction
+        // Shift by -0.5 in X (local space) to move left-corner origin to center
+        // Adjust -0.5f if your model unit size differs
+        offsetTransform->setTranslation(QVector3D(-0.5f * 1.87f * scale, 0.0f, 0.0f));
+        offsetEntity->addComponent(offsetTransform);
+        */
+        //Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(cpEntity);
         Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
 
         connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
