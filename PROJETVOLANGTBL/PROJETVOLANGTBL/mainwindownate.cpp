@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget* parent)
     image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
 	image = image.scaled(60, 60, Qt::KeepAspectRatio);
 
+    raceTimes = new RaceTimes();
 	//Vehicule* voiture = new Vehicule;
     voiture = Vehicule();
 	//track = Track();
@@ -292,8 +293,14 @@ void MainWindow::gameLoop()
         .contains(QPointF(carXpx, carYpx));
     bool onPit = pitStop.getRect().contains(carXpx, carYpx);
 
+    if (!raceTimes->isRaceStarted()) { raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
+    //Checkpoint Check
+    raceTimes->checkForCheckpoint(track, voiture.getPosition());
+
     voiture.is_on_grass = !(onTrack || onPitLane || onPit);
     voiture.is_on_track = !voiture.is_on_grass;
+
+    
 
     //M�canique de pitstop
     int carX = (int)(voiture.getPosition().x() * PIXELS_PER_METER);

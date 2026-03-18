@@ -12,6 +12,8 @@
 #include <QPixmap>
 #include <map>
 
+#include "raceTimes.h"
+
 
 class MainWindow : public QMainWindow
 {
@@ -23,6 +25,8 @@ public:
     QTimer* timer;
     Vehicule voiture;
     Track* track = nullptr;
+    RaceTimes* raceTimes = nullptr;
+
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -37,6 +41,7 @@ protected:
 
     void drawPit(float scale, Track* track, QPainter& painter);
     void drawMinimap(QPainter& painter);
+    
     
 
 private slots:

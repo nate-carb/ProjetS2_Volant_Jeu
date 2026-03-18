@@ -102,6 +102,7 @@
     <ClCompile Include="mainWindowView.cpp" />
     <ClCompile Include="map2d.cpp" />
     <ClCompile Include="PitStop.cpp" />
+    <ClCompile Include="raceTimes.cpp" />
     <ClCompile Include="Track.cpp" />
     <ClCompile Include="track3DViewer.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
@@ -136,6 +137,7 @@
     <ClInclude Include="mainWindowCreator.h" />
     <ClInclude Include="map2d.h" />
     <ClInclude Include="PitStop.h" />
+    <ClInclude Include="raceTimes.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Track.h" />
     <QtMoc Include="track3DViewer.h" />

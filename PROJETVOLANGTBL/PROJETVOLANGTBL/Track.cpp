@@ -862,7 +862,7 @@ void Track::createCheckpointAtSegment()
     checkpoints.push_back(cp);
 }
 // Checks if the car is within a certain distance (threshold) of the line segment defined by pointA and pointB. This is used to determine if the car has crossed a checkpoint.
-bool Track::isCarBetweenPoints(const QVector2D& carPos,
+bool Track::isBetweenPoints(const QVector2D& carPos,
     const QVector2D& pointA,
     const QVector2D& pointB,
     float threshold) const
@@ -885,6 +885,16 @@ bool Track::isCarBetweenPoints(const QVector2D& carPos,
     float dist = (carPos - closest).length();
 
     return dist <= threshold;
+}
+
+int Track::isCarBetweenCheckpoints(const QVector2D& point) const
+{
+    for (int i = 0; i < checkpoints.size(); i++)
+        // Check if car is between the checkpoints 
+        if (isBetweenPoints(point, checkpoints[i].left, checkpoints[i].right)) {
+            return i;
+        }
+    return -1;
 }
 
 
