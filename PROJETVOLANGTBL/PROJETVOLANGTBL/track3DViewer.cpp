@@ -733,34 +733,22 @@ void Track3DViewer::buildCheckpoints(Track* track)
         Qt3DCore::QEntity* offsetEntity = new Qt3DCore::QEntity(cpEntity);
         Qt3DCore::QTransform* offsetTransform = new Qt3DCore::QTransform(offsetEntity);
 
-        // Shift by -0.5 along the model's local X axis (left->right direction)
-        // Tune the -0.5f multiplier if the model width in its local space != 1.0
-        // model dimensions : x = 1.87f , y = 0.93f , z = 0.33f a
-        offsetTransform->setTranslation(QVector3D(-1.87f / 2, 0.0f, 0.0f));
+        
+        // Starting line model does not have the same center
+        if (i == 0) {
+            offsetTransform->setTranslation(QVector3D(-1.0f / 2, 0.0f, 0.0f));
+        }
+        // model dimensions : x = 1.87f , y = 0.93f , z = 0.33f for every other checkpoint
+        else {
+            offsetTransform->setTranslation(QVector3D(-1.87f / 2, 0.0f, -0.33f / 2));
+        }
+        
         
         offsetEntity->addComponent(offsetTransform);
 
         // Attach loader to offsetEntity instead of directly to cpEntity
         Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(offsetEntity); // <-- parent changed
         
-		// We want to load the model with its local origin at the left edge, so we create an offset parent entity to shift it by half the width
-        /*
-        Qt3DCore::QEntity* offsetEntity = new Qt3DCore::QEntity(cpEntity);
-        Qt3DCore::QTransform* offsetTransform = new Qt3DCore::QTransform(offsetEntity);
-        offsetTransform->setScale3D(QVector3D(
-            1.87f * scale,
-            0.93f * scale,
-            0.33f * scale
-        ));
-		qDebug() << "Rotations Checkpoints before: " << offsetTransform->rotationY(); // rotate the offset entity so the model faces the correct direction
-        //offsetTransform->setRotationY(angle);
-        qDebug() << "Rotations Checkpoints after: " << offsetTransform->rotationY(); // rotate the offset entity so the model faces the correct direction
-        // Shift by -0.5 in X (local space) to move left-corner origin to center
-        // Adjust -0.5f if your model unit size differs
-        offsetTransform->setTranslation(QVector3D(-0.5f * 1.87f * scale, 0.0f, 0.0f));
-        offsetEntity->addComponent(offsetTransform);
-        */
-        //Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(cpEntity);
         Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
 
         connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
@@ -787,10 +775,16 @@ void Track3DViewer::buildCheckpoints(Track* track)
 
         modelEntity->addComponent(loader);
 
+        QString modelPath;
         // Load .dae model
+        if (i == 0) {
+            modelPath = QDir::currentPath() + "/3dModels/dae/overheadRound.dae"; // Starting line
+        }
+        else {
+            modelPath = QDir::currentPath() + "/3dModels/dae/overheadRoundColored.dae"; // Checkpoints
+        }
         
-        QString modelPath = QDir::currentPath() + "/3dModels/dae/overheadRoundColored.dae";
-        qDebug() << "Loading checkpoint from:" << modelPath;
+        //qDebug() << "Loading checkpoint from:" << modelPath;
         loader->setSource(QUrl::fromLocalFile(modelPath));
 
         m_checkpointEntities.push_back(cpEntity);

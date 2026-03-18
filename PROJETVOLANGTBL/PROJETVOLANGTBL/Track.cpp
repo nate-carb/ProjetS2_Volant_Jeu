@@ -830,6 +830,19 @@ void Track::createCheckpointAtSegment()
     if (centerLine.empty()) return;
     if (trackEdges.left.empty()) return;
 
+    if (checkpoints.empty()) {
+
+        
+        CheckpointData cp;
+        cp.left = trackEdges.left[0];
+        cp.right = trackEdges.right[0];
+        cp.forward = (centerLine[1] - centerLine[0]).normalized();
+        cp.centerLineIndex = 0;
+        cp.triggered = false;
+
+        checkpoints.push_back(cp);
+    }
+
     int clIndex = centerLine.size() - 1;
 
     // Get forward direction from last two centerline points
@@ -842,7 +855,7 @@ void Track::createCheckpointAtSegment()
     CheckpointData cp;
     cp.left = trackEdges.left[clIndex];
     cp.right = trackEdges.right[clIndex];
-    cp.forward = forward; // SAVE direction
+    cp.forward = forward; 
     cp.centerLineIndex = clIndex;
     cp.triggered = false;
 
