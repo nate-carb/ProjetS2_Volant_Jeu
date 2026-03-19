@@ -7,4 +7,3 @@ class SerialComm
 	public:
 		void findPort();
 };
-
