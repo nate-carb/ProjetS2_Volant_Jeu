@@ -293,7 +293,7 @@ void MainWindow::gameLoop()
         .contains(QPointF(carXpx, carYpx));
     bool onPit = pitStop.getRect().contains(carXpx, carYpx);
 
-    if (!raceTimes->isRaceStarted()) { raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
+    if (!raceTimes->isRaceStarted()) { raceTimes->setupRace(1, track);  raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
     //Checkpoint Check
     raceTimes->checkForCheckpoint(track, voiture.getPosition());
 
