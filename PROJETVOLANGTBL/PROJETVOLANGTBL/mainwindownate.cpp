@@ -273,7 +273,10 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     if (event->key() == Qt::Key_D) keyD = true;
     if (event->key() == Qt::Key_Space) keySpace = true;
     if (event->key() == Qt::Key_Return) keyEnter = true;
-    if (event->key() == Qt::Key_E) voiture.shiftUp();
+    if (event->key() == Qt::Key_E) {
+        voiture.shiftUp();
+            qDebug()<< "helo";
+    }
     if (event->key() == Qt::Key_Q) voiture.shiftDown();
     if (event->key() == Qt::Key_F1) {
         DevMenu* devMenu = new DevMenu(&voiture, this);
@@ -303,6 +306,22 @@ void MainWindow::gameLoop()
     keyD = (GetAsyncKeyState('D') & 0x8000) != 0;
     keySpace = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
     keyEnter = (GetAsyncKeyState(VK_RETURN) & 0x8000) != 0;
+
+    bool curKeyE = (GetAsyncKeyState('E') & 0x8000) != 0;
+    bool curKeyQ = (GetAsyncKeyState('Q') & 0x8000) != 0;
+    bool curKeyF1 = (GetAsyncKeyState(VK_F1) & 0x8000) != 0;
+
+    // Front montant seulement (évite la répétition 60fps)
+    if (curKeyE && !prevKeyE)  voiture.shiftUp();
+    if (curKeyQ && !prevKeyQ)  voiture.shiftDown();
+    if (curKeyF1 && !prevKeyF1) {
+        DevMenu* devMenu = new DevMenu(&voiture, this);
+        devMenu->show();
+    }
+
+    prevKeyE = curKeyE;
+    prevKeyQ = curKeyQ;
+    prevKeyF1 = curKeyF1;
 
     QTime currentTime = QTime::currentTime();
     int msElapsed = lastFrameTime.msecsTo(currentTime);  // Millisecondes écoulées
