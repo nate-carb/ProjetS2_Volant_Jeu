@@ -12,6 +12,8 @@
 #include "mainwindownate.h"
 #include "mainWindowCreator.h"
 #include "mainWindowView.h"
+#include <QStackedLayout>
+#include "HUDOverlay.h"
 bool isKeyPressed(int vkCode) {
     return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
 }
@@ -185,19 +187,23 @@ int main(int argc, char* argv[])
     container->resize(1280, 720);
     container->setWindowTitle("Racing Game 3D");
 
-    // ===== HUD avec QStackedLayout =====
-    QWidget* mainWidget = new QWidget();
-    mainWidget->resize(1280, 720);
-    mainWidget->setWindowTitle("Racing Game 3D");
-
-    QStackedLayout* stackLayout = new QStackedLayout(mainWidget);
-    stackLayout->setStackingMode(QStackedLayout::StackAll);
-    stackLayout->addWidget(container);
-
-    HUDOverlay* hud = new HUDOverlay();
+    // ===== HUD flottant par-dessus =====
+    HUDOverlay* hud = new HUDOverlay();  // pas de parent !
+    hud->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     hud->setAttribute(Qt::WA_TranslucentBackground);
-    stackLayout->addWidget(hud);
-    stackLayout->setCurrentIndex(1);  // HUD au dessus
+    hud->resize(container->size());
+    hud->move(15, 15);  // coin supérieur gauche
+    hud->show();
+    // Positionne le HUD au bon endroit au départ
+    hud->move(container->mapToGlobal(QPoint(15, 15)));
+
+    // Suit la fenêtre de jeu quand elle bouge
+    QObject::connect(window->timer, &QTimer::timeout, [=]() {
+        hud->move(container->mapToGlobal(QPoint(0, 0)));
+        hud->resize(container->size());
+        });
+    hud->setAttribute(Qt::WA_ShowWithoutActivating);
+    container->setFocus();
 
     // ===== TIMER =====
     QObject::connect(window->timer, &QTimer::timeout, [=]() {
@@ -213,10 +219,11 @@ int main(int argc, char* argv[])
     viewer->setTrack(window->track);
 
     // ===== CLAVIER =====
-    mainWidget->setFocusPolicy(Qt::StrongFocus);
-    mainWidget->installEventFilter(window);
+    container->setFocusPolicy(Qt::StrongFocus);
+    container->installEventFilter(window);
 
-    mainWidget->show();
+    container->show();
 
     return app.exec();
 }
+#include "main.moc"

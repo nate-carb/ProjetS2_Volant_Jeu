@@ -166,7 +166,7 @@ void Vehicule::update(float deltaTime)
         << "| NOS:" << (int)nos << "%";
 
     // USURE DES PNEUS
-    const float wearRate = 0.5f;  // usure par seconde, ajuste au goût
+    float wearRate = is_on_grass ? 1.5f : 0.5f;  // usure par seconde, ajuste au goût
     if (speed > 0.1f) {
         tireWear -= wearRate * deltaTime;
         tireWear = std::max(tireWear, 0.0f);

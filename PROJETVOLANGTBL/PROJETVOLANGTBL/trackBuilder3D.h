@@ -7,6 +7,7 @@
 #include <vector>
 #include "Track.h"
 #include "TrackPieces3D.h"
+#include "Vehicule.h"
 
 struct PlacedPiece3D {
     Qt3DCore::QEntity* entity;
@@ -24,6 +25,8 @@ public:
     void clear();
 
     std::vector<PlacedPiece3D> getPlacedPieces() const { return placedPieces; }
+
+    void setWeather(Vehicule::Weather weather);
 
 private:
     Qt3DCore::QEntity* rootEntity;

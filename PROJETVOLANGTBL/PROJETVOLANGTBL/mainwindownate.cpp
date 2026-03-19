@@ -8,6 +8,7 @@
 #include <QKeyEvent>
 #include <trackViewer.h>
 #include <QPainterPath>
+#include <windows.h>
 
 
 
@@ -63,6 +64,19 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
+}
+
+bool MainWindow::eventFilter(QObject* obj, QEvent* event)
+{
+    if (event->type() == QEvent::KeyPress) {
+        keyPressEvent(static_cast<QKeyEvent*>(event));
+        return true;
+    }
+    if (event->type() == QEvent::KeyRelease) {
+        keyReleaseEvent(static_cast<QKeyEvent*>(event));
+        return true;
+    }
+    return QObject::eventFilter(obj, event);
 }
 
 void MainWindow::changeWeather()
@@ -268,6 +282,15 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 
 void MainWindow::gameLoop()
 {
+
+    // Lecture directe des touches Windows
+    keyW = (GetAsyncKeyState('W') & 0x8000) != 0;
+    keyS = (GetAsyncKeyState('S') & 0x8000) != 0;
+    keyA = (GetAsyncKeyState('A') & 0x8000) != 0;
+    keyD = (GetAsyncKeyState('D') & 0x8000) != 0;
+    keySpace = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+    keyEnter = (GetAsyncKeyState(VK_RETURN) & 0x8000) != 0;
+
     QTime currentTime = QTime::currentTime();
     int msElapsed = lastFrameTime.msecsTo(currentTime);  // Millisecondes écoulées
     deltaTime = msElapsed / 1000.0f;  // Convertit en secondes

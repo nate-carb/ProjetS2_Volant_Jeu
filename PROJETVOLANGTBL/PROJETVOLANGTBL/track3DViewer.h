@@ -23,6 +23,7 @@
 #include <Qt3DRender/QDirectionalLight>
 #include "Track.h"
 #include "Vehicule.h"
+#include "HUDOverlay.h"
 
 class Track3DViewer : public Qt3DExtras::Qt3DWindow
 {
@@ -97,4 +98,7 @@ private:
     // Stored track pointer (not owned)
     Track* m_track = nullptr;
     Vehicule* m_vehicule = nullptr;
+
+    //HUD Overlay en 3D
+    HUDOverlay* m_hud = nullptr;
 };
