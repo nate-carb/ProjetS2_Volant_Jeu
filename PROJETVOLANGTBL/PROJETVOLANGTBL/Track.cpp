@@ -830,6 +830,19 @@ void Track::createCheckpointAtSegment()
     if (centerLine.empty()) return;
     if (trackEdges.left.empty()) return;
 
+    if (checkpoints.empty()) {
+
+        
+        CheckpointData cp;
+        cp.left = trackEdges.left[0];
+        cp.right = trackEdges.right[0];
+        cp.forward = (centerLine[1] - centerLine[0]).normalized();
+        cp.centerLineIndex = 0;
+        cp.triggered = false;
+
+        checkpoints.push_back(cp);
+    }
+
     int clIndex = centerLine.size() - 1;
 
     // Get forward direction from last two centerline points
@@ -842,14 +855,14 @@ void Track::createCheckpointAtSegment()
     CheckpointData cp;
     cp.left = trackEdges.left[clIndex];
     cp.right = trackEdges.right[clIndex];
-    cp.forward = forward; // SAVE direction
+    cp.forward = forward; 
     cp.centerLineIndex = clIndex;
     cp.triggered = false;
 
     checkpoints.push_back(cp);
 }
 // Checks if the car is within a certain distance (threshold) of the line segment defined by pointA and pointB. This is used to determine if the car has crossed a checkpoint.
-bool Track::isCarBetweenPoints(const QVector2D& carPos,
+bool Track::isBetweenPoints(const QVector2D& carPos,
     const QVector2D& pointA,
     const QVector2D& pointB,
     float threshold) const
@@ -872,6 +885,16 @@ bool Track::isCarBetweenPoints(const QVector2D& carPos,
     float dist = (carPos - closest).length();
 
     return dist <= threshold;
+}
+
+int Track::isCarBetweenCheckpoints(const QVector2D& point) const
+{
+    for (int i = 0; i < checkpoints.size(); i++)
+        // Check if car is between the checkpoints 
+        if (isBetweenPoints(point, checkpoints[i].left, checkpoints[i].right)) {
+            return i;
+        }
+    return -1;
 }
 
 
@@ -1109,6 +1132,7 @@ bool Track::saveToFile(const std::string& filename) const
     for (const auto& cp : checkpoints) {
         file << cp.left.x() << " " << cp.left.y() << " "
             << cp.right.x() << " " << cp.right.y() << " "
+            << cp.forward.x() << " " << cp.forward.y() << " "  
             << cp.centerLineIndex << "\n";
     }
 
@@ -1267,10 +1291,11 @@ bool Track::loadFromFile(const std::string& filename)
                 std::getline(file, line);
                 std::istringstream cpIss(line);
                 CheckpointData cp;
-                float lx, ly, rx, ry;
-                cpIss >> lx >> ly >> rx >> ry >> cp.centerLineIndex;
+                float lx, ly, rx, ry, fx, fy;
+                cpIss >> lx >> ly >> rx >> ry >> fx >> fy >> cp.centerLineIndex;
                 cp.left = QVector2D(lx, ly);
                 cp.right = QVector2D(rx, ry);
+                cp.forward = QVector2D(fx, fy);
                 cp.triggered = false;
                 checkpoints.push_back(cp);
             }

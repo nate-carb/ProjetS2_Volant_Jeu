@@ -326,10 +326,12 @@ public:
 	std::vector<CheckpointData>& getCheckpointsRef() { return checkpoints; }
 	
 	// tools for checkpoints and start and gameplay
-	bool isCarBetweenPoints(const QVector2D& carPos,
+	bool isBetweenPoints(const QVector2D& carPos,
 		const QVector2D& pointA,
 		const QVector2D& pointB,
 		float threshold = 5.0f) const;
+
+	int isCarBetweenCheckpoints(const QVector2D& point) const; // Returns checkpoint index that got pass or -1 if no checkpoint
 
 	const std::vector<TrackSegment>& getTrackSegments() const { return trackSegments; }
 	std::vector<TrackSegment>& getTrackSegmentsRef() { return trackSegments; }
