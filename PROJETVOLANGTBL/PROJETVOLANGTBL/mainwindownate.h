@@ -72,6 +72,10 @@ private:
     bool keyP = false;
     bool keyShiftUp = false; // E
     bool keyShiftDown = false; // Q
+    // Dans le .h, section private:
+    bool prevKeyE = false;
+    bool prevKeyQ = false;
+    bool prevKeyF1 = false;
 };
 
 #endif
