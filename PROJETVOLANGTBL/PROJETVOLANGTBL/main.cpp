@@ -170,47 +170,53 @@ int main(int argc, char* argv[])
 }*/
 int main(int argc, char* argv[])
 {
-    // Force OpenGL backend - fixes QSkyboxEntity cubemap issues with D3D11
     qputenv("QT3D_RENDERER", "opengl");
-    
-    // In buildDecors() or main():
-    qDebug() << "Scene parsers:" <<
-        QPluginLoader::staticInstances();
-
-    // Also check the plugins folder directly:
-    QDir pluginDir(QCoreApplication::applicationDirPath() + "/sceneparsers");
-    qDebug() << "Sceneparsers folder exists:" << pluginDir.exists();
-    qDebug() << "Sceneparsers files:" << pluginDir.entryList();
-
     QApplication app(argc, argv);
 
-    // Create 3D viewer
-    Track3DViewer* viewer = new Track3DViewer();
-    viewer->resize(1280, 720);
-    viewer->setTitle("Racing Game 3D");
-    viewer->setFirstPersonMode(true);
-    viewer->show();
-
-    // Create main window (already has its own timer/gameloop)
     MainWindow* window = new MainWindow();
-    qDebug() << "track pointer:" << window->track;
-    qDebug() << "track centerLine size:" << (window->track ? window->track->getCenterLine().size() : -1);
-    // Give viewer the track from mainwindow
-    viewer->setTrack(window->track);
+    window->timer->start(16);  // force le timer même sans show()
 
-    // Hook 3D viewer update into MainWindow's existing timer`
+    // ===== WRAPPER =====
+    Track3DViewer* viewer = new Track3DViewer();
+    viewer->setFirstPersonMode(true);
 
+    QWidget* container = QWidget::createWindowContainer(viewer);
+    container->setMinimumSize(1280, 720);
+    container->resize(1280, 720);
+    container->setWindowTitle("Racing Game 3D");
+
+    // ===== HUD avec QStackedLayout =====
+    QWidget* mainWidget = new QWidget();
+    mainWidget->resize(1280, 720);
+    mainWidget->setWindowTitle("Racing Game 3D");
+
+    QStackedLayout* stackLayout = new QStackedLayout(mainWidget);
+    stackLayout->setStackingMode(QStackedLayout::StackAll);
+    stackLayout->addWidget(container);
+
+    HUDOverlay* hud = new HUDOverlay();
+    hud->setAttribute(Qt::WA_TranslucentBackground);
+    stackLayout->addWidget(hud);
+    stackLayout->setCurrentIndex(1);  // HUD au dessus
+
+    // ===== TIMER =====
     QObject::connect(window->timer, &QTimer::timeout, [=]() {
         viewer->updateVehicule(&window->voiture);
+        hud->updateData(
+            window->voiture.getCarburant(),
+            window->voiture.getNos(),
+            window->voiture.getTireWear(),
+            window->currentWeather
+        );
         });
 
-    window->show();
+    viewer->setTrack(window->track);
 
-	MainWindowCreator* creator = new MainWindowCreator();
-	creator->show();
+    // ===== CLAVIER =====
+    mainWidget->setFocusPolicy(Qt::StrongFocus);
+    mainWidget->installEventFilter(window);
 
+    mainWidget->show();
 
     return app.exec();
 }
-#include "main.moc"
-
