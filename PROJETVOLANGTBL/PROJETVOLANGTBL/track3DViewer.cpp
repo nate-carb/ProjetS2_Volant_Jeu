@@ -191,7 +191,7 @@ void Track3DViewer::buildSkybox()
     // Just use QSkyboxEntity - it works in Qt6 with correct path format
     Qt3DExtras::QSkyboxEntity* skybox = new Qt3DExtras::QSkyboxEntity(m_rootEntity);
 
-    QString basePath = "file:///" + QDir::currentPath() + "/images/skybox/cubemap1/cubemap1";
+    QString basePath = "file:///" + QDir::currentPath() + "/images/skybox/space/cubemap1";
     basePath.replace("\\", "/"); // fix Windows backslashes
 
     qDebug() << "Skybox base path:" << basePath;
@@ -654,7 +654,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
 // ─────────────────────────────────────────────
 void Track3DViewer::buildGround()
 {
-	// Remove old ground entity if it exists
+	 //Remove old ground entity if it exists
     if (m_groundEntity) {
         m_groundEntity->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
         delete m_groundEntity;

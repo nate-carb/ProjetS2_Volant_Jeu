@@ -27,6 +27,9 @@ public:
     Track* track = nullptr;
     RaceTimes* raceTimes = nullptr;
 
+    Vehicule::Weather currentWeather = Vehicule::SUNNY;
+    QTimer* weatherTimer;  // pour changer la météo automatiquement
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -36,8 +39,7 @@ protected:
 
     void drawTrack(QPainter& painter, float scale);
     void drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge, float scale, QColor color);
-    Vehicule::Weather currentWeather = Vehicule::SUNNY;
-    QTimer* weatherTimer;  // pour changer la météo automatiquement
+    
 
     void drawPit(float scale, Track* track, QPainter& painter);
     void drawMinimap(QPainter& painter);

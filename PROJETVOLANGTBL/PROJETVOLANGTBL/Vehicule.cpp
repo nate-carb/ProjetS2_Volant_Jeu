@@ -135,6 +135,8 @@ void Vehicule::update(float deltaTime)
     rpm += (targetRpm - rpm) * 0.1f;
     rpm = std::clamp(rpm, minRpm, maxRpm);
 
+    // USURE DES PNEUS
+    float wearRate = is_on_grass ? 1.5f : 0.5f;  // usure par seconde, ajuste au goût
     // 11) Usure pneus
     if (speed > 0.1f) {
         tireWear -= 0.5f * deltaTime;

@@ -12,6 +12,8 @@
 #include "mainwindownate.h"
 #include "mainWindowCreator.h"
 #include "mainWindowView.h"
+#include <QStackedLayout>
+#include "HUDOverlay.h"
 bool isKeyPressed(int vkCode) {
     return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
 }
@@ -170,47 +172,58 @@ int main(int argc, char* argv[])
 }*/
 int main(int argc, char* argv[])
 {
-    // Force OpenGL backend - fixes QSkyboxEntity cubemap issues with D3D11
     qputenv("QT3D_RENDERER", "opengl");
-    
-    // In buildDecors() or main():
-    qDebug() << "Scene parsers:" <<
-        QPluginLoader::staticInstances();
-
-    // Also check the plugins folder directly:
-    QDir pluginDir(QCoreApplication::applicationDirPath() + "/sceneparsers");
-    qDebug() << "Sceneparsers folder exists:" << pluginDir.exists();
-    qDebug() << "Sceneparsers files:" << pluginDir.entryList();
-
     QApplication app(argc, argv);
 
-    // Create 3D viewer
-    Track3DViewer* viewer = new Track3DViewer();
-    viewer->resize(1280, 720);
-    viewer->setTitle("Racing Game 3D");
-    viewer->setFirstPersonMode(true);
-    viewer->show();
-
-    // Create main window (already has its own timer/gameloop)
     MainWindow* window = new MainWindow();
-    qDebug() << "track pointer:" << window->track;
-    qDebug() << "track centerLine size:" << (window->track ? window->track->getCenterLine().size() : -1);
-    // Give viewer the track from mainwindow
-    viewer->setTrack(window->track);
+    window->timer->start(16);  // force le timer même sans show()
 
-    // Hook 3D viewer update into MainWindow's existing timer`
+    // ===== WRAPPER =====
+    Track3DViewer* viewer = new Track3DViewer();
+    viewer->setFirstPersonMode(true);
 
+    QWidget* container = QWidget::createWindowContainer(viewer);
+    container->setMinimumSize(1280, 720);
+    container->resize(1280, 720);
+    container->setWindowTitle("Racing Game 3D");
+
+    // ===== HUD flottant par-dessus =====
+    HUDOverlay* hud = new HUDOverlay();  // pas de parent !
+    hud->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
+    hud->setAttribute(Qt::WA_TranslucentBackground);
+    hud->resize(container->size());
+    hud->move(15, 15);  // coin supérieur gauche
+    hud->show();
+    // Positionne le HUD au bon endroit au départ
+    hud->move(container->mapToGlobal(QPoint(15, 15)));
+
+    // Suit la fenêtre de jeu quand elle bouge
+    QObject::connect(window->timer, &QTimer::timeout, [=]() {
+        hud->move(container->mapToGlobal(QPoint(0, 0)));
+        hud->resize(container->size());
+        });
+    hud->setAttribute(Qt::WA_ShowWithoutActivating);
+    container->setFocus();
+
+    // ===== TIMER =====
     QObject::connect(window->timer, &QTimer::timeout, [=]() {
         viewer->updateVehicule(&window->voiture);
+        hud->updateData(
+            window->voiture.getCarburant(),
+            window->voiture.getNos(),
+            window->voiture.getTireWear(),
+            window->currentWeather
+        );
         });
 
-    window->show();
+    viewer->setTrack(window->track);
 
-	MainWindowCreator* creator = new MainWindowCreator();
-	creator->show();
+    // ===== CLAVIER =====
+    container->setFocusPolicy(Qt::StrongFocus);
+    container->installEventFilter(window);
 
+    container->show();
 
     return app.exec();
 }
 #include "main.moc"
-

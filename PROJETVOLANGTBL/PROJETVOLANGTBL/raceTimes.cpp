@@ -48,4 +48,10 @@ void RaceTimes::checkForCheckpoint(Track* track, QVector2D position)
 
 }
 
+QString RaceTimes::getLastCheckpointTimeString()
+{
+
+	return QString();
+}
+
 

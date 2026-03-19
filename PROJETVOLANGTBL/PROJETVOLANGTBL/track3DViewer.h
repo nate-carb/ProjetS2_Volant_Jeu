@@ -23,6 +23,7 @@
 #include <Qt3DRender/QDirectionalLight>
 #include "Track.h"
 #include "Vehicule.h"
+#include "HUDOverlay.h"
 
 class Track3DViewer : public Qt3DExtras::Qt3DWindow
 {
@@ -90,9 +91,6 @@ private:
     void buildDecors(Track* track);
     void buildGround();
     void buildCheckpoints(Track* track);
-	
-    
-    
 
     Qt3DCore::QEntity* createBox(Qt3DCore::QEntity* parent,
         QVector3D size,
@@ -102,4 +100,7 @@ private:
     // Stored track pointer (not owned)
     Track* m_track = nullptr;
     Vehicule* m_vehicule = nullptr;
+
+    //HUD Overlay en 3D
+    HUDOverlay* m_hud = nullptr;
 };
