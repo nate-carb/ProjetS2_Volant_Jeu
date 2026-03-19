@@ -36,6 +36,8 @@ public:
     float getTireWear() const { return tireWear; }
     void setTireWear(float t) { tireWear = t; }
     float getRpm() const { return rpm; }
+	float getMinRpm() const { return minRpm; }
+	float getMaxRpm() const { return maxRpm; }
 
     // Getters/Setters DevMenu
     float getBrakeForce() const { return brakeForce; }
