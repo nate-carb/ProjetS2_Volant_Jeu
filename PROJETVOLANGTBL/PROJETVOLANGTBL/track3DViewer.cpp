@@ -652,135 +652,6 @@ void Track3DViewer::buildTrackMesh(Track* track)
 // ─────────────────────────────────────────────
 // Ground (grass outside the track)
 // ─────────────────────────────────────────────
-/*
-void Track3DViewer::buildGround()
-{
-    if (m_groundEntity) {
-        m_groundEntity->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
-        delete m_groundEntity;
-    }
-
-    m_groundEntity = new Qt3DCore::QEntity(m_rootEntity);
-
-    // ── Build a tessellated plane with procedural bumps ──────────────
-    const int   GRID = 120;       // grid subdivisions (higher = smoother bumps)
-    const float SIZE = 2000.0f;
-    const float STEP = SIZE / GRID;
-    const float BUMP = 2.8f;      // max bump height
-    const float FREQ1 = 0.018f;    // large rolling hills
-    const float FREQ2 = 0.055f;    // medium lumps
-    const float FREQ3 = 0.130f;    // small pebble texture
-
-    int   vertCount = (GRID + 1) * (GRID + 1);
-    int   idxCount = GRID * GRID * 6;
-
-    QVector<float>   verts;   verts.reserve(vertCount * 3);
-    QVector<float>   normals; normals.reserve(vertCount * 3);
-    QVector<quint32> idx;     idx.reserve(idxCount);
-
-    // Height function - layered sine waves for organic bumps
-    auto height = [&](float x, float z) -> float {
-        return BUMP * (
-            0.50f * sinf(x * FREQ1 + 1.3f) * cosf(z * FREQ1 * 0.8f + 0.7f) +
-            0.30f * sinf(x * FREQ2 + 2.1f) * sinf(z * FREQ2 + 1.5f) +
-            0.20f * cosf(x * FREQ3 + 0.4f) * cosf(z * FREQ3 * 1.2f + 3.1f)
-            );
-        };
-
-    // Generate vertices
-    for (int row = 0; row <= GRID; ++row) {
-        for (int col = 0; col <= GRID; ++col) {
-            float x = -SIZE * 0.5f + col * STEP;
-            float z = -SIZE * 0.5f + row * STEP;
-            float y = height(x, z);
-            verts << x << y << z;
-        }
-    }
-
-    // Compute smooth normals via central differences
-    auto idx2d = [&](int r, int c) { return r * (GRID + 1) + c; };
-    for (int row = 0; row <= GRID; ++row) {
-        for (int col = 0; col <= GRID; ++col) {
-            int   r0 = qMax(row - 1, 0), r1 = qMin(row + 1, GRID);
-            int   c0 = qMax(col - 1, 0), c1 = qMin(col + 1, GRID);
-            float hL = verts[idx2d(row, c0) * 3 + 1];
-            float hR = verts[idx2d(row, c1) * 3 + 1];
-            float hD = verts[idx2d(r0, col) * 3 + 1];
-            float hU = verts[idx2d(r1, col) * 3 + 1];
-            QVector3D n = QVector3D(hL - hR, 2.0f * STEP, hD - hU).normalized();
-            normals << n.x() << n.y() << n.z();
-        }
-    }
-
-    // Generate indices
-    for (int row = 0; row < GRID; ++row) {
-        for (int col = 0; col < GRID; ++col) {
-            quint32 tl = idx2d(row, col);
-            quint32 tr = idx2d(row, col + 1);
-            quint32 bl = idx2d(row + 1, col);
-            quint32 br = idx2d(row + 1, col + 1);
-            idx << tl << bl << tr;
-            idx << tr << bl << br;
-        }
-    }
-
-    // ── Wire up Qt3D geometry ────────────────────────────────────────
-    Qt3DRender::QGeometryRenderer* renderer = new Qt3DRender::QGeometryRenderer(m_groundEntity);
-    Qt3DCore::QGeometry* geom = new Qt3DCore::QGeometry(renderer);
-
-    auto makeAttr = [&](Qt3DCore::QBuffer* buf, const QString& name,
-        uint count, Qt3DCore::QAttribute::AttributeType type
-        = Qt3DCore::QAttribute::VertexAttribute)
-        {
-            Qt3DCore::QAttribute* a = new Qt3DCore::QAttribute(geom);
-            a->setName(name);
-            a->setVertexBaseType(Qt3DCore::QAttribute::Float);
-            a->setVertexSize(3);
-            a->setAttributeType(type);
-            a->setBuffer(buf);
-            a->setByteStride(3 * sizeof(float));
-            a->setCount(count);
-            geom->addAttribute(a);
-            return a;
-        };
-
-    Qt3DCore::QBuffer* vb = new Qt3DCore::QBuffer(geom);
-    vb->setData(QByteArray(reinterpret_cast<const char*>(verts.constData()),
-        verts.size() * sizeof(float)));
-    makeAttr(vb, Qt3DCore::QAttribute::defaultPositionAttributeName(),
-        static_cast<uint>(vertCount));
-
-    Qt3DCore::QBuffer* nb = new Qt3DCore::QBuffer(geom);
-    nb->setData(QByteArray(reinterpret_cast<const char*>(normals.constData()),
-        normals.size() * sizeof(float)));
-    makeAttr(nb, Qt3DCore::QAttribute::defaultNormalAttributeName(),
-        static_cast<uint>(vertCount));
-
-    Qt3DCore::QBuffer* ib = new Qt3DCore::QBuffer(geom);
-    ib->setData(QByteArray(reinterpret_cast<const char*>(idx.constData()),
-        idx.size() * sizeof(quint32)));
-    Qt3DCore::QAttribute* ia = new Qt3DCore::QAttribute(geom);
-    ia->setAttributeType(Qt3DCore::QAttribute::IndexAttribute);
-    ia->setVertexBaseType(Qt3DCore::QAttribute::UnsignedInt);
-    ia->setBuffer(ib);
-    ia->setCount(static_cast<uint>(idx.size()));
-    geom->addAttribute(ia);
-
-    renderer->setGeometry(geom);
-    renderer->setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
-
-    Qt3DExtras::QPhongMaterial* mat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
-    mat->setDiffuse(QColor(119, 171, 86));
-    mat->setAmbient(QColor(30, 80, 30));
-    mat->setShininess(0.0f);
-
-    Qt3DCore::QTransform* t = new Qt3DCore::QTransform(m_groundEntity);
-    t->setTranslation(QVector3D(0, -1.0f, 0));
-
-    m_groundEntity->addComponent(renderer);
-    m_groundEntity->addComponent(mat);
-    m_groundEntity->addComponent(t);
-}*/
 
 void Track3DViewer::buildGround()
 {
@@ -800,22 +671,39 @@ void Track3DViewer::buildGround()
     planeMesh->setMeshResolution(QSize(2, 2));
 
 	//  Material with green colour for grass
-    Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
-    grassMat->setDiffuse(QColor(119, 171, 86));   // Kenney's signature green
-    grassMat->setAmbient(QColor(30, 80, 30));
-    grassMat->setShininess(0.0f);
-    //Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
-    //QColor grassColor(119, 171, 86);
-    //grassMat->setDiffuse(grassColor);
-    //grassMat->setAmbient(grassColor.darker(200));
-    //grassMat->setSpecular(QColor(0, 0, 0));
-    //grassMat->setShininess(0.0f);
-	
-    // QPlaneMesh is in XZ plane by default, centred at origin – perfect
+ //   Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
+ //   grassMat->setDiffuse(QColor(119, 171, 86));   // Kenney's signature green
+ //   grassMat->setAmbient(QColor(30, 80, 30));
+ //   grassMat->setShininess(0.0f);
+ //   //Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
+ //   //QColor grassColor(119, 171, 86);
+ //   //grassMat->setDiffuse(grassColor);
+ //   //grassMat->setAmbient(grassColor.darker(200));
+ //   //grassMat->setSpecular(QColor(0, 0, 0));
+ //   //grassMat->setShininess(0.0f);
+	//
+ //   // QPlaneMesh is in XZ plane by default, centred at origin – perfect
     Qt3DCore::QTransform* groundTransform = new Qt3DCore::QTransform(m_groundEntity);
 	groundTransform->setTranslation(QVector3D(0, -1.0f, 0)); // slightly below track to avoid z-fighting with track surface
 
-	//  Add components to the ground entity
+	////  Add components to the ground entity
+ //   m_groundEntity->addComponent(planeMesh);
+ //   m_groundEntity->addComponent(grassMat);
+ //   m_groundEntity->addComponent(groundTransform);
+
+    Qt3DExtras::QDiffuseMapMaterial* grassMat = new Qt3DExtras::QDiffuseMapMaterial(m_groundEntity);
+
+    Qt3DRender::QTextureImage* grassTex = new Qt3DRender::QTextureImage();
+    grassTex->setSource(QUrl::fromLocalFile(
+        QDir::currentPath() + "/images/Cartoon_green_texture_grass.jpg"));
+
+    grassMat->diffuse()->addTextureImage(grassTex);
+    grassMat->setAmbient(QColor(80, 200, 80));   // tints shadowed areas green
+    grassMat->setSpecular(QColor(0, 0, 0));
+    grassMat->setShininess(0.0f);
+    // Texture tiling — higher = more repeats across the ground plane
+    grassMat->setTextureScale(20.0f);
+
     m_groundEntity->addComponent(planeMesh);
     m_groundEntity->addComponent(grassMat);
     m_groundEntity->addComponent(groundTransform);

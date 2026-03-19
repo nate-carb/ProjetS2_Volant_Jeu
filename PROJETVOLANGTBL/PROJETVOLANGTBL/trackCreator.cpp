@@ -142,6 +142,20 @@ void TrackCreator::closeTrack()
     update();                        // repaint 2D view
 }
 
+void TrackCreator::autoDecors()
+{
+    currentTrack.autoPlaceAllDecors();
+    emit trackUpdated(currentTrack);
+    update();
+}
+
+void TrackCreator::removeAutoDecors()
+{
+    currentTrack.removeAllAutoDecors();
+    emit trackUpdated(currentTrack);
+    update();
+}
+
 // Calculate the bounding box of the track for auto-fitting
 void TrackCreator::calculateBounds(float& minX, float& maxX, float& minY, float& maxY) 
 {
@@ -756,6 +770,8 @@ void TrackCreator::mouseMoveEvent(QMouseEvent* event)
         update();
     }
     if (isDraggingDecor && selectedDecorIndex >= 0) {
+        DecorPieces* d = currentTrack.getDecors()[selectedDecorIndex];
+        d->getInfoRef().autoPlaced = false;  // — user owns it now for auto decors
         currentTrack.getDecors()[selectedDecorIndex]->setPos(
             screenToWorld(event->pos()));
         update();

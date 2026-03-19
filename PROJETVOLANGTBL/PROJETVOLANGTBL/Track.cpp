@@ -402,6 +402,126 @@ void Track::addDecor(int decorType, int decorIndexList)
             break;
     }
 }
+
+void Track::autoPlaceDecorsForSegment(int segmentIndex)
+{
+    if (segmentIndex < 0 || segmentIndex >= (int)trackSegments.size()) return;
+    if (centerLine.empty()) return;
+
+    const TrackSegment& seg = trackSegments[segmentIndex];
+    if (seg.type == TrackSegmentType::PIT_TRACK) return;
+
+    const float grandstandSpacing = 50.0f; // old value 150
+    const float treeSpacing = 30.0f; // old value 80
+    const float sideOffset = trackWidth * 1.5f; 
+    const int   steps = 20; // must match buildFromSegments()
+
+    int segStart = (segmentIndex == 0) ? 0 : segmentIndex * steps;
+    int segEnd = segStart + steps;
+    if (segEnd >= (int)centerLine.size()) segEnd = (int)centerLine.size() - 1;
+    if (segStart >= segEnd) return;
+
+    auto faceNearestCenterLine = [&](QVector2D pos) -> float {
+        float minDist = 1e9f;
+        int   nearest = segStart;
+        // Only search within this segment's centerline range
+        for (int ci = segStart; ci <= segEnd; ci++) {
+            float d = (centerLine[ci] - pos).length();
+            if (d < minDist) { minDist = d; nearest = ci; }
+        }
+        QVector2D toCenter = (centerLine[nearest] - pos).normalized();
+        return qRadiansToDegrees(std::atan2(toCenter.y(), toCenter.x())) + 90.0f;
+        };
+
+    auto spawnGrandstand = [&](QVector2D pos, int variant) {
+        Grandstand* gs = new Grandstand(pos, 0.0f);
+        gs->selectModel(variant % 5);
+        gs->setAngle(faceNearestCenterLine(pos));
+        gs->setAutoPlaced(true);
+        gs->setSegmentIndex(segmentIndex);
+        decors.push_back(gs);
+        };
+
+    auto spawnTree = [&](QVector2D pos, int variant) {
+        // Reject position if it is too close to any centerline point
+        // that belongs to a different segment
+        for (int ci = 0; ci < (int)centerLine.size(); ci++) {
+            if (ci >= segStart && ci <= segEnd) continue; // skip own segment
+            if ((centerLine[ci] - pos).length() < trackWidth * 1.5f) return;
+        }
+        TREES* tree = new TREES(pos, 0.0f);
+        tree->selectModel(variant % 2);
+        tree->setAngle(faceNearestCenterLine(pos));
+        tree->setAutoPlaced(true);
+        tree->setSegmentIndex(segmentIndex);
+        decors.push_back(tree);
+        };
+
+    float gsAccum = 0.0f, treeAccum = 0.0f;
+    bool  gsFirst = true, treeFirst = true;
+
+    for (int i = segStart + 1; i <= segEnd; i++) {
+        float stepLen = (centerLine[i] - centerLine[i - 1]).length();
+        gsAccum += stepLen;
+        treeAccum += stepLen;
+
+        QVector2D tangent = (centerLine[i] - centerLine[i - 1]).normalized();
+        QVector2D leftNormal(-tangent.y(), tangent.x());
+        QVector2D rightNormal(tangent.y(), -tangent.x());
+
+        // Grandstands on the left side (both segment types)
+        bool placeGS = gsFirst || (gsAccum >= grandstandSpacing);
+        if (placeGS) {
+            gsFirst = false; gsAccum = 0.0f;
+            spawnGrandstand(centerLine[i] + leftNormal * sideOffset, i);
+        }
+
+        // Trees on both sides (both segment types)
+        bool placeTree = treeFirst || (treeAccum >= treeSpacing);
+        if (placeTree) {
+            treeFirst = false; treeAccum = 0.0f;
+            spawnTree(centerLine[i] + rightNormal * sideOffset, i);
+            spawnTree(centerLine[i] + leftNormal * sideOffset * 1.3f, i + 1);
+        }
+    }
+
+    qDebug() << "[autoPlace] segment" << segmentIndex
+        << "-> total decors now:" << decors.size();
+}
+
+void Track::removeAutoDecorsForSegment(int segmentIndex)
+{
+    decors.erase(
+        std::remove_if(decors.begin(), decors.end(),
+            [segmentIndex](DecorPieces* d) -> bool {
+                if (d && d->getInfo().autoPlaced &&
+                    d->getInfo().segmentIndex == segmentIndex)
+                {
+                    delete d;
+                    return true;
+                }
+                return false;
+            }),
+        decors.end());
+}
+
+void Track::autoPlaceAllDecors()
+{
+    for (int i = 0; i < (int)trackSegments.size(); i++)
+        autoPlaceDecorsForSegment(i);
+}
+
+void Track::removeAllAutoDecors()
+{
+    decors.erase(
+        std::remove_if(decors.begin(), decors.end(),
+            [](DecorPieces* d) -> bool {
+                if (d && d->getInfo().autoPlaced) { delete d; return true; }
+                return false;
+            }),
+        decors.end());
+}
+
 //------------------------------------
 //--- Decor pieces implementations ---
 //------------------------------------
@@ -707,6 +827,7 @@ void Track::removeLastSegment()
 {
     if (trackSegments.empty()) return;
     trackSegments.pop_back();
+    
     buildFromSegments(); // refills centerLine + trackEdges
 }
 
@@ -807,7 +928,7 @@ void Track::buildFromSegments()
 			createCheckpointAtSegment(); // place checkpoint at the end of this segment
         }
     }
-
+    
     qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
         << trackEdges.left.size() << "left edge points";
 }
