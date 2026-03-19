@@ -67,7 +67,7 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
 
     float x = vehicule->getPosition().x();
     float y = vehicule->getPosition().y();
-    float angle = vehicule->getAngle();
+    float angle = vehicule->getAngle(); // en radian
 
     // Car stays at game logic position
     m_carTransform->setTranslation(QVector3D(x, 0.0f, y)); // 0 = on the ground
@@ -101,13 +101,13 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
         float smoothAngle = qDegreesToRadians(-m_cameraYaw);
 
         // Camera position behind and above the car
-        float camOffsetBack = 20.0f;
-        float camHeight = 15.0f;
+        float camOffsetBack = 15.0f;
+        float camHeight = 10.0f;
 
         float camX = x - camOffsetBack * qCos(smoothAngle);
         float camZ = y - camOffsetBack * qSin(smoothAngle);
 
-        // Look ahead of the car
+        // Look ahead of the carw
         float lookX = x + 30.0f * qCos(smoothAngle);
         float lookZ = y + 30.0f * qSin(smoothAngle);
 
