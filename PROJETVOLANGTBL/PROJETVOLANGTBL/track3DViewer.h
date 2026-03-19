@@ -91,9 +91,6 @@ private:
     void buildDecors(Track* track);
     void buildGround();
     void buildCheckpoints(Track* track);
-	
-    
-    
 
     Qt3DCore::QEntity* createBox(Qt3DCore::QEntity* parent,
         QVector3D size,

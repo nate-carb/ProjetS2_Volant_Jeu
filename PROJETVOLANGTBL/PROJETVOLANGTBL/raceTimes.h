@@ -1,6 +1,7 @@
 #pragma once
 #include <QElapsedTimer>
 #include <vector>
+#include <QString>
 #include "track.h"
 
 struct CheckpointStamp {
@@ -16,6 +17,8 @@ class RaceTimes
 		void finishRace();
 		void checkForCheckpoint(Track* track, QVector2D pos); // ptr Track, position of the voiture
 		bool isRaceStarted() { return raceStarted; };
+
+		QString getLastCheckpointTimeString();
 
 	private:
 		QElapsedTimer elapsedTimer;
