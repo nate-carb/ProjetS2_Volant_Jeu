@@ -274,6 +274,8 @@ public:
 	bool loadFromFile(const std::string& filename);
 	
 	bool isVector2DOnTrack(const QVector2D& point) const;
+
+
 	float getTrackWidth() const { return trackWidth; };
 	void setTrackWidth(float w) { trackWidth = w; }
 	std::vector<TrackPieces*> getPieces() const { return pieces; };

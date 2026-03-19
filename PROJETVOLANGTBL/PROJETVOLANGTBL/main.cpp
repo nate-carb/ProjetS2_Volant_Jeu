@@ -100,44 +100,6 @@ bool isKeyPressed(int vkCode) {
 // ── Simple input handler ─────────────────────────────────────
 // You probably already have this elsewhere – just an example
 
-class GameLoop : public QObject
-{
-    Q_OBJECT
-public:
-    GameLoop(Track3DViewer* viewer, Vehicule* car, MainWindow* gameWindow, QObject* parent = nullptr)
-        : QObject(parent), m_viewer(viewer), m_car(car)
-    {
-        // Run game update at ~60 fps
-        QTimer* timer = new QTimer(this);
-        connect(timer, &QTimer::timeout, this, &GameLoop::update);
-        timer->start(16); // ~60 fps
-		
-    }
-
-public slots:
-    void update()
-    {
-        float deltaTime = 0.016f; // fixed step, replace with real elapsed time
-
-        // ── Your existing 2D game logic runs here ────────────
-        m_car->update(deltaTime);
-
-        // ── Tell the 3D viewer where the car is now ──────────
-        m_viewer->updateVehicule(m_car);
-    }
-
-    // Hook this up to your keyboard handler
-    void onAccel(bool pressed) { m_car->setAccel(pressed ? 1.0f : 0.0f); }
-    void onBrake(bool pressed) { m_car->setBreaking(pressed ? 1.0f : 0.0f); }
-    void onLeft(bool pressed) { m_car->setSteering(pressed ? -1.0f : 0.0f); }
-    void onRight(bool pressed) { m_car->setSteering(pressed ? 1.0f : 0.0f); }
-
-private:
-    Track3DViewer* m_viewer;
-    Vehicule* m_car;
-	MainWindow* m_gameWindow;
-};
-
 // ─────────────────────────────────────────────────────────────
 /*
 int main(int argc, char* argv[])
@@ -224,6 +186,7 @@ int main(int argc, char* argv[])
 
     container->show();
 
+    MainWindowCreator* creator = new MainWindowCreator();
+    creator->show();
     return app.exec();
 }
-#include "main.moc"
