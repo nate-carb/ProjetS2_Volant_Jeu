@@ -92,8 +92,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="camera2D.cpp" />
-    <ClCompile Include="GameEngine.cpp" />
     <ClCompile Include="HUDOverlay.cpp" />
     <ClCompile Include="devmenu.cpp" />
     <ClCompile Include="mainwindow.cpp">
