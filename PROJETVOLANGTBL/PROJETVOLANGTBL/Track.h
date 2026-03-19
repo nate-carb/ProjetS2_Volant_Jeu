@@ -184,6 +184,9 @@ struct DecorsInfo {
 	QString modelPath;
 	int modelType; // e.g., GARAGE, GRANDSTAND, TREES, NOSPECIFICDECOR
 	int modelIndex; // index in the model list for this decor type
+
+	int  segmentIndex = -1;  // which segment spawned this decor (-1 = manual)
+	bool autoPlaced = false; // flipped to false when user moves it
 };
 
 
@@ -193,6 +196,7 @@ class DecorPieces
 		DecorPieces();
 		virtual ~DecorPieces();
 		DecorsInfo getInfo() { return info; };
+		DecorsInfo& getInfoRef() { return info; }
 		void setPos(QVector2D p) { info.pos = p; }
 		// For model loading
 		QString getModelPath() { return info.modelPath; };
@@ -203,6 +207,9 @@ class DecorPieces
 
 		// Angle is in degrees
 		void setAngle(float a) { info.angle = qDegreesToRadians(a); };
+		// 
+		void setAutoPlaced(bool b) { info.autoPlaced = b; }
+		void setSegmentIndex(int i) { info.segmentIndex = i; }
 
 		virtual void selectModel(int modelNum) = 0; // Pure virtual function to select a model based on some criteria 
 
@@ -297,7 +304,11 @@ public:
 	std::vector<DecorPieces*> getDecors() const { return decors; };
 	void addDecor(int decorType, int decorIndexList); // decorType is the type of decor (e.g., GARAGE_INDEX, GRANDSTAND_INDEX, TREES_INDEX), decorIndexList is the index in the corresponding model list for that decor type
 	void addDecorDirect(DecorPieces* d) { if (d) decors.push_back(d); }
-
+	// auto decors functions
+	void autoPlaceDecorsForSegment(int segmentIndex);
+	void removeAutoDecorsForSegment(int segmentIndex);
+	void autoPlaceAllDecors();
+	void removeAllAutoDecors();
 	// Curves walls related functions
 	void addBezierCurve(BezierCurveData c) { bezierCurves.push_back(c); }
 	const std::vector<BezierCurveData>& getBezierCurves() const { return bezierCurves; }

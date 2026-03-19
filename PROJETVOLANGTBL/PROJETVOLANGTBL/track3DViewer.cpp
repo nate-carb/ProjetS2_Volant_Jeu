@@ -652,7 +652,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
 // ─────────────────────────────────────────────
 // Ground (grass outside the track)
 // ─────────────────────────────────────────────
-/*
+
 void Track3DViewer::buildGround()
 {
     if (m_groundEntity) {
@@ -774,14 +774,20 @@ void Track3DViewer::buildGround()
     mat->setAmbient(QColor(30, 80, 30));
     mat->setShininess(0.0f);
 
+    //Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
+    //grassMat->setDiffuse(QColor(80, 200, 80));    // bright cartoon green
+    //grassMat->setAmbient(QColor(60, 180, 60));    // close to diffuse = flat shading look
+    //grassMat->setSpecular(QColor(0, 0, 0));       // no specular = no shine
+    //grassMat->setShininess(0.0f);
+
     Qt3DCore::QTransform* t = new Qt3DCore::QTransform(m_groundEntity);
     t->setTranslation(QVector3D(0, -1.0f, 0));
 
     m_groundEntity->addComponent(renderer);
     m_groundEntity->addComponent(mat);
     m_groundEntity->addComponent(t);
-}*/
-
+}
+/*
 void Track3DViewer::buildGround()
 {
 	 //Remove old ground entity if it exists
@@ -820,7 +826,7 @@ void Track3DViewer::buildGround()
     m_groundEntity->addComponent(grassMat);
     m_groundEntity->addComponent(groundTransform);
 }
-
+*/
 void Track3DViewer::buildCheckpoints(Track* track)
 {
     for (Qt3DCore::QEntity* e : m_checkpointEntities) {

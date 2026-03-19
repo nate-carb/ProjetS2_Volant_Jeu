@@ -285,6 +285,22 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         trackCreator->closeTrack(); // use TrackCreator method not Track directly
         });
     layout->addWidget(closeBtn);
+    // ── Auto decors ───────────────────────────────
+    QPushButton* autoDecorsBtn = new QPushButton("Auto Place Decors", this);
+    autoDecorsBtn->setStyleSheet(
+        "QPushButton { background-color: #FF6F00; color: white; padding: 8px; }");
+    connect(autoDecorsBtn, &QPushButton::clicked, [this]() {
+        trackCreator->autoDecors();
+        });
+    layout->addWidget(autoDecorsBtn);
+    // ── Remove Auto decors ───────────────────────────────
+    QPushButton* removeAutoDecorsBtn = new QPushButton("Remove Auto Decors", this);
+    removeAutoDecorsBtn->setStyleSheet(
+        "QPushButton { background-color: #B71C1C; color: white; padding: 8px; }");
+    connect(removeAutoDecorsBtn, &QPushButton::clicked, [this]() {
+        trackCreator->removeAutoDecors();
+        });
+    layout->addWidget(removeAutoDecorsBtn);
 }
 
 void MainWindowCreator::onAddPiece(int pieceType)

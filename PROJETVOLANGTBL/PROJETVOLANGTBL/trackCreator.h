@@ -43,7 +43,9 @@ public:
 	QVector2D getCarPos() const { return carPos; }
     
     void closeTrack();// Close the track by connecting end to start
-    
+    void autoDecors();
+    void removeAutoDecors();
+
 	// Segement editing functions for new track editor
     void addCurveSegment();
     void addStraightSegment();
