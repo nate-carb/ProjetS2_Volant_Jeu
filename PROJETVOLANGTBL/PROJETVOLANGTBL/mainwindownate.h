@@ -12,6 +12,8 @@
 #include <QPixmap>
 #include <map>
 
+#include "raceTimes.h"
+
 
 class MainWindow : public QMainWindow
 {
@@ -23,6 +25,8 @@ public:
     QTimer* timer;
     Vehicule voiture;
     Track* track = nullptr;
+    RaceTimes* raceTimes = nullptr;
+
     Vehicule::Weather currentWeather = Vehicule::SUNNY;
     QTimer* weatherTimer;  // pour changer la météo automatiquement
     bool eventFilter(QObject* obj, QEvent* event) override;
@@ -38,7 +42,8 @@ protected:
     
 
     void drawPit(float scale, Track* track, QPainter& painter);
-
+    void drawMinimap(QPainter& painter);
+    
     
 
 private slots:

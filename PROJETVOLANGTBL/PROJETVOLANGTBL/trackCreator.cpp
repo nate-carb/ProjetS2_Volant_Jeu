@@ -15,6 +15,10 @@ TrackCreator::TrackCreator(QWidget* parent)
 
     // Initialize with empty track
     clearTrack();
+    void createStartLine(); // Create a start line segment at the beginning of the track, aligned with the first segment's direction
+	emit trackUpdated(currentTrack); // Notify that the track has been initialized
+    update();
+    
 }
 
 void TrackCreator::loadTrack(const Track& track)
@@ -267,6 +271,7 @@ void TrackCreator::drawTrack(QPainter& painter)
         //    worldToScreen(pit.exitPoint));
     }
     drawTrackSegments(painter);
+    drawCheckpoints(painter);
 	drawDecors(painter);
     drawBezierCurves(painter);
     drawCar(painter);
@@ -399,7 +404,25 @@ void TrackCreator::rotateDecorExact(float angle)
 	update();
 }
 
+void TrackCreator::drawCheckpoints(QPainter& painter)
+{
+    const auto& cps = currentTrack.getCheckpoints();
 
+    for (int i = 0; i < (int)cps.size(); i++) {
+        const CheckpointData& cp = cps[i];
+
+        // Draw line between left and right edge
+        painter.setPen(QPen(QColor(255, 200, 0), 2, Qt::DashLine));
+        painter.drawLine(worldToScreen(cp.left), worldToScreen(cp.right));
+
+        // Draw number at center
+        QVector2D center = (cp.left + cp.right) / 2.0f;
+        QPointF   sc = worldToScreen(center);
+        painter.setPen(Qt::white);
+        painter.setFont(QFont("Arial", 8, QFont::Bold));
+        painter.drawText(sc + QPointF(3, -3), QString::number(i));
+    }
+}
 // ---------------------------
 // Walls setup to use Bezier 
 // ---------------------------
@@ -496,6 +519,13 @@ void TrackCreator::addCurveSegment()
 void TrackCreator::addStraightSegment()
 {
     currentTrack.addStraightSegment();
+    emit trackUpdated(currentTrack);
+    update();
+}
+
+void TrackCreator::addPitSegment()
+{
+    currentTrack.addPitSegment();
     emit trackUpdated(currentTrack);
     update();
 }

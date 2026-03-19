@@ -151,7 +151,9 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     // PIT
     QPushButton* pitBtn = new QPushButton("Pit", this);
     pitBtn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
-    connect(pitBtn, &QPushButton::clicked, [this]() { onAddPiece(PIT); });
+    connect(pitBtn, &QPushButton::clicked, [this]() {
+        trackCreator->addPitSegment();
+        });
     layout->addWidget(pitBtn);
     
     // ── Decor dropdown ──────────────────────────────────────────

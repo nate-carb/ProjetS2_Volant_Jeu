@@ -85,7 +85,10 @@
     <ClCompile Include="trackViewer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HUDOverlay.cpp">
+    <ClCompile Include="raceTimes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="serialComm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -126,7 +129,10 @@
     <ClInclude Include="ui_PROJETVOLANGTBL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HUDOverlay.h">
+    <ClInclude Include="raceTimes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="serialComm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
