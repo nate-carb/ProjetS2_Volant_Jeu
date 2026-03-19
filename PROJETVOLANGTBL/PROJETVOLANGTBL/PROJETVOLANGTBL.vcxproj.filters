@@ -88,6 +88,9 @@
     <ClCompile Include="raceTimes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="serialComm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vehicule.h">
@@ -127,6 +130,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="raceTimes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="serialComm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
