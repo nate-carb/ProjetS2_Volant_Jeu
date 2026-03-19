@@ -1,5 +1,6 @@
 ﻿#include "mainwindownate.h"
 
+#define NOMINMAX
 #include <QPainter>
 #include <QMouseEvent>
 #include <QDebug>
