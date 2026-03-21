@@ -1,6 +1,6 @@
 ﻿#include "mainwindownate.h"
 
-#define NOMINMAX
+//#define NOMINMAX
 #include <QPainter>
 #include <QMouseEvent>
 #include <QDebug>
@@ -11,6 +11,7 @@
 #include <QPainterPath>
 #include <devmenu.h>
 #include <windows.h>
+
 
 const float PIXELS_PER_METER = 5.0f;
 
@@ -25,6 +26,11 @@ MainWindow::MainWindow(QWidget* parent)
     // Essayer de charger l'image
     image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
 	image = image.scaled(60, 60, Qt::KeepAspectRatio);
+
+    // ---------- Setup Arduino Comm -----------
+    arduino = new ArduinoManager();
+    arduino->connectBase("\\\\.\\COM3"); //
+    arduino->connectWheel("\\\\.\\COM4"); // COM port temporaire
 
     raceTimes = new RaceTimes();
 	//Vehicule* voiture = new Vehicule;
@@ -299,6 +305,18 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 
 void MainWindow::gameLoop()
 {
+    //---------- Info Arduino -------------
+    // Lire Arduino
+    arduino->update();
+
+    // Utiliser les données
+    //ArduinoBaseData  base = arduino->getBaseData();
+    ArduinoWheelData wheelData =  arduino->getWheelData();
+    qDebug() << "=== WHEEL DATA ===";
+    qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
+    qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
+    qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR;
+    qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
 
     // Lecture directe des touches Windows
     keyW = (GetAsyncKeyState('W') & 0x8000) != 0;
@@ -545,9 +563,13 @@ void MainWindow::drawMinimap(QPainter& painter)
     float minX = 1e9f, maxX = -1e9f;
     float minY = 1e9f, maxY = -1e9f;
 
+    //auto checkPoint = [&](const QVector2D& p) {
+    //    minX = std::min(minX, p.x()); maxX = std::max(maxX, p.x());
+    //    minY = std::min(minY, p.y()); maxY = std::max(maxY, p.y());
+    //    };
     auto checkPoint = [&](const QVector2D& p) {
-        minX = std::min(minX, p.x()); maxX = std::max(maxX, p.x());
-        minY = std::min(minY, p.y()); maxY = std::max(maxY, p.y());
+        minX = qMin(minX, p.x()); maxX = qMax(maxX, p.x());
+        minY = qMin(minY, p.y()); maxY = qMax(maxY, p.y());
         };
     for (const auto& p : track->getCenterLine())       checkPoint(p);
     for (const auto& p : track->getTrackEdges().left)  checkPoint(p);
@@ -565,7 +587,7 @@ void MainWindow::drawMinimap(QPainter& painter)
     const float MAX_SIZE = 250.0f;
     const int MARGIN = 15;
 
-    float scale = std::min(MAX_SIZE / rangeX, MAX_SIZE / rangeY);
+    float scale = qMin(MAX_SIZE / rangeX, MAX_SIZE / rangeY);
     float minimapWidth = rangeX * scale;
     float minimapHeight = rangeY * scale;
 

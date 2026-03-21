@@ -13,7 +13,7 @@
 #include <map>
 #include <SoundManager.h>
 #include "raceTimes.h"
-
+#include "ArduinoManager.h"
 
 class MainWindow : public QMainWindow
 {
@@ -51,7 +51,7 @@ private slots:
     void changeWeather();
 
 private:
-    
+    ArduinoManager* arduino = nullptr; // comm arduino
 
     QPixmap image;  // Ton image PNG
     float imageX;     // Position X
