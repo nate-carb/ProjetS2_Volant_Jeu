@@ -43,13 +43,7 @@
     <ClCompile Include="Vehicule.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mainwindow.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="camera2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mainWindowCreator.cpp">
@@ -88,7 +82,25 @@
     <ClCompile Include="raceTimes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="serialComm.cpp">
+    <ClCompile Include="HUDOverlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="devmenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Meshinstance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SoundManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ArduinoManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="include\serial\SerialPort.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -132,14 +144,23 @@
     <ClInclude Include="raceTimes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="serialComm.h">
+    <ClInclude Include="DaeLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HUDOverlay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshConverter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Meshinstance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ArduinoManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </QtMoc>
     <QtMoc Include="mainwindownate.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -153,6 +174,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="trackViewer.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="devmenu.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="SoundManager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

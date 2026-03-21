@@ -2,5 +2,6 @@
   <Configurations>
     <Platform Name="x64" />
   </Configurations>
+  <Folder Name="/Solution Items/" />
   <Project Path="PROJETVOLANGTBL/PROJETVOLANGTBL.vcxproj" Id="3dffc994-a0c5-4195-a6b0-8aafde843bcf" />
 </Solution>

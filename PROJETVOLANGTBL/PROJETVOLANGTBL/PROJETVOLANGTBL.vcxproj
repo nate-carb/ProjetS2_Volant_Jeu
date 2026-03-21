@@ -63,6 +63,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -92,8 +98,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ArduinoManager.cpp" />
     <ClCompile Include="HUDOverlay.cpp" />
     <ClCompile Include="devmenu.cpp" />
+    <ClCompile Include="include\serial\SerialPort.cpp" />
     <ClCompile Include="mainwindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -104,7 +112,6 @@
     <ClCompile Include="Meshinstance.cpp" />
     <ClCompile Include="PitStop.cpp" />
     <ClCompile Include="raceTimes.cpp" />
-    <ClCompile Include="serialComm.cpp" />
     <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="Track.cpp" />
     <ClCompile Include="track3DViewer.cpp">
@@ -130,6 +137,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ArduinoManager.h" />
     <ClInclude Include="camera2D.h" />
     <QtMoc Include="devmenu.h" />
     <ClInclude Include="DaeLoader.h" />
@@ -149,7 +157,6 @@
     <ClInclude Include="PitStop.h" />
     <ClInclude Include="raceTimes.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="serialComm.h" />
     <QtMoc Include="SoundManager.h" />
     <ClInclude Include="Track.h" />
     <QtMoc Include="track3DViewer.h" />
