@@ -20,8 +20,8 @@ MainWindow::MainWindow(QWidget* parent)
     // Voir où le programme cherche les fichiers
     qDebug() << "Dossier de travail actuel:" << QDir::currentPath();
 
-	
-
+    soundManager = new SoundManager(this);
+    soundManager->playMenuMusic();
     // Essayer de charger l'image
     image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
 	image = image.scaled(60, 60, Qt::KeepAspectRatio);
@@ -313,8 +313,8 @@ void MainWindow::gameLoop()
     bool curKeyF1 = (GetAsyncKeyState(VK_F1) & 0x8000) != 0;
 
     // Front montant seulement (évite la répétition 60fps)
-    if (curKeyE && !prevKeyE)  voiture.shiftUp();
-    if (curKeyQ && !prevKeyQ)  voiture.shiftDown();
+    if (curKeyE && !prevKeyE) { voiture.shiftUp();   soundManager->playGearShift(); }
+    if (curKeyQ && !prevKeyQ) { voiture.shiftDown();  soundManager->playGearShift(); }
     if (curKeyF1 && !prevKeyF1) {
         DevMenu* devMenu = new DevMenu(&voiture, this);
         devMenu->show();
@@ -376,6 +376,10 @@ void MainWindow::gameLoop()
 
     if (inPitStop && keyEnter) pitStop.setLeaving(true);
 
+    soundManager->updateEngine(voiture.getRpm(), voiture.getMaxRpm(), voiture.is_on_grass);
+    soundManager->playBrake(keyS, voiture.getSpeed());
+    soundManager->playNos(keySpace && voiture.getNos() > 0);
+    soundManager->playGrass(voiture.is_on_grass);
     // ===== UPDATE PHYSIQUE =====
     voiture.update(deltaTime);
 

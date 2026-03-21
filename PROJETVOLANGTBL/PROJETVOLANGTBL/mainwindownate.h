@@ -11,7 +11,7 @@
 #include "PitStop.h"
 #include <QPixmap>
 #include <map>
-
+#include <SoundManager.h>
 #include "raceTimes.h"
 
 
@@ -26,7 +26,7 @@ public:
     Vehicule voiture;
     Track* track = nullptr;
     RaceTimes* raceTimes = nullptr;
-
+    SoundManager* soundManager = nullptr;
     Vehicule::Weather currentWeather = Vehicule::SUNNY;
     QTimer* weatherTimer;  // pour changer la météo automatiquement
     bool eventFilter(QObject* obj, QEvent* event) override;

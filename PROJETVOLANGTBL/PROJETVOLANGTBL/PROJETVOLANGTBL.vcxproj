@@ -37,7 +37,7 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.10.2_msvc2022_64</QtInstall>
-    <QtModules>core;gui;widgets;3dcore;3drender;3dinput;3dextras;openglwidgets;serialport</QtModules>
+    <QtModules>core;gui;widgets;3dcore;3drender;3dinput;3dextras;openglwidgets;serialport;multimedia</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
@@ -105,6 +105,7 @@
     <ClCompile Include="PitStop.cpp" />
     <ClCompile Include="raceTimes.cpp" />
     <ClCompile Include="serialComm.cpp" />
+    <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="Track.cpp" />
     <ClCompile Include="track3DViewer.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
@@ -149,6 +150,7 @@
     <ClInclude Include="raceTimes.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="serialComm.h" />
+    <QtMoc Include="SoundManager.h" />
     <ClInclude Include="Track.h" />
     <QtMoc Include="track3DViewer.h" />
     <ClInclude Include="trackBuilder3D.h" />
