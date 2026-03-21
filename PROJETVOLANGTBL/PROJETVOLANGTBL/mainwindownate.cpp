@@ -32,8 +32,8 @@ MainWindow::MainWindow(QWidget* parent)
 	//track = Track();
 	//track.loadFromFile("tracks/defaultTrack1.trk");
     track = new Track();       // assigns to the MEMBER pointer
-    track->loadFromFile("tracks/nate2.trk");
-    //track->loadFromFile("tracks/testDecors1.trk");
+    //track->loadFromFile("tracks/nate2.trk");
+    track->loadFromFile("tracks/decorsNate1.trk");
     //track->loadFromFile("tracks/track3dmodelV1.trk");
     //track->loadFromFile("tracks/test_pit.trk");
     // Vérifier si ça a marché

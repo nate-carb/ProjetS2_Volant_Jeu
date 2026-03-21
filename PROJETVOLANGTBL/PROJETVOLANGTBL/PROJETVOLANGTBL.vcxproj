@@ -101,6 +101,7 @@
     <ClCompile Include="mainwindownate.cpp" />
     <ClCompile Include="mainWindowView.cpp" />
     <ClCompile Include="map2d.cpp" />
+    <ClCompile Include="Meshinstance.cpp" />
     <ClCompile Include="PitStop.cpp" />
     <ClCompile Include="raceTimes.cpp" />
     <ClCompile Include="serialComm.cpp" />
@@ -130,6 +131,7 @@
   <ItemGroup>
     <ClInclude Include="camera2D.h" />
     <QtMoc Include="devmenu.h" />
+    <ClInclude Include="DaeLoader.h" />
     <ClInclude Include="GameEngine.h" />
     <QtMoc Include="mainwindownate.h" />
     <QtMoc Include="mainWindowView.h" />
@@ -141,6 +143,8 @@
     </ClInclude>
     <ClInclude Include="mainWindowCreator.h" />
     <ClInclude Include="map2d.h" />
+    <ClInclude Include="MeshConverter.h" />
+    <ClInclude Include="Meshinstance.h" />
     <ClInclude Include="PitStop.h" />
     <ClInclude Include="raceTimes.h" />
     <ClInclude Include="resource.h" />

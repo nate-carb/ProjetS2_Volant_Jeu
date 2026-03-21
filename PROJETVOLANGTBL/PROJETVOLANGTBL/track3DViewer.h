@@ -18,12 +18,17 @@
 #include <Qt3DExtras/QSkyboxEntity>
 #include <Qt3DRender/QCullFace>
 #include <Qt3DRender/QGeometryRenderer>
+//DECORS IMPORT .DAE
+#include <QMap>
+#include <Qt3DRender/QSceneLoader>
 //Light
 #include <Qt3DRender/QPointLight>
 #include <Qt3DRender/QDirectionalLight>
 #include "Track.h"
 #include "Vehicule.h"
 #include "HUDOverlay.h"
+#include "DaeLoader.h"
+#include "MeshInstance.h"
 
 class Track3DViewer : public Qt3DExtras::Qt3DWindow
 {
@@ -42,6 +47,7 @@ public:
     // Switch between first-person and orbit (debug) camera
     void setFirstPersonMode(bool enabled);
 
+    
 public slots:
     void onUpdateFrame();
 
@@ -75,9 +81,13 @@ private:
 	// Decor entity (for 3D model)
     QVector<Qt3DCore::QEntity*> m_decorEntities;
 	//Qt3DCore::QTransform* m_decorTransform = nullptr;
+    
+    QMap<QString, Qt3DRender::QSceneLoader*> m_loaderCache; //cache the file path
 
 	// Checkpoint entities
     QVector<Qt3DCore::QEntity*> m_checkpointEntities;
+
+
 
 	// Bezier walls entities
     void buildBezierWalls(Track* track);
@@ -92,6 +102,10 @@ private:
     void buildGround();
     void buildCheckpoints(Track* track);
 
+    // decors instance
+    QVector<Qt3DCore::QEntity*> m_instancedDecorEntities;
+    void buildInstancedDecors(Track* track);
+
     Qt3DCore::QEntity* createBox(Qt3DCore::QEntity* parent,
         QVector3D size,
         QVector3D position,
@@ -103,4 +117,6 @@ private:
 
     //HUD Overlay en 3D
     HUDOverlay* m_hud = nullptr;
+signals:
+    void trackUpdated(Track* track);
 };

@@ -160,14 +160,23 @@ int main(int argc, char* argv[])
     hud->move(container->mapToGlobal(QPoint(15, 15)));
 
     // Suit la fenêtre de jeu quand elle bouge
-    QObject::connect(window->timer, &QTimer::timeout, [=]() {
-        hud->move(container->mapToGlobal(QPoint(0, 0)));
-        hud->resize(container->size());
-        });
-    hud->setAttribute(Qt::WA_ShowWithoutActivating);
-    container->setFocus();
+    //QObject::connect(window->timer, &QTimer::timeout, [=]() {
+    //    hud->move(container->mapToGlobal(QPoint(0, 0)));
+    //    hud->resize(container->size());
+    //    });
+    //hud->setAttribute(Qt::WA_ShowWithoutActivating);
+    //container->setFocus();
 
-    // ===== TIMER =====
+    //// ===== TIMER =====
+    //QObject::connect(window->timer, &QTimer::timeout, [=]() {
+    //    viewer->updateVehicule(&window->voiture);
+    //    hud->updateData(
+    //        window->voiture.getCarburant(),
+    //        window->voiture.getNos(),
+    //        window->voiture.getTireWear(),
+    //        window->currentWeather
+    //    );
+    //    });
     QObject::connect(window->timer, &QTimer::timeout, [=]() {
         viewer->updateVehicule(&window->voiture);
         hud->updateData(
@@ -176,9 +185,19 @@ int main(int argc, char* argv[])
             window->voiture.getTireWear(),
             window->currentWeather
         );
-        });
+        // Only reposition HUD if window actually moved
+        static QPoint lastPos;
+        QPoint currentPos = container->mapToGlobal(QPoint(0, 0));
+        if (currentPos != lastPos) {
+            hud->move(currentPos);
+            hud->resize(container->size());
+            lastPos = currentPos;
+        }
+    });
+    
 
-    viewer->setTrack(window->track);
+    viewer->setTrack(window->track); // initial load
+    
 
     // ===== CLAVIER =====
     container->setFocusPolicy(Qt::StrongFocus);
@@ -188,5 +207,7 @@ int main(int argc, char* argv[])
 
     MainWindowCreator* creator = new MainWindowCreator();
     creator->show();
+    
+    
     return app.exec();
 }

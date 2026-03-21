@@ -54,11 +54,13 @@ void Track3DViewer::setTrack(Track* track)
         m_trackEntity = nullptr;
     }
     qDebug() << "setTrack called - checkpoints:" << track->getCheckpoints().size();
+    
     buildTrackMesh(track);
-	buildDecors(track);
+	//buildDecors(track);
     buildBezierWalls(track);
 	buildCheckpoints(track);
     buildGround();
+    buildInstancedDecors(track);
 }
 void Track3DViewer::updateVehicule(Vehicule* vehicule)
 {
@@ -68,6 +70,18 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
     float x = vehicule->getPosition().x();
     float y = vehicule->getPosition().y();
     float angle = vehicule->getAngle(); // en radian
+
+    // For rending only around the car
+    const float LOAD_RADIUS = 500.0f;
+
+    for (Qt3DCore::QEntity* e : m_decorEntities) {
+        Qt3DCore::QTransform* t = e->findChild<Qt3DCore::QTransform*>();
+        if (!t) continue;
+        float dx = t->translation().x() - x;
+        float dz = t->translation().z() - y;
+        float dist = std::sqrt(dx * dx + dz * dz);
+        e->setEnabled(dist < LOAD_RADIUS);  // hide far ones instead of deleting
+    }
 
     // Car stays at game logic position
     m_carTransform->setTranslation(QVector3D(x, 0.0f, y)); // 0 = on the ground
@@ -179,6 +193,15 @@ void Track3DViewer::buildScene()
     // ── Car placeholder ──────────────────────────────────────
     buildCar();
 	buildSkybox();
+
+    Qt3DRender::QFrameGraphNode* fg = defaultFrameGraph();
+    qDebug() << "FrameGraph class:" << fg->metaObject()->className();
+
+    // Print all filter keys in the forward renderer
+    QList<Qt3DRender::QFilterKey*> keys =
+        fg->findChildren<Qt3DRender::QFilterKey*>();
+    for (Qt3DRender::QFilterKey* k : keys)
+        qDebug() << "FilterKey:" << k->name() << "=" << k->value();
 }
 
 
@@ -870,8 +893,10 @@ void Track3DViewer::buildCar()
 //------------------------------------------
 //--- buildDecor - version 3d model .obj ---
 //------------------------------------------
+
 void Track3DViewer::buildDecors(Track* track)
 {
+    m_loaderCache.clear();
     // Remove old decor entities if they exist
     for (Qt3DCore::QEntity* e : m_decorEntities) {
         e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
@@ -905,16 +930,33 @@ void Track3DViewer::buildDecors(Track* track)
         // Child entity holds the actual 3D model
         Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(decorEntity);
 
-        // Add to buildDecors() before creating loader:
+       
         qDebug() << "App dir:" << QCoreApplication::applicationDirPath();
+
         QDir sceneDir(QCoreApplication::applicationDirPath() + "/sceneparsers");
+
         qDebug() << "Sceneparsers exists:" << sceneDir.exists();
         qDebug() << "Files:" << sceneDir.entryList(QDir::Files);
-        Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
-        QString modelPath = QDir::currentPath() + decor->getInfo().modelPath;
-        loader->setSource(QUrl::fromLocalFile(modelPath));
 
-       
+        //Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
+        //QString modelPath = QDir::currentPath() + decor->getInfo().modelPath;
+        //loader->setSource(QUrl::fromLocalFile(modelPath));
+
+        QString modelPath = QDir::currentPath() + decor->getInfo().modelPath;
+        Qt3DRender::QSceneLoader* loader;
+
+        if (m_loaderCache.contains(modelPath)) {
+            // Reuse the already-loaded scene loader source
+            loader = new Qt3DRender::QSceneLoader(modelEntity);
+            loader->setSource(m_loaderCache[modelPath]->source());
+        }
+        else {
+            loader = new Qt3DRender::QSceneLoader(modelEntity);
+            loader->setSource(QUrl::fromLocalFile(modelPath));
+            m_loaderCache[modelPath] = loader;
+        }
+        
+
         // Scale based on decor info
         Qt3DCore::QTransform* modelTransform = new Qt3DCore::QTransform(modelEntity);
         modelTransform->setScale3D(QVector3D(
@@ -929,8 +971,9 @@ void Track3DViewer::buildDecors(Track* track)
         //    [modelPath](Qt3DRender::QSceneLoader::Status status) {
         //        qDebug() << "Decor model" << modelPath << "status:" << status;
         //    });
+        // -------------- connect -----------
         connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
-            [modelEntity](Qt3DRender::QSceneLoader::Status status) {
+           [modelEntity](Qt3DRender::QSceneLoader::Status status) {
                 if (status != Qt3DRender::QSceneLoader::Ready) return;
 
                 QList<Qt3DExtras::QPhongMaterial*> mats =
@@ -951,6 +994,7 @@ void Track3DViewer::buildDecors(Track* track)
     }
 
     qDebug() << "Built" << m_decorEntities.size() << "decor entities";
+    
 }
 
 
@@ -1062,7 +1106,141 @@ void Track3DViewer::buildBezierWalls(Track* track)
 
     qDebug() << "Built" << m_wallEntities.size() << "wall segments";
 }
+// ─────────────────────────────────────────────
+// buildInstancedDecors – generate decor instance
+// ─────────────────────────────────────────────
+void Track3DViewer::buildInstancedDecors(Track* track)
+{
+    qDebug() << "buildInstancedDecors start, decors:"
+        << (track ? (int)track->getDecors().size() : -1);
 
+    for (Qt3DCore::QEntity* e : m_instancedDecorEntities) {
+        e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
+        delete e;
+    }
+    m_instancedDecorEntities.clear();
+
+    if (!track || track->getDecors().empty()) return;
+
+    // Group transforms by model path
+    QMap<QString, QVector<QMatrix4x4>> transformsByModel;
+
+    for (DecorPieces* d : track->getDecors()) {
+        if (!d) continue;
+
+        QString modelPath =
+            QDir::currentPath() + d->getInfo().modelPath;
+
+        QMatrix4x4 mat;
+        mat.translate(d->getInfo().pos.x(), 0.0f,
+            d->getInfo().pos.y());
+        mat.rotate(-qRadiansToDegrees(d->getInfo().angle),
+            0, 1, 0);
+        mat.scale(d->getInfo().width * d->getScale(),
+            d->getInfo().height * d->getScale(),
+            d->getInfo().length * d->getScale());
+
+        transformsByModel[modelPath].append(mat);
+    }
+
+    // Build one instanced group per unique model
+    // Each group has one draw call per submesh (material)
+    for (auto it = transformsByModel.begin();
+        it != transformsByModel.end(); ++it)
+    {
+        const QString& modelPath = it.key();
+        const QVector<QMatrix4x4>& transforms = it.value();
+
+        qDebug() << "Loading:" << modelPath
+            << "instances:" << transforms.size();
+
+        // Load all submeshes with correct per-material colors
+        MeshDataList meshList =
+            DaeLoader::loadByMaterial(modelPath);
+
+        if (!meshList.valid) {
+            qDebug() << "buildInstancedDecors: failed to load"
+                << modelPath;
+            continue;
+        }
+
+        Qt3DCore::QEntity* e = MeshInstance::buildFromList(
+            meshList, transforms, m_rootEntity);
+
+        if (e) m_instancedDecorEntities.push_back(e);
+    }
+
+    qDebug() << "buildInstancedDecors: built"
+        << m_instancedDecorEntities.size()
+        << "instanced groups from"
+        << track->getDecors().size() << "decors";
+}
+/*void Track3DViewer::buildInstancedDecors(Track* track)
+{
+    qDebug() << "buildInstancedDecors start, decors:"
+        << (track ? (int)track->getDecors().size() : -1);
+
+    // Clear old instanced decor entities
+    for (Qt3DCore::QEntity* e : m_instancedDecorEntities) {
+        e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
+        delete e;
+    }
+    m_instancedDecorEntities.clear();
+
+    if (!track) return;
+    if (track->getDecors().empty()) return;
+
+    // ── Group transforms by model path ────────────────────────
+    // Each unique .dae file becomes one instanced draw call
+    QMap<QString, QVector<QMatrix4x4>> transformsByModel;
+
+    for (DecorPieces* d : track->getDecors()) {
+        if (!d) continue;
+
+        QString modelPath =
+            QDir::currentPath() + d->getInfo().modelPath;
+
+        QMatrix4x4 mat;
+        mat.translate(d->getInfo().pos.x(), 0.0f,
+            d->getInfo().pos.y());
+        mat.rotate(-qRadiansToDegrees(d->getInfo().angle),
+            0, 1, 0);
+        mat.scale(d->getInfo().width * d->getScale(),
+            d->getInfo().height * d->getScale(),
+            d->getInfo().length * d->getScale());
+
+        transformsByModel[modelPath].append(mat);
+    }
+
+    // ── Build one instanced entity per unique model ───────────
+    for (auto it = transformsByModel.begin();
+        it != transformsByModel.end(); ++it)
+    {
+        const QString& modelPath = it.key();
+        const QVector<QMatrix4x4>& transforms = it.value();
+
+        qDebug() << "Loading:" << modelPath
+            << "instances:" << transforms.size();
+
+        MeshData mesh = DaeLoader::load(modelPath);
+        if (!mesh.valid) {
+            qDebug() << "buildInstancedDecors: failed to load"
+                << modelPath;
+            continue;
+        }
+
+        Qt3DCore::QEntity* e = MeshInstance::build(
+            mesh, transforms, m_rootEntity);
+
+        if (e) m_instancedDecorEntities.push_back(e);
+    }
+
+    qDebug() << "buildInstancedDecors: built"
+        << m_instancedDecorEntities.size()
+        << "instanced groups from"
+        << track->getDecors().size()
+        << "decors";
+}*/
 // ─────────────────────────────────────────────
 // Helper – generic coloured box
 // ─────────────────────────────────────────────

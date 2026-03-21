@@ -411,8 +411,8 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
     const TrackSegment& seg = trackSegments[segmentIndex];
     if (seg.type == TrackSegmentType::PIT_TRACK) return;
 
-    const float grandstandSpacing = 50.0f; // old value 150
-    const float treeSpacing = 30.0f; // old value 80
+    const float grandstandSpacing = 150.0f; // old value 150
+    const float treeSpacing = 80.0f; // old value 80
     const float sideOffset = trackWidth * 1.5f; 
     const int   steps = 20; // must match buildFromSegments()
 
