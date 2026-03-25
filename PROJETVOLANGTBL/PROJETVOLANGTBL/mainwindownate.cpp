@@ -317,7 +317,7 @@ void MainWindow::gameLoop()
     //qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
     //qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR;
     //qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
-    //qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
+    qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
 
     // Lecture directe des touches Windows
     keyW = (GetAsyncKeyState('W') & 0x8000) != 0;
