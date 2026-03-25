@@ -362,9 +362,13 @@ void MainWindow::gameLoop()
     //else if (keyD && !keyA) voiture.setSteering(1.0f);
     //else voiture.setSteering(0.0f);
     
-    voiture.setAccel(wheelData.switchTR ? 1.0f : 0.0f);
-    voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);
+    voiture.setAccel(base.gas);
+    voiture.setBreaking(base.brake);
     voiture.setSteering(base.pos);
+
+    //voiture.setAccel(wheelData.switchTR ? 1.0f : 0.0f);
+    //voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);
+   
 
 
 
