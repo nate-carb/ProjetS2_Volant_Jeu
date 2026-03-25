@@ -158,6 +158,8 @@ void ArduinoManager::parseWheel(const std::string& raw)
         wheelData.switchBL = j.value("switchBL", false);
         wheelData.switchBR = j.value("switchBR", false);
         wheelData.joyDir = j.value("JoyDirection", 0);
+        wheelData.paddleshiftup = j.value("paddleshiftup", false);  
+        wheelData.paddleshiftdown = j.value("paddleshiftdown", false);
     }
     catch (...) {
         std::cerr << "Erreur parse volant: " << raw << std::endl;

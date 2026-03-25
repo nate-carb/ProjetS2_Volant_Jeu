@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget* parent)
     // ---------- Setup Arduino Comm -----------
     arduino = new ArduinoManager();
     arduino->connectBase("\\\\.\\COM3"); //
-    //arduino->connectWheel("\\\\.\\COM4"); // COM port temporaire
+    arduino->connectWheel("\\\\.\\COM5"); // COM port temporaire
 
     raceTimes = new RaceTimes();
 	//Vehicule* voiture = new Vehicule;
@@ -311,13 +311,14 @@ void MainWindow::gameLoop()
 
     // Utiliser les données
     ArduinoBaseData  base = arduino->getBaseData();
-    //ArduinoWheelData wheelData =  arduino->getWheelData();
-    //qDebug() << "=== WHEEL DATA ===";
-    //qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
-    //qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
-    //qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR;
-    //qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
+    ArduinoWheelData wheelData =  arduino->getWheelData();
+    qDebug() << "=== WHEEL DATA ===";
+    qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
+    qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
+    qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR << "PADGAU" << wheelData.paddleshiftdown << "PADDRO" << wheelData.paddleshiftup;
+    qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
     qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
+    qDebug() << "GEAR" << voiture.getGear();
 
     // Lecture directe des touches Windows
     keyW = (GetAsyncKeyState('W') & 0x8000) != 0;
@@ -331,9 +332,11 @@ void MainWindow::gameLoop()
     bool curKeyQ = (GetAsyncKeyState('Q') & 0x8000) != 0;
     bool curKeyF1 = (GetAsyncKeyState(VK_F1) & 0x8000) != 0;
 
-    // Front montant seulement (évite la répétition 60fps)
-    if (curKeyE && !prevKeyE) { voiture.shiftUp();   soundManager->playGearShift(); }
-    if (curKeyQ && !prevKeyQ) { voiture.shiftDown();  soundManager->playGearShift(); }
+    if (wheelData.paddleshiftup && !arduino->prevPaddleUp)   voiture.shiftUp();
+    if (wheelData.paddleshiftdown && !arduino->prevPaddleDown) voiture.shiftDown();
+
+    arduino->prevPaddleUp = wheelData.paddleshiftup;
+    arduino->prevPaddleDown = wheelData.paddleshiftdown;
     if (curKeyF1 && !prevKeyF1) {
         DevMenu* devMenu = new DevMenu(&voiture, this);
         devMenu->show();
@@ -356,8 +359,8 @@ void MainWindow::gameLoop()
     //else if (keyD && !keyA) voiture.setSteering(1.0f);
     //else voiture.setSteering(0.0f);
     
-    voiture.setAccel(base.gas);
-    voiture.setBreaking(base.brake);
+    voiture.setAccel(wheelData.switchTR ? 1.0f : 0.0f);
+    voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);
     voiture.setSteering(base.pos);
 
 

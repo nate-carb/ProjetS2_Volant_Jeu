@@ -22,6 +22,11 @@ struct ArduinoWheelData {
     bool  switchBL = false;
     bool  switchBR = false;
     int   joyDir = 0;
+    bool  paddleshiftup = false; 
+    bool  paddleshiftdown = false;
+    bool prevPaddleUp = false;
+    bool prevPaddleDown = false;
+
 };
 
 class ArduinoManager {
@@ -40,6 +45,8 @@ public:
 
     ArduinoBaseData  getBaseData()  const { return baseData; }
     ArduinoWheelData getWheelData() const { return wheelData; }
+    bool prevPaddleUp = false;
+    bool prevPaddleDown = false;
 
 private:
     SerialPort* basePort = nullptr;
@@ -56,5 +63,6 @@ private:
 
     void parseBase(const std::string& raw);
     void parseWheel(const std::string& raw);
+
 };
 
