@@ -93,7 +93,7 @@ void ArduinoManager::update()
 // ── Envoyer données du jeu vers le volant ────────────────────────────────────
 void ArduinoManager::sendToWheel(float rpm, float maxRpm, int gear,
     float fuel, float tireWear,
-    bool inPit, float speed)
+    bool inPit, float speed, float angle)
 {
     if (!wheelPort || !wheelPort->isConnected()) return;
 
@@ -105,6 +105,7 @@ void ArduinoManager::sendToWheel(float rpm, float maxRpm, int gear,
     j["tires"] = tireWear;
     j["speed"] = speed;
     j["pit"] = inPit;
+    j["angle"] = angle;
 
     SendToSerial(wheelPort, j);
 }

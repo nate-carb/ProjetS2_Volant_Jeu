@@ -41,7 +41,7 @@ public:
 
     void sendToWheel(float rpm, float maxRpm, int gear,
         float fuel, float tireWear,
-        bool inPit, float speed);
+        bool inPit, float speed, float angle);
 
     ArduinoBaseData  getBaseData()  const { return baseData; }
     ArduinoWheelData getWheelData() const { return wheelData; }

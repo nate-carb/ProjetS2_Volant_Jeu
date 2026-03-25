@@ -29,8 +29,11 @@ MainWindow::MainWindow(QWidget* parent)
 
     // ---------- Setup Arduino Comm -----------
     arduino = new ArduinoManager();
-    arduino->connectBase("\\\\.\\COM3"); //
-    arduino->connectWheel("\\\\.\\COM5"); // COM port temporaire
+    bool baseOk = arduino->connectBase("\\\\.\\COM4");
+    bool wheelOk = arduino->connectWheel("\\\\.\\COM3");
+
+    qDebug() << "Base connectee:" << baseOk;
+    qDebug() << "Wheel connectee:" << wheelOk;
 
     raceTimes = new RaceTimes();
 	//Vehicule* voiture = new Vehicule;
@@ -412,6 +415,20 @@ void MainWindow::gameLoop()
     soundManager->playBrake(keyS, voiture.getSpeed());
     soundManager->playNos(keySpace && voiture.getNos() > 0);
     soundManager->playGrass(voiture.is_on_grass);
+
+    // Envoi vers Arduino à 20Hz
+    static QElapsedTimer sendTimer;
+    if (!sendTimer.isValid()) sendTimer.start();
+    if (sendTimer.elapsed() > 50) {
+        arduino->sendToWheel(
+            voiture.getRpm(), voiture.getMaxRpm(), voiture.getGear(),
+            voiture.getCarburant(), voiture.getTireWear(),
+            inPitStop, voiture.getSpeed() * 3.6f,
+            voiture.getAngle()
+        );
+        sendTimer.restart();
+    }
+
     // ===== UPDATE PHYSIQUE =====
     voiture.update(deltaTime);
 
