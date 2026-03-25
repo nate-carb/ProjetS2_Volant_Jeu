@@ -1,6 +1,7 @@
 #include "ArduinoManager.h"
 #include <iostream>
-#define BAUD       115200
+#include <QDebug>
+#define BAUD       9600
 #define MSG_MAX    1024
 
 ArduinoManager::ArduinoManager() {}
@@ -36,20 +37,58 @@ bool ArduinoManager::connectWheel(const std::string& port)
 // ── Appelé dans gameLoop() ───────────────────────────────────────────────────
 void ArduinoManager::update()
 {
+    char char_buffer[1024];
+
+    // ── BASE ─────────────────────────────────────────
+    if (basePort && basePort->isConnected()) {
+        int size = basePort->readSerialPort(char_buffer, sizeof(char_buffer));
+        if (size > 0) baseBuffer.append(char_buffer, size);
+
+        size_t pos;
+        while ((pos = baseBuffer.find('\n')) != std::string::npos) {
+            std::string line = baseBuffer.substr(0, pos);  // prend UNE ligne
+            baseBuffer = baseBuffer.substr(pos + 1);       // garde le reste
+
+            // Nettoie le \r si présent
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+
+            if (!line.empty()) parseBase(line);
+        }
+    }
+
+    // ── VOLANT ───────────────────────────────────────
+    if (wheelPort && wheelPort->isConnected()) {
+        int size = wheelPort->readSerialPort(char_buffer, sizeof(char_buffer));
+        if (size > 0) wheelBuffer.append(char_buffer, size);
+
+        size_t pos;
+        while ((pos = wheelBuffer.find('\n')) != std::string::npos) {
+            std::string line = wheelBuffer.substr(0, pos);
+            wheelBuffer = wheelBuffer.substr(pos + 1);
+
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+
+            if (!line.empty()) parseWheel(line);
+        }
+    }
+}
+/*void ArduinoManager::update()
+{
     std::string raw;
 
     // Lire la base
     if (basePort && basePort->isConnected()) {
         if (RcvFromSerial(basePort, raw) && raw.size() > 0)
-            parseBase(raw);
+            
+            parseBase(raw)
+;
     }
-
     // Lire le volant
     if (wheelPort && wheelPort->isConnected()) {
         if (RcvFromSerial(wheelPort, raw) && raw.size() > 0)
             parseWheel(raw);
     }
-}
+}*/
 
 // ── Envoyer données du jeu vers le volant ────────────────────────────────────
 void ArduinoManager::sendToWheel(float rpm, float maxRpm, int gear,
@@ -93,6 +132,7 @@ bool ArduinoManager::RcvFromSerial(SerialPort* port, std::string& msg)
 // ── Parsers JSON ─────────────────────────────────────────────────────────────
 void ArduinoManager::parseBase(const std::string& raw)
 {
+    //qDebug() << "raw data" << QString::fromStdString(raw);
     try {
         json j = json::parse(raw);
         baseData.pos = j.value("pos", 0.0f);

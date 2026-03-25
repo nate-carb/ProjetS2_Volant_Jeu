@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget* parent)
     // ---------- Setup Arduino Comm -----------
     arduino = new ArduinoManager();
     arduino->connectBase("\\\\.\\COM3"); //
-    arduino->connectWheel("\\\\.\\COM4"); // COM port temporaire
+    //arduino->connectWheel("\\\\.\\COM4"); // COM port temporaire
 
     raceTimes = new RaceTimes();
 	//Vehicule* voiture = new Vehicule;
@@ -310,13 +310,14 @@ void MainWindow::gameLoop()
     arduino->update();
 
     // Utiliser les données
-    //ArduinoBaseData  base = arduino->getBaseData();
-    ArduinoWheelData wheelData =  arduino->getWheelData();
-    qDebug() << "=== WHEEL DATA ===";
-    qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
-    qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
-    qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR;
-    qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
+    ArduinoBaseData  base = arduino->getBaseData();
+    //ArduinoWheelData wheelData =  arduino->getWheelData();
+    //qDebug() << "=== WHEEL DATA ===";
+    //qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
+    //qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
+    //qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR;
+    //qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
+    //qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
 
     // Lecture directe des touches Windows
     keyW = (GetAsyncKeyState('W') & 0x8000) != 0;
@@ -347,14 +348,24 @@ void MainWindow::gameLoop()
     deltaTime = msElapsed / 1000.0f;  // Convertit en secondes
     lastFrameTime = currentTime;  // Sauvegarde pour la prochaine frame
 
-    voiture.setAccel(keyW ? 1.0f : 0.0f);
-    voiture.setBreaking(keyS ? 1.0f : 0.0f);
-    voiture.setBoosting(keySpace);
+    //voiture.setAccel(keyW ? 1.0f : 0.0f);
+    //voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    //voiture.setBoosting(keySpace);
 
-    if (keyA && !keyD) voiture.setSteering(-1.0f);
-    else if (keyD && !keyA) voiture.setSteering(1.0f);
-    else voiture.setSteering(0.0f);
+    //if (keyA && !keyD) voiture.setSteering(-1.0f);
+    //else if (keyD && !keyA) voiture.setSteering(1.0f);
+    //else voiture.setSteering(0.0f);
+    
+    voiture.setAccel(base.gas);
+    voiture.setBreaking(base.brake);
+    voiture.setSteering(base.pos);
+
+
+
+
+
     // Sur la piste OU dans la pitlane OU dans le pit stop
+
     const float PIXELS_PER_METER = 5.0f;
     int carXpx = (int)(voiture.getPosition().x() * PIXELS_PER_METER);
     int carYpx = (int)(voiture.getPosition().y() * PIXELS_PER_METER);

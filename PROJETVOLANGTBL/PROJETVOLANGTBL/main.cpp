@@ -1,18 +1,22 @@
 // main.cpp
+
+// -- Qt includes --
 #include <QtWidgets/QApplication>
-#include "Vehicule.h"
-#include "Track.h"
-#include <windows.h>
-#include <iostream>
 #include <QDebug>
 #include <chrono>
 #include <QTimer>
 #include <QPluginLoader>
 #include <QDir>
+#include <QStackedLayout>
+// -- includes --
+#include <windows.h>
+#include <iostream>
+// -- Home includes -- 
+#include "Vehicule.h"
+#include "Track.h"
 #include "mainwindownate.h"
 #include "mainWindowCreator.h"
 #include "mainWindowView.h"
-#include <QStackedLayout>
 #include "HUDOverlay.h"
 bool isKeyPressed(int vkCode) {
     return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
@@ -97,10 +101,7 @@ bool isKeyPressed(int vkCode) {
 //3d test
 #include "track3DViewer.h"
 
-// ── Simple input handler ─────────────────────────────────────
-// You probably already have this elsewhere – just an example
 
-// ─────────────────────────────────────────────────────────────
 /*
 int main(int argc, char* argv[])
 {
@@ -192,8 +193,8 @@ int main(int argc, char* argv[])
             hud->move(currentPos);
             hud->resize(container->size());
             lastPos = currentPos;
-        }
-    });
+        } 
+    }); 
     
 
     viewer->setTrack(window->track); // initial load

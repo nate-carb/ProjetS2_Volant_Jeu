@@ -48,6 +48,9 @@ private:
     ArduinoBaseData  baseData;
     ArduinoWheelData wheelData;
 
+    std::string baseBuffer;
+    std::string wheelBuffer;
+
     bool RcvFromSerial(SerialPort* port, std::string& msg);
     bool SendToSerial(SerialPort* port, json j_msg);
 
