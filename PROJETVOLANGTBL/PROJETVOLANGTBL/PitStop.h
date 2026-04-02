@@ -4,6 +4,8 @@
 #include <vector>
 #include <QPolygonF>
 #include <QPainterPath>
+#include "Track.h"
+
 
 class PitStop
 {
@@ -12,9 +14,13 @@ public:
     PitStop(int x, int y, int width, int height);
     ~PitStop();
 
+    
+
     bool contains(int carX, int carY);
     void recharge(float deltaTime, float& carburant, float& nos, float& tireWear);
     void placeNearTrack(const std::vector<QVector2D>& centerLine, float scale, float offset = 150.0f, float trackWidth = 40.0f);
+
+    void placePitLane(const PitLane& pit, float trackWidth);
 
     QRect getRect() const { return zone; }
     bool isLeaving() const { return leavingPitStop; }

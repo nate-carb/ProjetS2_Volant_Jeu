@@ -282,6 +282,7 @@ public:
 	
 	bool isVector2DOnTrack(const QVector2D& point) const;
 
+	bool isVector2DOnPitLane(const QVector2D& point, bool onTrack) const;
 
 	float getTrackWidth() const { return trackWidth; };
 	void setTrackWidth(float w) { trackWidth = w; }

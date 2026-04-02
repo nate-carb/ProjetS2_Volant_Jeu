@@ -668,7 +668,114 @@ void Track3DViewer::buildTrackMesh(Track* track)
             << "straight:" << pit.edges.left.size()
             << "exit:" << pit.exitCurveEdges.left.size()
             << "total:" << fullLeft.size();
-            
+        // ── Pit Stop box (flat rectangle on the pit lane surface) ──
+        if (track->hasPitLane()) {
+            PitLane pit = track->getPitLane();
+            if (pit.centerLine.size() >= 2) {
+                // Midpoint of pit lane
+                int mid = pit.centerLine.size() / 2;
+                QVector2D center = pit.centerLine[mid];
+                QVector2D dir = (pit.centerLine[mid + 1] - pit.centerLine[mid]).normalized();
+                QVector2D normal(-dir.y(), dir.x());
+
+                float halfLen = 20.0f;   // half-length along pit lane
+                float halfWid = 15.0f;   // half-width across pit lane
+
+                // 4 corners of the box in world XZ plane
+                QVector2D c0 = center - dir * halfLen - normal * halfWid;
+                QVector2D c1 = center + dir * halfLen - normal * halfWid;
+                QVector2D c2 = center + dir * halfLen + normal * halfWid;
+                QVector2D c3 = center - dir * halfLen + normal * halfWid;
+
+                float y = 0.15f; // slightly above track surface to avoid z-fighting
+
+                QVector<float> verts = {
+                    c0.x(), y, c0.y(),
+                    c1.x(), y, c1.y(),
+                    c2.x(), y, c2.y(),
+                    c3.x(), y, c3.y()
+                };
+                QVector<float> normals = {
+                    0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0
+                };
+                QVector<quint32> idx = { 0, 2, 1,  0, 3, 2 };
+
+
+                Qt3DCore::QEntity* boxEntity = new Qt3DCore::QEntity(m_rootEntity);
+                Qt3DRender::QGeometryRenderer* renderer = new Qt3DRender::QGeometryRenderer(boxEntity);
+                Qt3DCore::QGeometry* geom = new Qt3DCore::QGeometry(renderer);
+
+                Qt3DCore::QBuffer* vb = new Qt3DCore::QBuffer(geom);
+                vb->setData(QByteArray(reinterpret_cast<const char*>(verts.constData()),
+                    verts.size() * sizeof(float)));
+
+                Qt3DCore::QAttribute* posAttr = new Qt3DCore::QAttribute(geom);
+                posAttr->setName(Qt3DCore::QAttribute::defaultPositionAttributeName());
+                posAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
+                posAttr->setVertexSize(3);
+                posAttr->setByteOffset(0);
+                posAttr->setBuffer(vb);
+                posAttr->setByteStride(3 * sizeof(float));
+                posAttr->setCount(4);
+                geom->addAttribute(posAttr);
+
+                Qt3DCore::QBuffer* nb = new Qt3DCore::QBuffer(geom);
+                nb->setData(QByteArray(reinterpret_cast<const char*>(normals.constData()),
+                    normals.size() * sizeof(float)));
+
+                Qt3DCore::QAttribute* normAttr = new Qt3DCore::QAttribute(geom);
+                normAttr->setName(Qt3DCore::QAttribute::defaultNormalAttributeName());
+                normAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
+                normAttr->setVertexSize(3);
+                normAttr->setByteOffset(0);
+                normAttr->setBuffer(nb);
+                normAttr->setByteStride(3 * sizeof(float));
+                normAttr->setCount(4);
+                geom->addAttribute(normAttr);
+
+                Qt3DCore::QBuffer* ib = new Qt3DCore::QBuffer(geom);
+                ib->setData(QByteArray(reinterpret_cast<const char*>(idx.constData()),
+                    idx.size() * sizeof(quint32)));
+
+                Qt3DCore::QAttribute* idxAttr = new Qt3DCore::QAttribute(geom);
+                idxAttr->setAttributeType(Qt3DCore::QAttribute::IndexAttribute);
+                idxAttr->setVertexBaseType(Qt3DCore::QAttribute::UnsignedInt);
+                idxAttr->setBuffer(ib);
+                idxAttr->setCount(static_cast<uint>(idx.size()));
+                geom->addAttribute(idxAttr);
+
+                renderer->setGeometry(geom);
+                renderer->setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
+
+                Qt3DExtras::QPhongMaterial* mat = new Qt3DExtras::QPhongMaterial(boxEntity);
+                mat->setDiffuse(QColor(255, 255, 0));   // yellow like in 2D
+                mat->setAmbient(QColor(100, 100, 0));
+                mat->setShininess(0.0f);
+
+                
+                Qt3DRender::QCullFace* cullFace = new Qt3DRender::QCullFace();
+                cullFace->setMode(Qt3DRender::QCullFace::NoCulling);
+
+                Qt3DRender::QRenderPass* renderPass = new Qt3DRender::QRenderPass();
+                renderPass->addRenderState(cullFace);
+
+                Qt3DRender::QTechnique* technique = new Qt3DRender::QTechnique();
+                technique->addRenderPass(renderPass);
+
+                Qt3DRender::QEffect* effect = mat->effect();
+                for (auto* tech : effect->techniques()) {
+                    for (auto* pass : tech->renderPasses()) {
+                        pass->addRenderState(cullFace);
+                    }
+                }
+
+                boxEntity->addComponent(renderer);
+                boxEntity->addComponent(mat);
+
+                qDebug() << "Pit stop box built at" << center;
+            }
+        }
+
     }
 }
 

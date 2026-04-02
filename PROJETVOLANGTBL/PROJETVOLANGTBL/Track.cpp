@@ -48,6 +48,33 @@ bool Track::isVector2DOnTrack(const QVector2D& point) const
     }
     return minDist <= trackWidth / 2.0f; // Vérifie si la distance minimale est inférieure ou égale à la moitié de la largeur de la piste
 }
+bool Track::isVector2DOnPitLane(const QVector2D& point, bool onTrack) const
+{
+    if (onTrack) return false;
+
+    float minDist = 300000;
+
+    // Pit straight
+    for (size_t i = 1; i < pitLane.centerLine.size(); i++) {
+        float d = distancePointToSegment(point, pitLane.centerLine[i - 1], pitLane.centerLine[i]);
+        minDist = std::min(minDist, d);
+    }
+
+    // Entry curve
+    for (size_t i = 1; i < pitLane.entryCurve.size(); i++) {
+        float d = distancePointToSegment(point, pitLane.entryCurve[i - 1], pitLane.entryCurve[i]);
+        minDist = std::min(minDist, d);
+    }
+
+    // Exit curve
+    for (size_t i = 1; i < pitLane.exitCurve.size(); i++) {
+        float d = distancePointToSegment(point, pitLane.exitCurve[i - 1], pitLane.exitCurve[i]);
+        minDist = std::min(minDist, d);
+    }
+
+    return minDist <= trackWidth / 2.0f;
+}
+
 // TrackPieces base class
 TrackPieces::~TrackPieces() {}
 

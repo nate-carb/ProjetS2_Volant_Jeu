@@ -1,5 +1,6 @@
 #include "PitStop.h"
 #include <algorithm>
+#include <Track.h>
 #include <QDebug>
 
 PitStop::PitStop()
@@ -11,6 +12,8 @@ PitStop::PitStop()
 PitStop::~PitStop()
 {
 }
+
+
 
 bool PitStop::contains(int carX, int carY)
 {
@@ -68,6 +71,26 @@ void PitStop::placeNearTrack(const std::vector<QVector2D>& centerLine, float sca
     int py = (int)(center.y() * scale);
     zone = QRect(px - 45, py - 30, 90, 60);  // encore plus grand
 }
+
+
+void PitStop::placePitLane(const PitLane& pit, float trackWidth)
+{
+    if (!pit.isValid || pit.centerLine.size() < 2) return;
+
+    int mid = pit.centerLine.size() / 2;
+    QVector2D center = pit.centerLine[mid];
+
+    float half = trackWidth / 2.0f;
+
+    zone = QRect(
+        (int)(center.x() - half),
+        (int)(center.y() - half),
+        (int)trackWidth,
+        (int)trackWidth
+    );
+}
+
+
 
 QPainterPath PitStop::getPitLanePath(float scale) const
 {

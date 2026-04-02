@@ -27,13 +27,8 @@ MainWindow::MainWindow(QWidget* parent)
     image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
 	image = image.scaled(60, 60, Qt::KeepAspectRatio);
 
-    // ---------- Setup Arduino Comm -----------
-    arduino = new ArduinoManager();
-    bool baseOk = arduino->connectBase("\\\\.\\COM4");
-    bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
-
-    qDebug() << "Base connectee:" << baseOk;
-    qDebug() << "Wheel connectee:" << wheelOk;
+    
+    
 
     raceTimes = new RaceTimes();
 	//Vehicule* voiture = new Vehicule;
@@ -42,12 +37,12 @@ MainWindow::MainWindow(QWidget* parent)
 	//track.loadFromFile("tracks/defaultTrack1.trk");
     track = new Track();       // assigns to the MEMBER pointer
     //track->loadFromFile("tracks/nate2.trk");
-    track->loadFromFile("tracks/decorsNate1.trk");
-    //track->loadFromFile("tracks/test400.trk");
+    //track->loadFromFile("tracks/decorsNate1.trk");
+    track->loadFromFile("tracks/test400.trk");
     //track->loadFromFile("tracks/track3dmodelV1.trk");
     //track->loadFromFile("tracks/test_pit.trk");
     // Vérifier si ça a marché
-    pitStop.placeNearTrack(track->getCenterLine(), 5.0f, 150.0f, track->getTrackWidth());
+    pitStop.placePitLane(track->getPitLane(), track->getTrackWidth());
    
     if (image.isNull()) {
         qDebug() << "ERREUR: Image non chargée!";
@@ -70,10 +65,20 @@ MainWindow::MainWindow(QWidget* parent)
     // CONNECTE le timer à ta fonction gameLoop
     connect(timer, &QTimer::timeout, this, &MainWindow::gameLoop);
 
-    // DÉMARRE le timer - déclenche toutes les 10ms
+    // DÉMARRE le timer - déclenche toutes les 10ms (~100 fois par seconde 100Hz)
     timer->start(10);  // 10 millisecondes ? 100 fois par seconde 100Hz
 
+
     lastFrameTime = QTime::currentTime();
+
+    // Instead, at the end of the constructor, add:
+    arduino = new ArduinoManager();
+    QTimer::singleShot(4000, this, [this]() {
+        bool baseOk = arduino->connectBase("\\\\.\\COM4");
+        bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
+        qDebug() << "Base connectee:" << baseOk;
+        qDebug() << "Wheel connectee:" << wheelOk;
+        });
 }
 
 MainWindow::~MainWindow()
@@ -107,23 +112,7 @@ void MainWindow::changeWeather()
     qDebug() << "M�t�o chang�e !";
 }
 
-// Cette fonction dessine l'image
-//void MainWindow::paintEvent(QPaintEvent* event)
-//{
-//    QPainter painter(this);
-//    const float PIXELS_PER_METER = 5.0f;
-//    float x = voiture.getPosition().x()*PIXELS_PER_METER;
-//    float y = voiture.getPosition().y()*PIXELS_PER_METER;
-//    float angle = voiture.getAngle();  // en radians
-//
-//    painter.translate(x, y);                 // va à la position de la voiture
-//    painter.rotate(angle * 180.0 / M_PI);   // Qt veut des degrés
-//
-//    // Dessine l'image centrée sur (0,0)
-//    painter.drawPixmap(-image.width() / 2,
-//        -image.height() / 2,
-//        image);
-//}
+
 void MainWindow::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
@@ -316,13 +305,13 @@ void MainWindow::gameLoop()
     // Utiliser les données
     ArduinoBaseData  base = arduino->getBaseData();
     ArduinoWheelData wheelData =  arduino->getWheelData();
-    qDebug() << "=== WHEEL DATA ===";
-    qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
-    qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
-    qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR << "PADGAU" << wheelData.paddleshiftdown << "PADDRO" << wheelData.paddleshiftup;
-    qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
-    qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
-    qDebug() << "GEAR" << voiture.getGear();
+    //qDebug() << "=== WHEEL DATA ===";
+    //qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
+    //qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
+    //qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR << "PADGAU" << wheelData.paddleshiftdown << "PADDRO" << wheelData.paddleshiftup;
+    //qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
+    //qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
+    //qDebug() << "GEAR" << voiture.getGear();
 
     // Lecture directe des touches Windows
     keyW = (GetAsyncKeyState('W') & 0x8000) != 0;
@@ -374,34 +363,26 @@ void MainWindow::gameLoop()
     //voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);
    
 
-
-
-
-
-    // Sur la piste OU dans la pitlane OU dans le pit stop
-
-    const float PIXELS_PER_METER = 5.0f;
-    int carXpx = (int)(voiture.getPosition().x() * PIXELS_PER_METER);
-    int carYpx = (int)(voiture.getPosition().y() * PIXELS_PER_METER);
-
     bool onTrack = track->isVector2DOnTrack(voiture.getPosition());
-    bool onPitLane = pitStop.getPitLanePath(PIXELS_PER_METER)
-        .contains(QPointF(carXpx, carYpx));
-    bool onPit = pitStop.getRect().contains(carXpx, carYpx);
 
     if (!raceTimes->isRaceStarted()) { raceTimes->setupRace(1, track);  raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
     //Checkpoint Check
     raceTimes->checkForCheckpoint(track, voiture.getPosition());
 
-    voiture.is_on_grass = !(onTrack || onPitLane || onPit);
+
+    ////Mecanique de pitstop
+	bool onPitlane = track->isVector2DOnPitLane(voiture.getPosition(), onTrack);
+
+    int carXpos = (int)(voiture.getPosition().x());
+    int carYpos = (int)(voiture.getPosition().y());
+    inPitStop = pitStop.contains(carXpos, carYpos);
+
+    bool onPitStop = pitStop.getPitLanePath(1.0f)
+        .contains(QPointF(carXpos, carYpos));
+    bool onPit = pitStop.getRect().contains(carXpos, carYpos);
+
+    voiture.is_on_grass = !(onTrack || onPitlane || onPit || onPitStop);
     voiture.is_on_track = !voiture.is_on_grass;
-
-    
-
-    //M�canique de pitstop
-    int carX = (int)(voiture.getPosition().x() * PIXELS_PER_METER);
-    int carY = (int)(voiture.getPosition().y() * PIXELS_PER_METER);
-    inPitStop = pitStop.contains(carX, carY);
 
     if (!inPitStop) pitStop.resetLeaving();
 
@@ -419,6 +400,7 @@ void MainWindow::gameLoop()
 
     if (inPitStop && keyEnter) pitStop.setLeaving(true);
 
+	// ===== SON =====
     soundManager->updateEngine(voiture.getRpm(), voiture.getMaxRpm(), voiture.is_on_grass);
     soundManager->playBrake(keyS, voiture.getSpeed());
     soundManager->playNos(keySpace && voiture.getNos() > 0);
