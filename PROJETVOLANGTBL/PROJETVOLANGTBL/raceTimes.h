@@ -5,31 +5,36 @@
 #include "track.h"
 
 struct CheckpointStamp {
-	int id;
-	qint64 elapsedMs;
+    int id;
+    qint64 elapsedMs;
 };
 
 class RaceTimes
 {
-	public:
-		void setupRace(int nlaps, Track* track); //nlaps : number of laps for the race , track : the current track of the race
-		void startRace();
-		void finishRace();
-		void checkForCheckpoint(Track* track, QVector2D pos); // ptr Track, position of the voiture
-		bool isRaceStarted() { return raceStarted; };
+public:
+    void setupRace(int nlaps, Track* track);
+    void startRace();
+    void finishRace();
+    void checkForCheckpoint(Track* track, QVector2D pos);
+    bool isRaceStarted() { return raceStarted; }
 
-		QString getLastCheckpointTimeString();
+    QString getLastCheckpointTimeString();
 
-	private:
-		QElapsedTimer elapsedTimer;
-		std::vector<CheckpointStamp> stamps;
-		int lastCheckpointId;
-		bool raceStarted = false;
+    // ── Nouveaux getters ──────────────────────────────
+    int  getCurrentLap()   const;
+    int  getTotalLaps()    const { return numOflaps; }
+    qint64 getCurrentLapMs() const;   // temps du lap en cours
+    qint64 getBestLapMs()    const;   // meilleur lap terminé (-1 si aucun)
+    qint64 getDeltaMs()      const;   // écart vs best (-1 si indisponible)
 
-		// RACE PARAMS
-		int numOflaps = 1;
-		int checkpointsPerLap;
-		int checkpointCounter;
+    QString formatMs(qint64 ms) const; // "1:23.456"
 
+private:
+    QElapsedTimer elapsedTimer;
+    std::vector<CheckpointStamp> stamps;
+    int lastCheckpointId = 0;
+    bool raceStarted = false;
+    int numOflaps = 1;
+    int checkpointsPerLap = 1;
+    int checkpointCounter = 0;
 };
-

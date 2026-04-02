@@ -365,7 +365,7 @@ void MainWindow::gameLoop()
 
     bool onTrack = track->isVector2DOnTrack(voiture.getPosition());
 
-    if (!raceTimes->isRaceStarted()) { raceTimes->setupRace(1, track);  raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
+    if (!raceTimes->isRaceStarted()) { raceTimes->setupRace(3, track);  raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
     //Checkpoint Check
     raceTimes->checkForCheckpoint(track, voiture.getPosition());
 
@@ -418,7 +418,7 @@ void MainWindow::gameLoop()
         );
         sendTimer.restart();
     }
-
+    
     // ===== UPDATE PHYSIQUE =====
     voiture.update(deltaTime);
 
