@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget* parent)
     // ---------- Setup Arduino Comm -----------
     arduino = new ArduinoManager();
     bool baseOk = arduino->connectBase("\\\\.\\COM4");
-    bool wheelOk = arduino->connectWheel("\\\\.\\COM3");
+    bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
 
     qDebug() << "Base connectee:" << baseOk;
     qDebug() << "Wheel connectee:" << wheelOk;
@@ -43,6 +43,7 @@ MainWindow::MainWindow(QWidget* parent)
     track = new Track();       // assigns to the MEMBER pointer
     //track->loadFromFile("tracks/nate2.trk");
     track->loadFromFile("tracks/decorsNate1.trk");
+    //track->loadFromFile("tracks/test400.trk");
     //track->loadFromFile("tracks/track3dmodelV1.trk");
     //track->loadFromFile("tracks/test_pit.trk");
     // Vérifier si ça a marché
@@ -69,8 +70,8 @@ MainWindow::MainWindow(QWidget* parent)
     // CONNECTE le timer à ta fonction gameLoop
     connect(timer, &QTimer::timeout, this, &MainWindow::gameLoop);
 
-    // DÉMARRE le timer - déclenche toutes les 16ms
-    timer->start(8);  // 16 millisecondes ? 60 fois par seconde
+    // DÉMARRE le timer - déclenche toutes les 10ms
+    timer->start(10);  // 10 millisecondes ? 100 fois par seconde 100Hz
 
     lastFrameTime = QTime::currentTime();
 }
@@ -354,17 +355,20 @@ void MainWindow::gameLoop()
     deltaTime = msElapsed / 1000.0f;  // Convertit en secondes
     lastFrameTime = currentTime;  // Sauvegarde pour la prochaine frame
 
-    //voiture.setAccel(keyW ? 1.0f : 0.0f);
-    //voiture.setBreaking(keyS ? 1.0f : 0.0f);
-    //voiture.setBoosting(keySpace);
 
-    //if (keyA && !keyD) voiture.setSteering(-1.0f);
-    //else if (keyD && !keyA) voiture.setSteering(1.0f);
-    //else voiture.setSteering(0.0f);
+	// ===== INPUTS CLAVIERS =====
+    voiture.setAccel(keyW ? 1.0f : 0.0f);
+    voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    voiture.setBoosting(keySpace);
+
+    if (keyA && !keyD) voiture.setSteering(-1.0f);
+    else if (keyD && !keyA) voiture.setSteering(1.0f);
+    else voiture.setSteering(0.0f);
     
-    voiture.setAccel(base.gas);
-    voiture.setBreaking(base.brake);
-    voiture.setSteering(base.pos);
+	// ===== INPUTS WHEEL =====
+    //voiture.setAccel(base.gas);
+    //voiture.setBreaking(base.brake);
+    //voiture.setSteering(base.pos);
 
     //voiture.setAccel(wheelData.switchTR ? 1.0f : 0.0f);
     //voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);

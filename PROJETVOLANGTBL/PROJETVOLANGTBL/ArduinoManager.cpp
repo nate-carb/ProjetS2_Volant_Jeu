@@ -34,9 +34,23 @@ bool ArduinoManager::connectWheel(const std::string& port)
     return true;
 }
 
+int reconnectCounter = 0;
 // ── Appelé dans gameLoop() ───────────────────────────────────────────────────
 void ArduinoManager::update()
 {
+/*    // Try reconnect every ~300 frames (~3 seconds at 100Hz)
+    if (++reconnectCounter >= 300) {
+        reconnectCounter = 0;
+        if (!basePort || !basePort->isConnected()) {
+            delete basePort;
+            basePort = new SerialPort("\\\\.\\COM4", 115200);
+        }
+        if (!wheelPort || !wheelPort->isConnected()) {
+            delete wheelPort;
+            wheelPort = new SerialPort("\\\\.\\COM5", 115200);
+        }
+    }*/
+
     char char_buffer[1024];
 
     // ── BASE ─────────────────────────────────────────

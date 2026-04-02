@@ -44,6 +44,7 @@ SerialPort::SerialPort(const char *portName, int BAUD)
             dcbSerialParameters.StopBits = ONESTOPBIT;
             dcbSerialParameters.Parity = NOPARITY;
             dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
+            
 
             if (!SetCommState(handler, &dcbSerialParameters))
             {

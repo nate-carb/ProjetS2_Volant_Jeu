@@ -371,7 +371,9 @@ void Track::generatePitLane(int startIndex, int endIndex)
     //pitLane.exitCurveEdges.right.back() = exitEnd;
 
     pitLane.isValid = true;
+
 }
+
 void Track::addDecor(int decorType, int decorIndexList)
 {
     switch (decorType) {
@@ -832,7 +834,7 @@ void Track::removeLastSegment()
 }
 
 // Adds a pit segment that extends from the last track segment, ensuring it's long enough for a pit lane. The actual pit lane geometry is generated in buildFromSegments() when it processes this segment type.
-void Track::addPitSegment()
+/*void Track::addPitSegment()
 {
     TrackSegment seg;
     seg.type = TrackSegmentType::PIT_TRACK;
@@ -853,7 +855,31 @@ void Track::addPitSegment()
 
     trackSegments.push_back(seg);
     buildFromSegments();
+}*/
+void Track::addPitSegment()
+{
+    TrackSegment seg;
+    seg.type = TrackSegmentType::PIT_TRACK;
+    seg.start = QVector2D(0, 0);
+    seg.end = QVector2D(400, 0);
+    seg.cp1 = seg.start;
+    seg.cp2 = seg.end;
+
+    if (!trackSegments.empty()) {
+        // Shift existing segments so they chain after the pit
+        QVector2D offset = seg.end - trackSegments.front().start;
+        for (auto& s : trackSegments) {
+            s.start += offset;
+            s.end += offset;
+            s.cp1 += offset;
+            s.cp2 += offset;
+        }
+    }
+
+    trackSegments.insert(trackSegments.begin(), seg);  // insert at front
+    buildFromSegments();
 }
+
 
 void Track::buildFromSegments()
 {
@@ -931,6 +957,8 @@ void Track::buildFromSegments()
     
     qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
         << trackEdges.left.size() << "left edge points";
+
+    
 }
 //void Track::createStartLine()
 //{
