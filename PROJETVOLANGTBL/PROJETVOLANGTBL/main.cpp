@@ -184,7 +184,17 @@ int main(int argc, char* argv[])
             window->voiture.getCarburant(),
             window->voiture.getNos(),
             window->voiture.getTireWear(),
-            window->currentWeather
+            window->currentWeather,
+			window->voiture.getSpeed(),     // m/s → km/h (ajuste si déjà en km/h)
+			window->voiture.getRpm(),
+			window->voiture.getMaxRpm(),
+			window->raceTimes->getCurrentLap(),
+			window->raceTimes->getTotalLaps(),
+			window->raceTimes->getBestLapMs(),
+			window->raceTimes->getCurrentLapMs(),
+			window->raceTimes->getDeltaMs(),
+			window->voiture.getCarburant() < 15.0f || window->voiture.getTireWear() < 15.0f,
+			window->raceTimes
         );
         // Only reposition HUD if window actually moved
         static QPoint lastPos;
