@@ -74,7 +74,7 @@ MainWindow::MainWindow(QWidget* parent)
     // Instead, at the end of the constructor, add:
     arduino = new ArduinoManager();
     QTimer::singleShot(4000, this, [this]() {
-        bool baseOk = arduino->connectBase("\\\\.\\COM4");
+        bool baseOk = arduino->connectBase("\\\\.\\COM3");
         bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
         qDebug() << "Base connectee:" << baseOk;
         qDebug() << "Wheel connectee:" << wheelOk;
@@ -305,13 +305,13 @@ void MainWindow::gameLoop()
     // Utiliser les données
     ArduinoBaseData  base = arduino->getBaseData();
     ArduinoWheelData wheelData =  arduino->getWheelData();
-    //qDebug() << "=== WHEEL DATA ===";
-    //qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
-    //qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
-    //qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR << "PADGAU" << wheelData.paddleshiftdown << "PADDRO" << wheelData.paddleshiftup;
-    //qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
-    //qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
-    //qDebug() << "GEAR" << voiture.getGear();
+    qDebug() << "=== WHEEL DATA ===";
+    qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
+    qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
+    qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR << "PADGAU" << wheelData.paddleshiftdown << "PADDRO" << wheelData.paddleshiftup;
+    qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
+    qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
+    qDebug() << "GEAR" << voiture.getGear();
 
     // Lecture directe des touches Windows
     keyW = (GetAsyncKeyState('W') & 0x8000) != 0;
@@ -346,18 +346,18 @@ void MainWindow::gameLoop()
 
 
 	// ===== INPUTS CLAVIERS =====
-    voiture.setAccel(keyW ? 1.0f : 0.0f);
-    voiture.setBreaking(keyS ? 1.0f : 0.0f);
-    voiture.setBoosting(keySpace);
+    //voiture.setAccel(keyW ? 1.0f : 0.0f);
+    //voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    //voiture.setBoosting(keySpace);
 
-    if (keyA && !keyD) voiture.setSteering(-1.0f);
-    else if (keyD && !keyA) voiture.setSteering(1.0f);
-    else voiture.setSteering(0.0f);
+    //if (keyA && !keyD) voiture.setSteering(-1.0f);
+    //else if (keyD && !keyA) voiture.setSteering(1.0f);
+    //else voiture.setSteering(0.0f);
     
 	// ===== INPUTS WHEEL =====
-    //voiture.setAccel(base.gas);
-    //voiture.setBreaking(base.brake);
-    //voiture.setSteering(base.pos);
+    voiture.setAccel(base.gas);
+    voiture.setBreaking(base.brake);
+    voiture.setSteering(base.pos);
 
     //voiture.setAccel(wheelData.switchTR ? 1.0f : 0.0f);
     //voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);
