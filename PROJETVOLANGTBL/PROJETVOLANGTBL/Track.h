@@ -5,6 +5,7 @@
 #include <iostream>
 #include <qvector2d.h>
 #include <QtMath>
+#include <QColor>
 
 //Track.h - Defines the Track class and related structures for representing a racing track, its pieces, and decor elements.
 #define VIRAGE_45RIGHT 1
@@ -60,10 +61,40 @@ struct BezierCurveData {
 	QVector2D p3;
 };
 
-struct choixMapData {
+struct GroundRenderingData {
+	float width;
+	float height;
+	QString texturePath;
+};
+
+struct KerbRenderingData {
+	float width;
+	float height;
+	QColor color1;
+	QColor color2;
+};
+
+struct PitRenderingData {
+	QColor pitColor;
+	KerbRenderingData kerbData;
+};
+
+struct TrackRenderingData {
+	QColor trackColor;
+	KerbRenderingData kerbData;
+};
+
+struct ChoixMapData {
 	int mapIndex;
 	QString mapName;
 	QString mapFilePath;
+	QString mapThumbnailPath;
+
+	QString skyboxFilePath;
+	
+	GroundRenderingData groundData;
+	TrackRenderingData trackData;
+	PitRenderingData pitData;
 	
 };
 
@@ -286,6 +317,7 @@ public:
 	// Save/Load functions
 	bool saveToFile(const std::string& filename) const;
 	bool loadFromFile(const std::string& filename);
+	bool playTrack(QString name);
 	
 	bool isVector2DOnTrack(const QVector2D& point) const;
 
@@ -338,6 +370,14 @@ public:
 	void buildFromSegments();
 	void addTrackSegment(TrackSegment s) { trackSegments.push_back(s); }
 
+
+	// Choix de map functions
+	ChoixMapData getCurrentChoixMapData() { return currentChoixMapData; }
+	void setCurrentChoixMapData( QString mapName);
+	void addChoixMap(const ChoixMapData& data) { choixMapList.push_back(data); }
+
+	void defaultMapList(); // Populate choixMapList with default maps (can be called in constructor)
+	
 	
 
 	// Checkpoint related functions
@@ -381,7 +421,8 @@ private:
 	std::vector<DecorPieces*> decors;
 
 	// Variables map selection
-	
+	std::vector<ChoixMapData> choixMapList;
+	ChoixMapData currentChoixMapData;
 
 };
 

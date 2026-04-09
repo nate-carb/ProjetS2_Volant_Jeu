@@ -35,7 +35,7 @@ Track3DViewer::Track3DViewer(QScreen* screen)
     m_rootEntity = new Qt3DCore::QEntity();
     setRootEntity(m_rootEntity);
 
-    buildScene();
+    
 }
 
 Track3DViewer::~Track3DViewer() {}
@@ -54,12 +54,13 @@ void Track3DViewer::setTrack(Track* track)
         m_trackEntity = nullptr;
     }
     qDebug() << "setTrack called - checkpoints:" << track->getCheckpoints().size();
-    
+
+    buildScene(track);
     buildTrackMesh(track);
 	//buildDecors(track);
     buildBezierWalls(track);
 	buildCheckpoints(track);
-    buildGround();
+    buildGround(track);
     buildInstancedDecors(track);
 }
 void Track3DViewer::updateVehicule(Vehicule* vehicule)
@@ -147,7 +148,7 @@ void Track3DViewer::setFirstPersonMode(bool enabled)
 // ─────────────────────────────────────────────
 // Scene setup
 // ─────────────────────────────────────────────
-void Track3DViewer::buildScene()
+void Track3DViewer::buildScene(Track* track)
 {
     defaultFrameGraph()->setClearColor(Qt::transparent);
     // Disable frustum culling so skybox always renders
@@ -192,7 +193,7 @@ void Track3DViewer::buildScene()
 
     // ── Car placeholder ──────────────────────────────────────
     buildCar();
-	buildSkybox();
+	buildSkybox(track);
 
     Qt3DRender::QFrameGraphNode* fg = defaultFrameGraph();
     qDebug() << "FrameGraph class:" << fg->metaObject()->className();
@@ -209,12 +210,13 @@ void Track3DViewer::buildScene()
 // Skybox setup
 // ─────────────────────────────────────────────
 
-void Track3DViewer::buildSkybox()
+void Track3DViewer::buildSkybox(Track* track)
 {
     // Just use QSkyboxEntity - it works in Qt6 with correct path format
     Qt3DExtras::QSkyboxEntity* skybox = new Qt3DExtras::QSkyboxEntity(m_rootEntity);
-
-    QString basePath = "file:///" + QDir::currentPath() + "/images/skybox/space/cubemap1";
+    
+    QString basePath = "file:///" + QDir::currentPath() + track->getCurrentChoixMapData().skyboxFilePath;
+    //QString basePath = "file:///" + QDir::currentPath() + "/images/skybox/space/cubemap1";
     basePath.replace("\\", "/"); // fix Windows backslashes
 
     qDebug() << "Skybox base path:" << basePath;
@@ -307,12 +309,15 @@ void Track3DViewer::buildTrackMesh(Track* track)
 
 	// Position attribute 3 floats per vertex
 	Qt3DCore::QAttribute* posAttr = new Qt3DCore::QAttribute(geometry); //QAttribute describes how to interpret the vertex buffer data
+
 	// We use the default position attribute name so that Qt3D's built-in shaders can recognize it
     posAttr->setName(Qt3DCore::QAttribute::defaultPositionAttributeName());
+
 	// We have 3 floats per vertex (x, y, z)
     posAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
     posAttr->setVertexSize(3);
     posAttr->setAttributeType(Qt3DCore::QAttribute::VertexAttribute);
+
 	// Link the attribute to our vertex buffer
     posAttr->setBuffer(vertexBuffer);
     posAttr->setByteStride(3 * sizeof(float)); 
@@ -354,7 +359,8 @@ void Track3DViewer::buildTrackMesh(Track* track)
     // Material – grey tarmac colour
     Qt3DExtras::QPhongMaterial* material = new Qt3DExtras::QPhongMaterial(m_trackEntity);
     //material->setDiffuse(QColor(60, 60, 60));    // dark grey = tarmac
-    material->setDiffuse(QColor(241, 242, 246));  // Kenney's exact grey
+	material->setDiffuse(track->getCurrentChoixMapData().trackData.trackColor);    // tarmac color from map data
+    //material->setDiffuse(QColor(241, 242, 246));  // Kenney's exact grey
 	material->setAmbient(QColor(0, 0, 0)); // ambient is usually darker than diffuse
     material->setShininess(0.0f);
 
@@ -379,8 +385,10 @@ void Track3DViewer::buildTrackMesh(Track* track)
 	//red and white kerbs along the edges, alternating every 10 units
     //--------------------------------------------------------------------
     auto buildKerb = [&](const std::vector<QVector2D>& edge, const std::vector<QVector2D>& center, bool flipWinding) {
-        float kerbWidth = 5.0f;
-        float kerbHeight = 0.05f;
+        //float kerbWidth = 5.0f;
+        //float kerbHeight = 0.05f;
+		float kerbWidth = track->getCurrentChoixMapData().trackData.kerbData.width;
+		float kerbHeight = track->getCurrentChoixMapData().trackData.kerbData.height;
         float segmentLength = 10.0f;
         float accumulated = 0.0f;
         bool isRed = true;
@@ -509,8 +517,8 @@ void Track3DViewer::buildTrackMesh(Track* track)
             };
 
         // 2 entities per edge instead of hundreds
-        makeEntity(redVerts, redNormals, redIdx, QColor(220, 30, 30));
-        makeEntity(whiteVerts, whiteNormals, whiteIdx, Qt::white);
+        makeEntity(redVerts, redNormals, redIdx, track->getCurrentChoixMapData().trackData.kerbData.color1);
+        makeEntity(whiteVerts, whiteNormals, whiteIdx, track->getCurrentChoixMapData().trackData.kerbData.color2);
         };
 
     
@@ -652,7 +660,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
 
         // ── Single mesh - no z-fighting, no gaps ────────────────────
         //buildPitMesh(fullLeft, fullRight, QColor(60, 60, 60));
-		buildPitMesh(fullLeft, fullRight, QColor(241, 242, 246)); // Kenney's exact grey
+		buildPitMesh(fullLeft, fullRight, track->getCurrentChoixMapData().pitData.pitColor); // Kenney's exact grey
         //material->setDiffuse(QColor(60, 60, 60));    // dark grey = tarmac
         //material->setAmbient(QColor(40, 40, 40)); // ambient is usually darker than diffuse
         //material->setShininess(5.0f);
@@ -663,11 +671,11 @@ void Track3DViewer::buildTrackMesh(Track* track)
         //if (pit.edges.right.size() == pit.centerLine.size())
         //    buildKerb(pit.edges.right, pit.centerLine, false);
 
-        qDebug() << "Pit lane mesh built -"
-            << "entry:" << pit.entryCurveEdges.left.size()
-            << "straight:" << pit.edges.left.size()
-            << "exit:" << pit.exitCurveEdges.left.size()
-            << "total:" << fullLeft.size();
+        //qDebug() << "Pit lane mesh built -"
+        //    << "entry:" << pit.entryCurveEdges.left.size()
+        //    << "straight:" << pit.edges.left.size()
+        //    << "exit:" << pit.exitCurveEdges.left.size()
+        //    << "total:" << fullLeft.size();
         // ── Pit Stop box (flat rectangle on the pit lane surface) ──
         if (track->hasPitLane()) {
             PitLane pit = track->getPitLane();
@@ -783,7 +791,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
 // Ground (grass outside the track)
 // ─────────────────────────────────────────────
 
-void Track3DViewer::buildGround()
+void Track3DViewer::buildGround(Track* track)
 {
 	 //Remove old ground entity if it exists
     if (m_groundEntity) {
@@ -798,8 +806,8 @@ void Track3DViewer::buildGround()
 	//  Create a large plane mesh for the ground
     Qt3DExtras::QPlaneMesh* planeMesh = new Qt3DExtras::QPlaneMesh();
 	// world dimensions - large enough to cover the whole track and surroundings
-    planeMesh->setWidth(2000.0f);
-    planeMesh->setHeight(2000.0f); 
+    planeMesh->setWidth(track->getCurrentChoixMapData().groundData.width);
+    planeMesh->setHeight(track->getCurrentChoixMapData().groundData.height); 
     planeMesh->setMeshResolution(QSize(2, 2));
 
  //  Material with green colour for grass
@@ -827,8 +835,9 @@ void Track3DViewer::buildGround()
 
     Qt3DRender::QTextureImage* grassTex = new Qt3DRender::QTextureImage();
     grassTex->setSource(QUrl::fromLocalFile(
-        QDir::currentPath() + "/images/Cartoon_green_texture_grass.jpg"));
-
+        QDir::currentPath() + track->getCurrentChoixMapData().groundData.texturePath));
+    //grassTex->setSource(QUrl::fromLocalFile(
+    //    QDir::currentPath() + "/images/Cartoon_green_texture_grass.jpg"));
     grassMat->diffuse()->addTextureImage(grassTex);
     grassMat->setAmbient(QColor(80, 200, 80));   // tints shadowed areas green
     grassMat->setSpecular(QColor(0, 0, 0));

@@ -14,6 +14,7 @@ HUDOverlay::HUDOverlay(QWidget* parent) : QWidget(parent)
     m_pixLapTime = QPixmap("./imagehud/laptime.png");
     m_pixSpeedRpm = QPixmap("./imagehud/vitesserpmvide.png");
     m_pixWarning = QPixmap("./imagehud/warning.png");
+    QFontDatabase::addApplicationFont("./font/PressStart2P-Regular.ttf");
 }
 
 void HUDOverlay::updateData(float carburant, float nos, float tireWear,

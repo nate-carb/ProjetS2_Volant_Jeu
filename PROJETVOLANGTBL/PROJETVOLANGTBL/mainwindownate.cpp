@@ -38,7 +38,8 @@ MainWindow::MainWindow(QWidget* parent)
     track = new Track();       // assigns to the MEMBER pointer
     //track->loadFromFile("tracks/nate2.trk");
     //track->loadFromFile("tracks/decorsNate1.trk");
-    track->loadFromFile("tracks/test400.trk");
+    //track->loadFromFile("tracks/test400.trk");
+	track->playTrack("nate");
     //track->loadFromFile("tracks/track3dmodelV1.trk");
     //track->loadFromFile("tracks/test_pit.trk");
     // Vérifier si ça a marché
@@ -74,8 +75,8 @@ MainWindow::MainWindow(QWidget* parent)
     // Instead, at the end of the constructor, add:
     arduino = new ArduinoManager();
     QTimer::singleShot(4000, this, [this]() {
-        bool baseOk = arduino->connectBase("\\\\.\\COM3");
-        bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
+        bool baseOk = arduino->connectBase("\\\\.\\COM16");
+        bool wheelOk = arduino->connectWheel("\\\\.\\COM15");
         qDebug() << "Base connectee:" << baseOk;
         qDebug() << "Wheel connectee:" << wheelOk;
         });
@@ -407,17 +408,17 @@ void MainWindow::gameLoop()
     soundManager->playGrass(voiture.is_on_grass);
 
     // Envoi vers Arduino à 20Hz
-    //static QElapsedTimer sendTimer;
-    //if (!sendTimer.isValid()) sendTimer.start();
-    //if (sendTimer.elapsed() > 50) {
-    //    arduino->sendToWheel(
-    //        voiture.getRpm(), voiture.getMaxRpm(), voiture.getGear(),
-    //        voiture.getCarburant(), voiture.getTireWear(),
-    //        inPitStop, voiture.getSpeed() * 3.6f,
-    //        voiture.getAngle()
-    //    );
-    //    sendTimer.restart();
-    //}
+    static QElapsedTimer sendTimer;
+    if (!sendTimer.isValid()) sendTimer.start();
+    if (sendTimer.elapsed() > 50) {
+        arduino->sendToWheel(
+            voiture.getRpm(), voiture.getMaxRpm(), voiture.getGear(),
+            voiture.getCarburant(), voiture.getTireWear(),
+            inPitStop, voiture.getSpeed() ,
+            voiture.getAngle()
+        );
+        sendTimer.restart();
+    }
     
     // Toggle pause avec Escape
     static bool escWasPressed = false;

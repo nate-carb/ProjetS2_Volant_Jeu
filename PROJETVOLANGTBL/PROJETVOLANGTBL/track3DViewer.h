@@ -94,12 +94,12 @@ private:
     QVector<Qt3DCore::QEntity*> m_wallEntities;
 
     // Internal helpers
-    void buildScene();
-    void buildSkybox();
+    void buildScene(Track* track);
+    void buildSkybox(Track* track);
     void buildTrackMesh(Track* track);
     void buildCar();
     void buildDecors(Track* track);
-    void buildGround();
+    void buildGround(Track* track);
     void buildCheckpoints(Track* track);
 
     // decors instance

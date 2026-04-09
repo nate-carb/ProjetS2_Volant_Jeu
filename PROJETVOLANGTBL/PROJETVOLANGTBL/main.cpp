@@ -33,7 +33,8 @@ int main(int argc, char* argv[])
     // ===== MENU =====
     MenuWindow* menu = new MenuWindow();
     menu->show();
-
+	MainWindowCreator* creator = new MainWindowCreator();
+	creator->show();
     // ===== JEU (créé mais caché) =====
     MainWindow* window = new MainWindow();
     window->timer->start(16);
@@ -56,8 +57,8 @@ int main(int argc, char* argv[])
         menu->hide();
 
         QStringList trackFiles = {
-            "tracks/track1.trk",
-            "tracks/track2.trk",
+            "tracks/nate.trk",
+            "tracks/nate2.trk",
             "tracks/defaultTrack1.trk"
         };
         if (window->track)

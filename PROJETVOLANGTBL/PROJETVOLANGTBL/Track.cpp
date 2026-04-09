@@ -797,6 +797,7 @@ Track::Track()
     centerLine.push_back(currentPos);
 
 	trackWidth = 40.0f; // Default track width
+    defaultMapList(); // Populate choixMapList with default maps
 }
 
 Track::Track(std::vector<int> listPieces)
@@ -994,16 +995,27 @@ void Track::buildFromSegments()
             int segEndIndex = centerLine.size() - 1;
             generatePitLane(segStartIndex, segEndIndex);
         }
+
         else {
 			createCheckpointAtSegment(); // place checkpoint at the end of this segment
         }
     }
     
-    qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
-        << trackEdges.left.size() << "left edge points";
+    //qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
+    //    << trackEdges.left.size() << "left edge points";
 
     
 }
+void Track::setCurrentChoixMapData(QString mapName)
+{
+        for (const auto& mapData : choixMapList) {
+            if (mapData.mapName == mapName) {
+                currentChoixMapData = mapData;
+                break;
+            }
+        }
+}
+
 //void Track::createStartLine()
 //{
 //    Checkpoint temp;
@@ -1541,4 +1553,107 @@ bool Track::loadFromFile(const std::string& filename)
     return true;
 }
 
+bool Track::playTrack(QString name)
+{
+    if (name == "nate") {
+        setCurrentChoixMapData("nate");
+        loadFromFile((getCurrentChoixMapData().mapFilePath).toStdString());
+
+        return true;
+	}else if (name == "track2") {
+        loadFromFile("tracks/track2.trk");
+		setCurrentChoixMapData("track2");
+        return true;
+	}else if (name == "track3") {
+        loadFromFile("tracks/track3.trk");
+		setCurrentChoixMapData("track3");
+        return true;
+	}
+
+    return false;
+}
+
+
+void Track::defaultMapList()
+{
+    choixMapList.clear();
+
+    // --- Track 1 ---
+    ChoixMapData map1;
+    map1.mapIndex = 0;
+    map1.mapName = "nate";
+    map1.mapFilePath = "tracks/nate.trk";
+    map1.mapThumbnailPath = "thumbnails/track1.png";
+    map1.skyboxFilePath = "/images/skybox/blueSky/cubemap1";
+
+    map1.groundData.width = 2000.0f;
+    map1.groundData.height = 2000.0f;
+    map1.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
+
+	map1.trackData.trackColor = QColor(241, 242, 246); // kenney gray
+    map1.trackData.kerbData.width = 5.0f;
+    map1.trackData.kerbData.height = 0.05f;
+    map1.trackData.kerbData.color1 = QColor(220, 30, 30); //red QColor(220, 30, 30)
+    map1.trackData.kerbData.color2 = QColor(Qt::white);
+
+    map1.pitData.pitColor = QColor(241, 242, 246);
+    map1.pitData.kerbData.width = 5.0f;
+    map1.pitData.kerbData.height = 2.0f;
+    map1.pitData.kerbData.color1 = QColor(255, 255, 0);
+    map1.pitData.kerbData.color2 = QColor(0, 0, 0);
+
+    choixMapList.push_back(map1);
+
+    // --- Track 2 ---
+    ChoixMapData map2;
+    map2.mapIndex = 1;
+    map2.mapName = "track2";
+    map2.mapFilePath = "tracks/track2.trk";
+    map2.mapThumbnailPath = "thumbnails/track2.png";
+    map2.skyboxFilePath = "skybox/skybox2.png";
+
+    map2.groundData.width = 2000.0f;
+    map2.groundData.height = 2000.0f;
+    map2.groundData.texturePath = "textures/grass2.png";
+
+    map2.trackData.trackColor = QColor(60, 60, 60);
+    map2.trackData.kerbData.width = 5.0f;
+    map2.trackData.kerbData.height = 2.0f;
+    map2.trackData.kerbData.color1 = QColor(0, 0, 255);
+    map2.trackData.kerbData.color2 = QColor(255, 255, 255);
+
+    map2.pitData.pitColor = QColor(90, 90, 90);
+    map2.pitData.kerbData.width = 5.0f;
+    map2.pitData.kerbData.height = 2.0f;
+    map2.pitData.kerbData.color1 = QColor(255, 255, 0);
+    map2.pitData.kerbData.color2 = QColor(0, 0, 0);
+
+    choixMapList.push_back(map2);
+
+    // --- Track 3 ---
+    ChoixMapData map3;
+    map3.mapIndex = 2;
+    map3.mapName = "track3";
+    map3.mapFilePath = "tracks/track3.trk";
+    map3.mapThumbnailPath = "thumbnails/track3.png";
+    map3.skyboxFilePath = "skybox/skybox3.png";
+
+    map3.groundData.width = 2000.0f;
+    map3.groundData.height = 2000.0f;
+    map3.groundData.texturePath = "textures/sand1.png";
+
+    map3.trackData.trackColor = QColor(70, 70, 70);
+    map3.trackData.kerbData.width = 5.0f;
+    map3.trackData.kerbData.height = 2.0f;
+    map3.trackData.kerbData.color1 = QColor(255, 165, 0);
+    map3.trackData.kerbData.color2 = QColor(255, 255, 255);
+
+    map3.pitData.pitColor = QColor(95, 95, 95);
+    map3.pitData.kerbData.width = 5.0f;
+    map3.pitData.kerbData.height = 2.0f;
+    map3.pitData.kerbData.color1 = QColor(255, 255, 0);
+    map3.pitData.kerbData.color2 = QColor(0, 0, 0);
+
+    choixMapList.push_back(map3);
+}
 
