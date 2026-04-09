@@ -197,7 +197,6 @@ void MainWindow::paintEvent(QPaintEvent* event)
             painter.drawLine(x, y, x - 3, y + length);
         }
     }
-
     // ===== COULEUR M�T�O =====
     QString weatherText;
     QColor weatherColor;
@@ -419,6 +418,16 @@ void MainWindow::gameLoop()
         sendTimer.restart();
     }
     
+    // Toggle pause avec Escape
+    static bool escWasPressed = false;
+    bool escNow = (GetAsyncKeyState(VK_ESCAPE) & 0x8000) != 0;
+    if (escNow && !escWasPressed) {
+        isPaused = !isPaused;
+    }
+    escWasPressed = escNow;
+
+    if (isPaused) return;
+
     // ===== UPDATE PHYSIQUE =====
     voiture.update(deltaTime);
 

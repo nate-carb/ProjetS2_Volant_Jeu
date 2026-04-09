@@ -30,6 +30,7 @@ public:
     Vehicule::Weather currentWeather = Vehicule::SUNNY;
     QTimer* weatherTimer;  // pour changer la météo automatiquement
     bool eventFilter(QObject* obj, QEvent* event) override;
+    bool isPaused = false;
 
 protected:
     void paintEvent(QPaintEvent* event) override;

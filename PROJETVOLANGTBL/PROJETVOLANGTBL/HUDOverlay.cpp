@@ -42,6 +42,11 @@ void HUDOverlay::updateData(float carburant, float nos, float tireWear,
 
 void HUDOverlay::paintEvent(QPaintEvent*)
 {
+    if (m_paused) {
+        QPainter painter(this);
+        painter.fillRect(rect(), QColor(0, 0, 0, 0));  // transparent quand pause
+        return;
+    }
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
@@ -74,7 +79,7 @@ void HUDOverlay::paintEvent(QPaintEvent*)
     painter.drawText(25, 155, weatherText);
 
     // ── Pluie ─────────────────────────────────────────────────────────────
-    if (m_weather == Vehicule::RAINY || m_weather == Vehicule::STORMY) {
+    if (!m_paused && (m_weather == Vehicule::RAINY || m_weather == Vehicule::STORMY)) {
         int   numDrops = (m_weather == Vehicule::STORMY) ? 150 : 75;
         float penWidth = (m_weather == Vehicule::STORMY) ? 2.5f : 1.5f;
         painter.setPen(QPen(QColor(150, 150, 255, 150), penWidth));

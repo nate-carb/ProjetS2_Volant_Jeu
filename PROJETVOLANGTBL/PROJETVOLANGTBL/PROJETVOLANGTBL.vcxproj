@@ -99,9 +99,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ArduinoManager.cpp" />
+    <ClCompile Include="ControlsDialog.cpp" />
     <ClCompile Include="HUDOverlay.cpp" />
     <ClCompile Include="devmenu.cpp" />
     <ClCompile Include="include\serial\SerialPort.cpp" />
+    <ClCompile Include="LeaderboardManager.cpp" />
     <ClCompile Include="mainwindow.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -109,8 +111,12 @@
     <ClCompile Include="mainwindownate.cpp" />
     <ClCompile Include="mainWindowView.cpp" />
     <ClCompile Include="map2d.cpp" />
+    <ClCompile Include="MenuWindow.cpp" />
     <ClCompile Include="Meshinstance.cpp" />
+    <ClCompile Include="OptionsDialog.cpp" />
+    <ClCompile Include="PauseDialog.cpp" />
     <ClCompile Include="PitStop.cpp" />
+    <ClCompile Include="RaceEndDialog.cpp" />
     <ClCompile Include="raceTimes.cpp" />
     <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="Track.cpp" />
@@ -140,6 +146,7 @@
     <ClInclude Include="ArduinoManager.h" />
     <ClInclude Include="camera2D.h" />
     <QtMoc Include="devmenu.h" />
+    <QtMoc Include="ControlsDialog.h" />
     <ClInclude Include="DaeLoader.h" />
     <ClInclude Include="GameEngine.h" />
     <QtMoc Include="mainwindownate.h" />
@@ -147,14 +154,19 @@
     <ClInclude Include="HUDOverlay.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="LeaderboardManager.h" />
     <ClInclude Include="mainwindow.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="mainWindowCreator.h" />
     <ClInclude Include="map2d.h" />
+    <QtMoc Include="MenuWindow.h" />
     <ClInclude Include="MeshConverter.h" />
     <ClInclude Include="Meshinstance.h" />
+    <QtMoc Include="OptionsDialog.h" />
+    <QtMoc Include="PauseDialog.h" />
     <ClInclude Include="PitStop.h" />
+    <QtMoc Include="RaceEndDialog.h" />
     <ClInclude Include="raceTimes.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="SoundManager.h" />
