@@ -5,6 +5,7 @@
 #include <QTextEdit>
 #include <QScrollArea>
 #include "LeaderboardManager.h"
+#include <QApplication>
 
 // ===== STYLES =====
 static const QString BTN_STYLE = R"(
@@ -41,7 +42,7 @@ static const QString TITLE_STYLE = R"(
 MenuWindow::MenuWindow(QWidget* parent) : QMainWindow(parent)
 {
     setWindowTitle("F1 Racing");
-    setFixedSize(800, 600);
+    showFullScreen();
 
     m_stack = new QStackedWidget(this);
     setCentralWidget(m_stack);
@@ -94,7 +95,7 @@ QWidget* MenuWindow::createMainMenuPage()
 
     // GIF background
     QLabel* bgLabel = new QLabel(page);
-    bgLabel->setGeometry(0, 0, 800, 600);
+    bgLabel->setGeometry(0, 0, 9999, 9999);
     bgLabel->setScaledContents(true);
 
     QMovie* movie = new QMovie("images/menu_bg.gif");
@@ -109,14 +110,10 @@ QWidget* MenuWindow::createMainMenuPage()
     bgLabel->lower();  // derrière tout
 
     // Layout par-dessus le GIF
-    QWidget* overlay = new QWidget(page);
-    overlay->setGeometry(0, 0, 800, 600);
-    overlay->setStyleSheet("background: transparent;");
-
-    QVBoxLayout* layout = new QVBoxLayout(overlay);
+    QVBoxLayout* layout = new QVBoxLayout(page);
     layout->setAlignment(Qt::AlignCenter);
     layout->setSpacing(15);
-    layout->setContentsMargins(150, 40, 150, 40);
+    layout->setContentsMargins(0, 40, 0, 40);
 
     // Logo F1
     QLabel* logo = new QLabel();
@@ -139,16 +136,27 @@ QWidget* MenuWindow::createMainMenuPage()
     QPushButton* btnLB = createStyledButton("Leaderboards");
     QPushButton* btnOpts = createStyledButton("Options");
     QPushButton* btnCtrl = createStyledButton("Controls");
+    QPushButton* btnQuit = createStyledButton("Quit");
+
+    btnPlay->setFixedWidth(400);
+    btnLB->setFixedWidth(400);
+    btnOpts->setFixedWidth(400);
+    btnCtrl->setFixedWidth(400);
+    btnQuit->setFixedWidth(400);
 
     connect(btnPlay, &QPushButton::clicked, this, &MenuWindow::onPlay);
     connect(btnLB, &QPushButton::clicked, this, &MenuWindow::onLeaderboards);
     connect(btnOpts, &QPushButton::clicked, this, &MenuWindow::onOptions);
     connect(btnCtrl, &QPushButton::clicked, this, &MenuWindow::onControls);
+    connect(btnQuit, &QPushButton::clicked, []() {
+        QApplication::quit();
+        });
 
     layout->addWidget(btnPlay);
     layout->addWidget(btnLB);
     layout->addWidget(btnOpts);
     layout->addWidget(btnCtrl);
+    layout->addWidget(btnQuit);
 
     return page;
 }
@@ -178,6 +186,7 @@ QWidget* MenuWindow::createTrackSelectionPage()
 
     for (int i = 0; i < 3; i++) {
         QVBoxLayout* box = new QVBoxLayout();
+        box->setAlignment(Qt::AlignHCenter);
 
         QLabel* preview = new QLabel();
         QPixmap px(images[i]);
@@ -193,6 +202,7 @@ QWidget* MenuWindow::createTrackSelectionPage()
         preview->setFixedSize(220, 220);
 
         QPushButton* btn = createStyledButton(names[i]);
+        btn->setFixedWidth(220);
         int idx = i;
         connect(btn, &QPushButton::clicked, [this, idx]() {
             onTrackSelected(idx);
@@ -348,6 +358,15 @@ void MenuWindow::onTrackSelected(int trackIndex) {
     emit playRequested(trackIndex);
 }
 
-void MenuWindow::onLeaderboardTrackSelected(int trackIndex) {
+void MenuWindow::onLeaderboardTrackSelected(int trackIndex)
+{
+    // Remplace la page existante par une nouvelle à jour
+    QWidget* oldPage = m_stack->widget(PAGE_LB_T1 + trackIndex);
+    m_stack->removeWidget(oldPage);
+    delete oldPage;
+
+    QWidget* newPage = createLeaderboardPage(trackIndex);
+    m_stack->insertWidget(PAGE_LB_T1 + trackIndex, newPage);
+
     goToPage(PAGE_LB_T1 + trackIndex);
 }

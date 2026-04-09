@@ -124,9 +124,17 @@ int main(int argc, char* argv[])
         if (!raceEndShown && window->raceTimes->isRaceFinished()) {
             raceEndShown = true;
             int trackIndex = 0;
-            int bestTime = window->raceTimes->getBestLapMs();
+            int bestTime = (int)window->raceTimes->getTotalRaceTimeMs();
             RaceEndDialog* dlg = new RaceEndDialog(trackIndex, bestTime, container);
             dlg->exec();
+
+            // Retour au menu principal
+            container->hide();
+            hud->hide();
+            menu->show();
+            window->voiture = Vehicule();
+            window->raceTimes->resetRace();
+
             raceEndShown = false;
         }
 

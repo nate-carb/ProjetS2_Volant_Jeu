@@ -28,6 +28,10 @@ public:
     qint64 getCurrentLapMs() const;   // temps du lap en cours
     qint64 getBestLapMs()    const;   // meilleur lap terminé (-1 si aucun)
     qint64 getDeltaMs()      const;   // écart vs best (-1 si indisponible)
+    qint64 getTotalRaceTimeMs() const {
+        if (stamps.empty()) return 0;
+        return stamps.back().elapsedMs;
+    }
 
     QString formatMs(qint64 ms) const; // "1:23.456"
 
