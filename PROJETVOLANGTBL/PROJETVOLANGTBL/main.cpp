@@ -33,7 +33,8 @@ int main(int argc, char* argv[])
     // ===== MENU =====
     MenuWindow* menu = new MenuWindow();
     menu->show();
-
+	MainWindowCreator* creator = new MainWindowCreator();
+	creator->show();
     // ===== JEU (créé mais caché) =====
     MainWindow* window = new MainWindow();
     window->timer->start(16);
