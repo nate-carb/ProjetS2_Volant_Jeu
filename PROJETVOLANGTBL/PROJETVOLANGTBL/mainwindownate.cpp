@@ -347,18 +347,18 @@ void MainWindow::gameLoop()
 
 
 	// ===== INPUTS CLAVIERS =====
-    //voiture.setAccel(keyW ? 1.0f : 0.0f);
-    //voiture.setBreaking(keyS ? 1.0f : 0.0f);
-    //voiture.setBoosting(keySpace);
+    voiture.setAccel(keyW ? 1.0f : 0.0f);
+    voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    voiture.setBoosting(keySpace);
 
-    //if (keyA && !keyD) voiture.setSteering(-1.0f);
-    //else if (keyD && !keyA) voiture.setSteering(1.0f);
-    //else voiture.setSteering(0.0f);
+    if (keyA && !keyD) voiture.setSteering(-1.0f);
+    else if (keyD && !keyA) voiture.setSteering(1.0f);
+    else voiture.setSteering(0.0f);
     
 	// ===== INPUTS WHEEL =====
-    voiture.setAccel(base.gas);
-    voiture.setBreaking(base.brake);
-    voiture.setSteering(base.pos);
+    //voiture.setAccel(base.gas);
+    //voiture.setBreaking(base.brake);
+    //voiture.setSteering(base.pos);
 
     //voiture.setAccel(wheelData.switchTR ? 1.0f : 0.0f);
     //voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);
@@ -414,7 +414,7 @@ void MainWindow::gameLoop()
     //    arduino->sendToWheel(
     //        voiture.getRpm(), voiture.getMaxRpm(), voiture.getGear(),
     //        voiture.getCarburant(), voiture.getTireWear(),
-    //        inPitStop, voiture.getSpeed() * 3.6f,
+    //        inPitStop, voiture.getSpeed() ,
     //        voiture.getAngle()
     //    );
     //    sendTimer.restart();

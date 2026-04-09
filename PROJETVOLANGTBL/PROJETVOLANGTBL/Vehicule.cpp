@@ -97,9 +97,11 @@ void Vehicule::update(float deltaTime)
     // 6) STEERING
     float speedValue = vitesse.length();
     if (speedValue > 0.1f) {
-        float speedNorm = std::clamp(speedValue / 100.0f, 0.0f, 1.0f);
-        float bell = 4.0f * speedNorm * (1.0f - speedNorm);
-        float turnFactor = minTurnFactor + bell * (maxTurnFactor - minTurnFactor);
+    //    float speedNorm = std::clamp(speedValue / 240.0f, 0.0f, 1.0f);
+    //    float bell = 4.0f * speedNorm * (1.0f - speedNorm);
+    //    float turnFactor = minTurnFactor + bell * (maxTurnFactor - minTurnFactor);
+        float speedNorm = std::clamp(speedValue / 300.0f, 0.0f, 1.0f);
+        float turnFactor = maxTurnFactor - speedNorm * (maxTurnFactor - minTurnFactor);
 
         float wetFactor = 1.0f;
         if (weather == RAINY)  wetFactor = 0.9f;
