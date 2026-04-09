@@ -194,7 +194,13 @@ int main(int argc, char* argv[])
 			window->raceTimes->getCurrentLapMs(),
 			window->raceTimes->getDeltaMs(),
 			window->voiture.getCarburant() < 15.0f || window->voiture.getTireWear() < 15.0f,
-			window->raceTimes
+			window->raceTimes,
+			window->track,
+			window->getPitStop(),
+			window->voiture.getPosition(),
+			window->voiture.getAngle()
+
+
         );
         // Only reposition HUD if window actually moved
         static QPoint lastPos;

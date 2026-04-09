@@ -334,7 +334,8 @@ void MainWindow::gameLoop()
         DevMenu* devMenu = new DevMenu(&voiture, this);
         devMenu->show();
     }
-
+    if (curKeyE && !prevKeyE)   voiture.shiftUp();
+    if (curKeyQ && ! prevKeyQ) voiture.shiftDown();
     prevKeyE = curKeyE;
     prevKeyQ = curKeyQ;
     prevKeyF1 = curKeyF1;
@@ -407,17 +408,17 @@ void MainWindow::gameLoop()
     soundManager->playGrass(voiture.is_on_grass);
 
     // Envoi vers Arduino à 20Hz
-    static QElapsedTimer sendTimer;
-    if (!sendTimer.isValid()) sendTimer.start();
-    if (sendTimer.elapsed() > 50) {
-        arduino->sendToWheel(
-            voiture.getRpm(), voiture.getMaxRpm(), voiture.getGear(),
-            voiture.getCarburant(), voiture.getTireWear(),
-            inPitStop, voiture.getSpeed() * 3.6f,
-            voiture.getAngle()
-        );
-        sendTimer.restart();
-    }
+    //static QElapsedTimer sendTimer;
+    //if (!sendTimer.isValid()) sendTimer.start();
+    //if (sendTimer.elapsed() > 50) {
+    //    arduino->sendToWheel(
+    //        voiture.getRpm(), voiture.getMaxRpm(), voiture.getGear(),
+    //        voiture.getCarburant(), voiture.getTireWear(),
+    //        inPitStop, voiture.getSpeed() * 3.6f,
+    //        voiture.getAngle()
+    //    );
+    //    sendTimer.restart();
+    //}
     
     // ===== UPDATE PHYSIQUE =====
     voiture.update(deltaTime);
@@ -696,7 +697,7 @@ void MainWindow::drawMinimap(QPainter& painter)
         pitRect.center().y() / PIXELS_PER_METER
     );
     painter.setBrush(Qt::yellow);
-    painter.setPen(Qt::NoPen);
+    painter.setPen(Qt::NoPen); 
     QPointF pitMiniPos = toMinimap(pitCenter);
     painter.drawRect(QRectF(pitMiniPos.x() - 4, pitMiniPos.y() - 4, 8, 8));
 
