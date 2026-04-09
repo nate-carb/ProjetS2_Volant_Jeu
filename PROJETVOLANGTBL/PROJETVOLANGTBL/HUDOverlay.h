@@ -19,6 +19,7 @@ public:
         bool warning, const RaceTimes* raceTimes,
         const Track* track, const PitStop* pitStop,        
         QVector2D carPos, float carAngle);     
+    void setPaused(bool paused) { m_paused = paused; update(); }
 
 protected:
     void paintEvent(QPaintEvent* event) override;
