@@ -14,11 +14,6 @@ HUDOverlay::HUDOverlay(QWidget* parent) : QWidget(parent)
     m_pixLapTime = QPixmap("./imagehud/laptime.png");
     m_pixSpeedRpm = QPixmap("./imagehud/vitesserpmvide.png");
     m_pixWarning = QPixmap("./imagehud/warning.png");
-    m_pixBoostEmpty = QPixmap("./imagehud/boostvide.png");
-
-    
-    QFontDatabase::addApplicationFont("./font/PressStart2P-Regular.ttf");
-
 }
 
 void HUDOverlay::updateData(float carburant, float nos, float tireWear,
@@ -44,75 +39,24 @@ void HUDOverlay::updateData(float carburant, float nos, float tireWear,
     m_deltaMs = deltaMs;
     m_warning = warning;
     m_raceTimes = raceTimes;
-
-    // store track / pit / car pose
     m_track = track;
     m_pitStop = pitStop;
     m_carPos = carPos;
     m_carAngle = carAngle;
-
     update();
 }
 
 void HUDOverlay::paintEvent(QPaintEvent*)
 {
-//    QPainter painter(this);
-//    painter.setRenderHint(QPainter::Antialiasing);
-//    painter.setRenderHint(QPainter::SmoothPixmapTransform);
-//
-//    // ── HUD gauche (barres) ───────────────────────────────────────────────
-//    QPainterPath bg;
-//    bg.addRoundedRect(15, 15, 200, 160, 12, 12);
-//    painter.fillPath(bg, QColor(0, 0, 0, 150));
-//
-//    QColor fuelColor = (m_carburant > 50) ? QColor(80, 220, 80)
-//        : (m_carburant > 25) ? QColor(255, 165, 0)
-//        : QColor(220, 50, 50);
-//    drawBar(painter, 25, 30, 170, 22, m_carburant, fuelColor, "Carburant");
-//    drawBoostBar(painter);
-//    QColor tireColor = (m_tireWear > 60) ? QColor(80, 220, 80)
-//        : (m_tireWear > 30) ? QColor(255, 165, 0)
-//        : QColor(220, 50, 50);
-//    drawBar(painter, 25, 110, 170, 22, m_tireWear, tireColor, "Pneus");
-//
-//    // ── Météo ─────────────────────────────────────────────────────────────
-//    QString weatherText;
-//    QColor  weatherColor;
-//    switch (m_weather) {
-//    case Vehicule::SUNNY:  weatherText = "☀ Ensoleillé"; weatherColor = QColor(255, 220, 0);   break;
-//    case Vehicule::RAINY:  weatherText = "🌧 Pluie";     weatherColor = QColor(100, 180, 255); break;
-//    case Vehicule::STORMY: weatherText = "⛈ Tempête";   weatherColor = QColor(180, 100, 255); break;
-//    }
-//    painter.setPen(weatherColor);
-//    painter.setFont(QFont("Arial", 11, QFont::Bold));
-//    painter.drawText(25, 155, weatherText);
-//
-//    // ── Pluie ─────────────────────────────────────────────────────────────
-//    if (m_weather == Vehicule::RAINY || m_weather == Vehicule::STORMY) {
-//        int   numDrops = (m_weather == Vehicule::STORMY) ? 150 : 75;
-//        float penWidth = (m_weather == Vehicule::STORMY) ? 2.5f : 1.5f;
-//        painter.setPen(QPen(QColor(150, 150, 255, 150), penWidth));
-//        srand(QTime::currentTime().msec());
-//        for (int i = 0; i < numDrops; i++) {
-//            int x = rand() % width(), y = rand() % height();
-//            int len = (m_weather == Vehicule::STORMY) ? 20 : 12;
-//            painter.drawLine(x, y, x - 3, y + len);
-//        }
-//    }
-//
-//    // ── Widgets images ────────────────────────────────────────────────────
-//    drawLapCounter(painter);
-//    drawLapTimes(painter);
-//    drawSpeedRpm(painter);
-//    if (m_warning) drawWarning(painter);
-//}
     QPainter painter(this);
+    if (m_paused) return;  // transparent quand pause
+
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
     painter.setRenderHint(QPainter::TextAntialiasing, false);
 
     // ── Pluie ─────────────────────────────────────────────────────────────
-    if (m_weather == Vehicule::RAINY || m_weather == Vehicule::STORMY) {
+    if (!m_paused && (m_weather == Vehicule::RAINY || m_weather == Vehicule::STORMY)) {
         int   numDrops = (m_weather == Vehicule::STORMY) ? 150 : 75;
         float penWidth = (m_weather == Vehicule::STORMY) ? 2.5f : 1.5f;
         painter.setPen(QPen(QColor(150, 150, 255, 150), penWidth));
