@@ -61,11 +61,15 @@ int main(int argc, char* argv[])
             "tracks/nate2.trk",
             "tracks/defaultTrack1.trk"
         };
-        if (window->track)
-            window->track->loadFromFile(
-                trackFiles[trackIndex].toStdString());
+        //if (window->track) {
+			//bool trackState = window->track->playTrack("nate2");
+		 //   qDebug() << "Track play result:" << trackState;
+   //         window->pitStop.placePitLane(window->track->getPitLane(), window->track->getTrackWidth());
+            //window->track->loadFromFile(
+            //    trackFiles[trackIndex].toStdString());
+        //}
 
-        viewer->setTrack(window->track);
+        //viewer->setTrack(window->track);
         container->setFocusPolicy(Qt::StrongFocus);
         container->installEventFilter(window);
         container->show();

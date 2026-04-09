@@ -1560,9 +1560,10 @@ bool Track::playTrack(QString name)
         loadFromFile((getCurrentChoixMapData().mapFilePath).toStdString());
 
         return true;
-	}else if (name == "track2") {
-        loadFromFile("tracks/track2.trk");
-		setCurrentChoixMapData("track2");
+	}else if (name == "nate2") {
+        
+		setCurrentChoixMapData("nate2");
+        loadFromFile((getCurrentChoixMapData().mapFilePath).toStdString());
         return true;
 	}else if (name == "track3") {
         loadFromFile("tracks/track3.trk");
@@ -1607,27 +1608,26 @@ void Track::defaultMapList()
     // --- Track 2 ---
     ChoixMapData map2;
     map2.mapIndex = 1;
-    map2.mapName = "track2";
-    map2.mapFilePath = "tracks/track2.trk";
+    map2.mapName = "nate2";
+    map2.mapFilePath = "tracks/nate2.trk";
     map2.mapThumbnailPath = "thumbnails/track2.png";
-    map2.skyboxFilePath = "skybox/skybox2.png";
+    map2.skyboxFilePath = "/images/skybox/blueSky/cubemap1";
 
     map2.groundData.width = 2000.0f;
     map2.groundData.height = 2000.0f;
-    map2.groundData.texturePath = "textures/grass2.png";
+    map2.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
 
-    map2.trackData.trackColor = QColor(60, 60, 60);
+    map2.trackData.trackColor = QColor(241, 242, 246); // kenney gray
     map2.trackData.kerbData.width = 5.0f;
-    map2.trackData.kerbData.height = 2.0f;
-    map2.trackData.kerbData.color1 = QColor(0, 0, 255);
-    map2.trackData.kerbData.color2 = QColor(255, 255, 255);
+    map2.trackData.kerbData.height = 0.05f;
+    map2.trackData.kerbData.color1 = QColor(220, 30, 30); //red QColor(220, 30, 30)
+    map2.trackData.kerbData.color2 = QColor(Qt::white);
 
-    map2.pitData.pitColor = QColor(90, 90, 90);
+    map2.pitData.pitColor = QColor(241, 242, 246);
     map2.pitData.kerbData.width = 5.0f;
     map2.pitData.kerbData.height = 2.0f;
     map2.pitData.kerbData.color1 = QColor(255, 255, 0);
     map2.pitData.kerbData.color2 = QColor(0, 0, 0);
-
     choixMapList.push_back(map2);
 
     // --- Track 3 ---

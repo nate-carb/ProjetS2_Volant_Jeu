@@ -36,14 +36,18 @@ MainWindow::MainWindow(QWidget* parent)
 	//track = Track();
 	//track.loadFromFile("tracks/defaultTrack1.trk");
     track = new Track();       // assigns to the MEMBER pointer
+ 
+    track->playTrack("nate2");
+    pitStop.placePitLane(track->getPitLane(), track->getTrackWidth());
+
     //track->loadFromFile("tracks/nate2.trk");
     //track->loadFromFile("tracks/decorsNate1.trk");
     //track->loadFromFile("tracks/test400.trk");
-	track->playTrack("nate");
+	//track->playTrack("nate");
     //track->loadFromFile("tracks/track3dmodelV1.trk");
     //track->loadFromFile("tracks/test_pit.trk");
     // Vérifier si ça a marché
-    pitStop.placePitLane(track->getPitLane(), track->getTrackWidth());
+    //pitStop.placePitLane(track->getPitLane(), track->getTrackWidth());
    
     if (image.isNull()) {
         qDebug() << "ERREUR: Image non chargée!";
