@@ -33,6 +33,7 @@ public:
     PitStop pitStop;
 
 	PitStop* getPitStop() { return &pitStop; }  
+    bool isPaused = false;
 
 protected:
     void paintEvent(QPaintEvent* event) override;

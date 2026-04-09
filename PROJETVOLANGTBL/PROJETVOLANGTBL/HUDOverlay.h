@@ -19,6 +19,7 @@ public:
         bool warning, const RaceTimes* raceTimes,
         const Track* track, const PitStop* pitStop,        
         QVector2D carPos, float carAngle);     
+    void setPaused(bool paused) { m_paused = paused; update(); }
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -39,6 +40,7 @@ private:
     qint64 m_deltaMs = 0;
     bool   m_warning = false;
     const RaceTimes* m_raceTimes = nullptr;
+    bool m_paused = false;
 
     // Images
     QPixmap m_pixLap;

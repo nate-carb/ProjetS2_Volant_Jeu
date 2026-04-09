@@ -17,6 +17,8 @@ public:
     void finishRace();
     void checkForCheckpoint(Track* track, QVector2D pos);
     bool isRaceStarted() { return raceStarted; }
+    bool isRaceFinished() const { return raceFinished; }
+    void resetRace() { raceFinished = false; raceStarted = false; }
 
     QString getLastCheckpointTimeString();
 
@@ -37,4 +39,5 @@ private:
     int numOflaps = 1;
     int checkpointsPerLap = 1;
     int checkpointCounter = 0;
+    bool raceFinished = false;
 };

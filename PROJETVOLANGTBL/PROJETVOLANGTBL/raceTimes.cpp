@@ -20,11 +20,13 @@ void RaceTimes::startRace()
 
 void RaceTimes::finishRace()
 {
-    if (checkpointCounter < (numOflaps * checkpointsPerLap))
+    if (checkpointCounter < (numOflaps * checkpointsPerLap)) {
         checkpointCounter++;
+    }
     else {
         qDebug() << "Race finish";
         raceStarted = false;
+        raceFinished = true;  // <-- ajoute
     }
 }
 

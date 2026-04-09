@@ -68,14 +68,14 @@ public:
     // ?? Paramètres tunable (publics pour DevMenu) ????????????
     float maxAcceleration = 45.0f;
     float turnResponsiveness = 8.0f;
-    float minTurnFactor = 0.35f;
-    float maxTurnFactor = 2.5f;
+    float minTurnFactor = 1.05f;
+    float maxTurnFactor = 2.0f;
     float nosForce = 50.0f;
     float nosDrain = 15.0f;
     float nosRegen = 2.0f;
     float brakeForce = 0.01f;
     float brakeDecel = 0.3f;
-    float dragOnTrack = 0.999f;
+    float dragOnTrack = 0.99999f;
     float dragOnGrass = 0.96f;
     float gearMinSpeed[7] = { 0,   0,  30,  60, 100, 140, 180 };
     float gearMaxSpeed[7] = { 0,  40,  80, 120, 160, 200, 240 };
