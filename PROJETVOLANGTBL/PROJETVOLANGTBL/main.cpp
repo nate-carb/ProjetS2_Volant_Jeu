@@ -37,7 +37,11 @@ int main(int argc, char* argv[])
 	creator->show();
     // ===== JEU (créé mais caché) =====
     MainWindow* window = new MainWindow();
-    window->timer->start(16);
+    //window->timer->start(16);
+    
+	// --- For 3D viewer ---
+    //QWidget* container = nullptr;
+    //Track3DViewer* viewer = nullptr;
 
     Track3DViewer* viewer = new Track3DViewer();
     viewer->setFirstPersonMode(true);
@@ -55,12 +59,27 @@ int main(int argc, char* argv[])
     // ===== QUAND PLAY EST CLIQUÉ =====
     QObject::connect(menu, &MenuWindow::playRequested, [=](int trackIndex) {
         menu->hide();
-
-        QStringList trackFiles = {
+        
+        
+		
+        /*QStringList trackFiles = {
             "tracks/nate.trk",
             "tracks/nate2.trk",
             "tracks/defaultTrack1.trk"
+        };*/
+        QStringList trackNames = {
+            "nate",
+            "nate2",
+            "TEST1"
         };
+        //qDebug() << "Working directory:" << QDir::currentPath();
+        //qDebug() << "Track name:" << trackNames[trackIndex];
+        if (window->track) {
+            window->track->playTrack(trackNames[trackIndex]);  // uses the name from the menu
+            window->pitStop.placePitLane(window->track->getPitLane(), window->track->getTrackWidth());
+        }
+
+        
         //if (window->track) {
 			//bool trackState = window->track->playTrack("nate2");
 		 //   qDebug() << "Track play result:" << trackState;
@@ -68,21 +87,31 @@ int main(int argc, char* argv[])
             //window->track->loadFromFile(
             //    trackFiles[trackIndex].toStdString());
         //}
+        // Create 3D viewer AFTER track is loaded
+        //Track3DViewer* viewer = new Track3DViewer();
+        //viewer->setFirstPersonMode(true);
+        viewer->setTrack(window->track);
 
-        //viewer->setTrack(window->track);
+        //QWidget* container = QWidget::createWindowContainer(viewer);
+        //container->setMinimumSize(1280, 720);
+        //container->resize(1280, 720);
+        //container->setWindowTitle("Racing Game 3D");
         container->setFocusPolicy(Qt::StrongFocus);
         container->installEventFilter(window);
         container->show();
         container->setFocus();
         hud->show();
+
+        window->timer->start(16);  // start game loop AFTER everything is ready
         });
 
-    QObject::connect(window->timer, &QTimer::timeout, [=]() {
-        if (!container->isVisible() || container->isMinimized()) {
+    QObject::connect(window->timer, &QTimer::timeout, [=, &container, &viewer]() {
+        if (!container || !container->isVisible() || container->isMinimized()) {
             hud->hide();
             return;
         }
-
+        // Don't update anything until a track is loaded
+        if (!window->track || window->track->getCenterLine().empty()) return;
         // Menu pause
         static bool pauseDialogOpen = false;
         if (window->isPaused && !pauseDialogOpen) {
@@ -169,7 +198,7 @@ int main(int argc, char* argv[])
             lastPos = currentPos;
         }
     });
-    viewer->setTrack(window->track);
+    //viewer->setTrack(window->track);
 
     return app.exec();
 }

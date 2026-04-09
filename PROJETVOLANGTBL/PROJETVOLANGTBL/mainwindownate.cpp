@@ -37,8 +37,8 @@ MainWindow::MainWindow(QWidget* parent)
 	//track.loadFromFile("tracks/defaultTrack1.trk");
     track = new Track();       // assigns to the MEMBER pointer
  
-    track->playTrack("nate2");
-    pitStop.placePitLane(track->getPitLane(), track->getTrackWidth());
+    //track->playTrack("nate2");
+    //pitStop.placePitLane(track->getPitLane(), track->getTrackWidth());
 
     //track->loadFromFile("tracks/nate2.trk");
     //track->loadFromFile("tracks/decorsNate1.trk");
@@ -125,6 +125,8 @@ void MainWindow::paintEvent(QPaintEvent* event)
 
     // ===== FOND =====
     painter.fillRect(rect(), QColor(34, 139, 34));  // Herbe verte
+
+    if (!track || track->getCenterLine().empty()) return;
 
     const float PIXELS_PER_METER = 5.0f;
 
@@ -302,6 +304,9 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 
 void MainWindow::gameLoop()
 {
+
+	//wait for track to load before doing anything
+    if (!track || track->getCenterLine().empty() || track->getCheckpoints().empty()) return;
     //---------- Info Arduino -------------
     // Lire Arduino
     arduino->update();

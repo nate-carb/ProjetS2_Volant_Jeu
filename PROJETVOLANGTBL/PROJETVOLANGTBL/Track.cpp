@@ -1632,23 +1632,24 @@ void Track::defaultMapList()
 
     // --- Track 3 ---
     ChoixMapData map3;
+  
     map3.mapIndex = 2;
-    map3.mapName = "track3";
-    map3.mapFilePath = "tracks/track3.trk";
+    map3.mapName = "TEST1";
+    map3.mapFilePath = "tracks/TEST1.trk";
     map3.mapThumbnailPath = "thumbnails/track3.png";
-    map3.skyboxFilePath = "skybox/skybox3.png";
+    map3.skyboxFilePath = "/images/skybox/blueSky/cubemap1";
 
     map3.groundData.width = 2000.0f;
     map3.groundData.height = 2000.0f;
-    map3.groundData.texturePath = "textures/sand1.png";
+    map3.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
 
-    map3.trackData.trackColor = QColor(70, 70, 70);
+    map3.trackData.trackColor = QColor(241, 242, 246); // kenney gray
     map3.trackData.kerbData.width = 5.0f;
-    map3.trackData.kerbData.height = 2.0f;
-    map3.trackData.kerbData.color1 = QColor(255, 165, 0);
-    map3.trackData.kerbData.color2 = QColor(255, 255, 255);
+    map3.trackData.kerbData.height = 0.05f;
+    map3.trackData.kerbData.color1 = QColor(220, 30, 30); //red QColor(220, 30, 30)
+    map3.trackData.kerbData.color2 = QColor(Qt::white);
 
-    map3.pitData.pitColor = QColor(95, 95, 95);
+    map3.pitData.pitColor = QColor(241, 242, 246);
     map3.pitData.kerbData.width = 5.0f;
     map3.pitData.kerbData.height = 2.0f;
     map3.pitData.kerbData.color1 = QColor(255, 255, 0);
