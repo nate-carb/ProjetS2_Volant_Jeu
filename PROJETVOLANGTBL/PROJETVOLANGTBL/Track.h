@@ -60,6 +60,13 @@ struct BezierCurveData {
 	QVector2D p3;
 };
 
+struct choixMapData {
+	int mapIndex;
+	QString mapName;
+	QString mapFilePath;
+	
+};
+
 // For track generation 
 enum class TrackSegmentType { CURVE_TRACK, STRAIGHT_TRACK, PIT_TRACK };
 
@@ -372,6 +379,8 @@ private:
 
 	// decor pieces
 	std::vector<DecorPieces*> decors;
+
+	// Variables map selection
 	
 
 };
