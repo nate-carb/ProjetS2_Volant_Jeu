@@ -464,7 +464,7 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
 
     auto spawnGrandstand = [&](QVector2D pos, int variant) {
         Grandstand* gs = new Grandstand(pos, 0.0f);
-        gs->selectModel(variant % 5);
+        gs->selectModel(variant % 2);
         gs->setAngle(faceNearestCenterLine(pos));
         gs->setAutoPlaced(true);
         gs->setSegmentIndex(segmentIndex);
@@ -485,6 +485,22 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
         tree->setSegmentIndex(segmentIndex);
         decors.push_back(tree);
         };
+
+    auto spawnGarage = [&](QVector2D pos, int variant) {
+        // Reject position if it is too close to any centerline point
+        // that belongs to a different segment
+        for (int ci = 0; ci < (int)centerLine.size(); ci++) {
+            if (ci >= segStart && ci <= segEnd) continue; // skip own segment
+            if ((centerLine[ci] - pos).length() < trackWidth * 1.5f) return;
+        }
+        Garage* garage = new Garage(pos, 0.0f); 
+        garage->selectModel(1);
+        garage->setAngle(faceNearestCenterLine(pos));
+        garage->setAutoPlaced(true);
+        garage->setSegmentIndex(segmentIndex);
+        decors.push_back(garage);
+        };
+
 
     float gsAccum = 0.0f, treeAccum = 0.0f;
     bool  gsFirst = true, treeFirst = true;
@@ -512,10 +528,11 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
             spawnTree(centerLine[i] + rightNormal * sideOffset, i);
             spawnTree(centerLine[i] + leftNormal * sideOffset * 1.3f, i + 1);
         }
+
     }
 
-    qDebug() << "[autoPlace] segment" << segmentIndex
-        << "-> total decors now:" << decors.size();
+    //qDebug() << "[autoPlace] segment" << segmentIndex
+    //    << "-> total decors now:" << decors.size();
 }
 
 void Track::removeAutoDecorsForSegment(int segmentIndex)

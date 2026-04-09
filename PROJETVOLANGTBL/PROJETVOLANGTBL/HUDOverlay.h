@@ -3,6 +3,8 @@
 #include <QPixmap>
 #include "Vehicule.h"
 #include "raceTimes.h"
+#include "Track.h"
+#include "PitStop.h"
 
 class HUDOverlay : public QWidget
 {
@@ -14,8 +16,9 @@ public:
         float speedKmh, float rpm, float maxRpm,
         int currentLap, int totalLaps,
         qint64 bestLapMs, qint64 currentLapMs, qint64 deltaMs,
-        bool warning, const RaceTimes* raceTimes);
-        void setPaused(bool paused) { m_paused = paused; update(); }
+        bool warning, const RaceTimes* raceTimes,
+        const Track* track, const PitStop* pitStop,        
+        QVector2D carPos, float carAngle);     
 
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -43,13 +46,24 @@ private:
     QPixmap m_pixLapTime;
     QPixmap m_pixSpeedRpm;
     QPixmap m_pixWarning;
+    QPixmap m_pixBoostEmpty;
 
     // Helpers
     void drawBar(QPainter& p, int x, int y, int w, int h,
         float value, QColor color, const QString& label);
-    void drawBoostBar(QPainter& p, int x, int y, float nosRatio);
+    //void drawBoostBar(QPainter& p, int x, int y, float nosRatio);
     void drawLapCounter(QPainter& p);
     void drawLapTimes(QPainter& p);
     void drawSpeedRpm(QPainter& p);
     void drawWarning(QPainter& p);
+    void drawBoostBar(QPainter& p);
+
+    const Track* m_track = nullptr;
+    const PitStop* m_pitStop = nullptr;
+    QVector2D m_carPos;
+    float     m_carAngle = 0.0f;
+
+    // Déclare la fonction
+    void drawMinimap(QPainter& p);
+
 };

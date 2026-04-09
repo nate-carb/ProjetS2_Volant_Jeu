@@ -30,6 +30,9 @@ public:
     Vehicule::Weather currentWeather = Vehicule::SUNNY;
     QTimer* weatherTimer;  // pour changer la météo automatiquement
     bool eventFilter(QObject* obj, QEvent* event) override;
+    PitStop pitStop;
+
+	PitStop* getPitStop() { return &pitStop; }  
     bool isPaused = false;
 
 protected:
@@ -68,7 +71,6 @@ private:
     bool keyD = false;
     bool keySpace = false;
     bool keyEnter = false;
-    PitStop pitStop;
     bool inPitStop;
     bool keyP = false;
     bool keyShiftUp = false; // E

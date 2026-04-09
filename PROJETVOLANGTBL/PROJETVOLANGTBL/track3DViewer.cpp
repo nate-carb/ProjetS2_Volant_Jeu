@@ -790,6 +790,8 @@ void Track3DViewer::buildGround()
         m_groundEntity->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
         delete m_groundEntity;
     }
+    
+
 
     m_groundEntity = new Qt3DCore::QEntity(m_rootEntity);
 
@@ -800,7 +802,7 @@ void Track3DViewer::buildGround()
     planeMesh->setHeight(2000.0f); 
     planeMesh->setMeshResolution(QSize(2, 2));
 
-	//  Material with green colour for grass
+ //  Material with green colour for grass
  //   Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
  //   grassMat->setDiffuse(QColor(119, 171, 86));   // Kenney's signature green
  //   grassMat->setAmbient(QColor(30, 80, 30));
