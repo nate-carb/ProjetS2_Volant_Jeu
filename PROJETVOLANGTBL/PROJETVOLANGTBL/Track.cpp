@@ -1565,9 +1565,10 @@ bool Track::playTrack(QString name)
 		setCurrentChoixMapData("nate2");
         loadFromFile((getCurrentChoixMapData().mapFilePath).toStdString());
         return true;
-	}else if (name == "track3") {
-        loadFromFile("tracks/track3.trk");
-		setCurrentChoixMapData("track3");
+	}else if (name == "TEST1") {
+        setCurrentChoixMapData("TEST1");
+        loadFromFile((getCurrentChoixMapData().mapFilePath).toStdString());
+		
         return true;
 	}
 

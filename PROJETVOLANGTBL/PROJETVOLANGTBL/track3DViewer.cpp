@@ -233,6 +233,7 @@ void Track3DViewer::buildSkybox(Track* track)
 // ─────────────────────────────────────────────
 void Track3DViewer::buildTrackMesh(Track* track)
 {
+    qDebug() << "Start track mesh";
 	// Get left and right edge points from your Track object
     const auto& left = track->getTrackEdges().left;
     const auto& right = track->getTrackEdges().right;
@@ -271,6 +272,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
     // Indices: for each segment i, two triangles
     // left[i]=i,  left[i+1]=i+1
     // right[i]=n+i, right[i+1]=n+i+1
+    qDebug() << "before for loop track mesh";
     for (quint32 i = 0; i < static_cast<quint32>(n - 1); i++) {
 		quint32 l0 = i; // left[i]
 		quint32 l1 = i + 1; // left[i+1]
@@ -289,7 +291,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
         // Triangle 2
         indices << l1 << r1 << r0;
     }
-
+    qDebug() << "Track mesh built with" << n << "segments.";
     // ── Qt3D geometry objects ────────────────────────────────
     m_trackEntity = new Qt3DCore::QEntity(m_rootEntity);
 

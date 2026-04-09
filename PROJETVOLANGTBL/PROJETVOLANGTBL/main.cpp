@@ -74,10 +74,10 @@ int main(int argc, char* argv[])
         };
         //qDebug() << "Working directory:" << QDir::currentPath();
         //qDebug() << "Track name:" << trackNames[trackIndex];
-        if (window->track) {
-            window->track->playTrack(trackNames[trackIndex]);  // uses the name from the menu
-            window->pitStop.placePitLane(window->track->getPitLane(), window->track->getTrackWidth());
-        }
+       
+        window->track->playTrack(trackNames[trackIndex]);  // uses the name from the menu
+        window->pitStop.placePitLane(window->track->getPitLane(), window->track->getTrackWidth());
+        
 
         
         //if (window->track) {
@@ -105,7 +105,8 @@ int main(int argc, char* argv[])
         window->timer->start(16);  // start game loop AFTER everything is ready
         });
 
-    QObject::connect(window->timer, &QTimer::timeout, [=, &container, &viewer]() {
+    //QObject::connect(window->timer, &QTimer::timeout, [=, &container, &viewer]() {
+    QObject::connect(window->timer, &QTimer::timeout, [=]() {
         if (!container || !container->isVisible() || container->isMinimized()) {
             hud->hide();
             return;
