@@ -74,8 +74,8 @@ MainWindow::MainWindow(QWidget* parent)
     // Instead, at the end of the constructor, add:
     arduino = new ArduinoManager();
     QTimer::singleShot(4000, this, [this]() {
-        bool baseOk = arduino->connectBase("\\\\.\\COM3");
-        bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
+        bool baseOk = arduino->connectBase("\\\\.\\COM16");
+        bool wheelOk = arduino->connectWheel("\\\\.\\COM15");
         qDebug() << "Base connectee:" << baseOk;
         qDebug() << "Wheel connectee:" << wheelOk;
         });
@@ -345,19 +345,19 @@ void MainWindow::gameLoop()
     lastFrameTime = currentTime;  // Sauvegarde pour la prochaine frame
 
 
-	// ===== INPUTS CLAVIERS =====
-    voiture.setAccel(keyW ? 1.0f : 0.0f);
-    voiture.setBreaking(keyS ? 1.0f : 0.0f);
-    voiture.setBoosting(keySpace);
+	//// ===== INPUTS CLAVIERS =====
+ //   voiture.setAccel(keyW ? 1.0f : 0.0f);
+ //   voiture.setBreaking(keyS ? 1.0f : 0.0f);
+ //   voiture.setBoosting(keySpace);
 
-    if (keyA && !keyD) voiture.setSteering(-1.0f);
-    else if (keyD && !keyA) voiture.setSteering(1.0f);
-    else voiture.setSteering(0.0f);
+ //   if (keyA && !keyD) voiture.setSteering(-1.0f);
+ //   else if (keyD && !keyA) voiture.setSteering(1.0f);
+ //   else voiture.setSteering(0.0f);
     
 	// ===== INPUTS WHEEL =====
-    //voiture.setAccel(base.gas);
-    //voiture.setBreaking(base.brake);
-    //voiture.setSteering(base.pos);
+    voiture.setAccel(base.gas);
+    voiture.setBreaking(base.brake);
+    voiture.setSteering(base.pos);
 
     //voiture.setAccel(wheelData.switchTR ? 1.0f : 0.0f);
     //voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);
@@ -407,17 +407,17 @@ void MainWindow::gameLoop()
     soundManager->playGrass(voiture.is_on_grass);
 
     // Envoi vers Arduino à 20Hz
-    //static QElapsedTimer sendTimer;
-    //if (!sendTimer.isValid()) sendTimer.start();
-    //if (sendTimer.elapsed() > 50) {
-    //    arduino->sendToWheel(
-    //        voiture.getRpm(), voiture.getMaxRpm(), voiture.getGear(),
-    //        voiture.getCarburant(), voiture.getTireWear(),
-    //        inPitStop, voiture.getSpeed() ,
-    //        voiture.getAngle()
-    //    );
-    //    sendTimer.restart();
-    //}
+    static QElapsedTimer sendTimer;
+    if (!sendTimer.isValid()) sendTimer.start();
+    if (sendTimer.elapsed() > 50) {
+        arduino->sendToWheel(
+            voiture.getRpm(), voiture.getMaxRpm(), voiture.getGear(),
+            voiture.getCarburant(), voiture.getTireWear(),
+            inPitStop, voiture.getSpeed() ,
+            voiture.getAngle()
+        );
+        sendTimer.restart();
+    }
     
     // Toggle pause avec Escape
     static bool escWasPressed = false;

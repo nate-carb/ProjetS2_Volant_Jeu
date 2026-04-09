@@ -57,8 +57,8 @@ int main(int argc, char* argv[])
         menu->hide();
 
         QStringList trackFiles = {
-            "tracks/track1.trk",
-            "tracks/track2.trk",
+            "tracks/nate.trk",
+            "tracks/nate2.trk",
             "tracks/defaultTrack1.trk"
         };
         if (window->track)
