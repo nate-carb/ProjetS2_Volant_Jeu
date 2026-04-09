@@ -83,14 +83,19 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, QWidget* parent)
 
     // ===== BOUTONS =====
     QPushButton* btnSubmit = createStyledButton("Save Score");
-    connect(btnSubmit, &QPushButton::clicked, this, &RaceEndDialog::onSubmit);
+    connect(btnSubmit, &QPushButton::clicked, [this, btnSubmit]() {
+        QString name = m_nameInput->text().trimmed();
+        if (name.isEmpty()) name = "???";
+        LeaderboardManager::addEntry(m_trackIndex, name, m_playerTimeMs);
+        btnSubmit->setText("Saved ✓");
+        btnSubmit->setEnabled(false);
+        });
     layout->addWidget(btnSubmit);
 
     QPushButton* btnClose = createStyledButton("Close");
     connect(btnClose, &QPushButton::clicked, this, &QDialog::accept);
     layout->addWidget(btnClose);
 }
-
 void RaceEndDialog::buildLeaderboard(QVBoxLayout* layout)
 {
     QVector<LeaderboardManager::Entry> entries =
