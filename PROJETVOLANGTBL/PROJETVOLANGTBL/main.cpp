@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
     container->setMinimumSize(1280, 720);
     container->resize(1280, 720);
     container->setWindowTitle("Racing Game 3D");
+    container->installEventFilter(viewer);
 
     HUDOverlay* hud = new HUDOverlay();
     hud->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
