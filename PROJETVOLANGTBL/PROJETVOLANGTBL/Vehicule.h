@@ -75,7 +75,7 @@ public:
     float nosRegen = 2.0f;
     float brakeForce = 0.01f;
     float brakeDecel = 0.3f;
-    float dragOnTrack = 0.99999f;
+    float dragOnTrack = 0.9999f;
     float dragOnGrass = 0.96f;
     float gearMinSpeed[7] = { 0,   0,  30,  60, 100, 140, 180 };
     float gearMaxSpeed[7] = { 0,  40,  80, 120, 160, 200, 240 };
