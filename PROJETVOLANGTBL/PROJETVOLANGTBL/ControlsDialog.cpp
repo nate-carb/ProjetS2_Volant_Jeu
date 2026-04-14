@@ -1,17 +1,18 @@
 #include "ControlsDialog.h"
+#include "AnimatedButton.h"
 
 ControlsDialog::ControlsDialog(QWidget* parent) : QDialog(parent)
 {
-    setWindowTitle("Controls");
+    setWindowTitle("Contrôles");
     setFixedSize(600, 450);
-    setStyleSheet("background-color: #CC2200;");
+    setStyleSheet("background-color: #4B0082;");
 
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->setSpacing(15);
     layout->setContentsMargins(30, 20, 30, 20);
 
     // Titre
-    QLabel* title = new QLabel("Controls");
+    QLabel* title = new QLabel("Contrôles");
     title->setStyleSheet(
         "background-color: #111111; color: white; font-size: 28px;"
         "font-weight: bold; border-radius: 8px; padding: 10px;");
@@ -36,11 +37,8 @@ ControlsDialog::ControlsDialog(QWidget* parent) : QDialog(parent)
 
     layout->addStretch();
 
-    QPushButton* btnClose = new QPushButton("Close");
-    btnClose->setStyleSheet(
-        "QPushButton { background-color: #111111; color: white; font-size: 18px;"
-        "font-weight: bold; border-radius: 8px; padding: 10px; }"
-        "QPushButton:hover { background-color: #880000; }");
+    AnimatedButton* btnClose = new AnimatedButton("Fermer");
+    btnClose->setFixedHeight(50);
     btnClose->setCursor(Qt::PointingHandCursor);
     connect(btnClose, &QPushButton::clicked, this, &QDialog::accept);
     layout->addWidget(btnClose);

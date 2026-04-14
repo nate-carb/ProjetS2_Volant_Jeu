@@ -19,6 +19,8 @@ public:
     QAudioOutput* menuOutput = nullptr;
     void playMenuMusic();
     void stopMenuMusic();
+    void setVolume(float volume);  // 0.0 à 1.0
+    float getVolume() const { return currentVolume; }
 
 private:
     // Moteur (son en boucle dont on change la vitesse selon RPM)

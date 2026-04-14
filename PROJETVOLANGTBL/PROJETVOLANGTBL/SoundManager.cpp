@@ -98,3 +98,14 @@ void SoundManager::stopMenuMusic()
 {
     menuMusic->stop();
 }
+
+void SoundManager::setVolume(float volume)
+{
+    currentVolume = volume;
+    if (engineOutput)  engineOutput->setVolume(volume);
+    if (menuOutput)    menuOutput->setVolume(volume);
+    if (brakeSound)    brakeSound->setVolume(volume);
+    if (shiftSound)    shiftSound->setVolume(volume);
+    if (nosSound)      nosSound->setVolume(volume);
+    if (grassSound)    grassSound->setVolume(volume);
+}

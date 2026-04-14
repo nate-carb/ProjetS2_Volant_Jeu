@@ -128,7 +128,7 @@ void Vehicule::update(float deltaTime)
     position.setY(position.y() + vitesse.y() * deltaTime);
 
     // 9) Carburant
-    if (speed > 0.1f)        carburant -= 0.5f * deltaTime;
+    if (speed > 0.1f)        carburant -= 0.05f * deltaTime;
     if (accel > 0 || boosting) carburant -= 0.01f * deltaTime;
     carburant = std::max(carburant, 0.0f);
 
@@ -138,10 +138,10 @@ void Vehicule::update(float deltaTime)
     rpm = std::clamp(rpm, minRpm, maxRpm);
 
     // USURE DES PNEUS
-    float wearRate = is_on_grass ? 1.5f : 0.5f;  // usure par seconde, ajuste au goût
+    float wearRate = is_on_grass ? 1.5f : 0.5f;  // usure par seconde
     // 11) Usure pneus
     if (speed > 0.1f) {
-        tireWear -= 0.5f * deltaTime;
+        tireWear -= 0.05f * deltaTime;
         tireWear = std::max(tireWear, 0.0f);
     }
 }

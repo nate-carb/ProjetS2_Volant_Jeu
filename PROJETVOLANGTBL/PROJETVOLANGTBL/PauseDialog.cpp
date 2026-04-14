@@ -1,4 +1,5 @@
 #include "PauseDialog.h"
+#include "AnimatedButton.h"
 
 static const QString BTN_STYLE = R"(
     QPushButton {
@@ -19,19 +20,29 @@ static const QString BTN_STYLE = R"(
     }
 )";
 
-PauseDialog::PauseDialog(QWidget* parent) : QDialog(parent)
+PauseDialog::PauseDialog(SoundManager* soundManager, QWidget* parent)
+    : QDialog(parent), m_soundManager(soundManager)
 {
-    setWindowTitle("Paused");
+    setWindowTitle("En Pause");
     setFixedSize(400, 420);
-    setStyleSheet("background-color: #CC2200;");
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setStyleSheet("background-color: transparent;");
 
-    QVBoxLayout* layout = new QVBoxLayout(this);
+    QWidget* card = new QWidget(this);
+    card->setStyleSheet("QWidget { background-color: #4B0082; border-radius: 18px; }");
+
+    QVBoxLayout* layout = new QVBoxLayout(card);  // ← card au lieu de this
     layout->setSpacing(12);
     layout->setContentsMargins(40, 30, 40, 30);
 
+    QVBoxLayout* outerLayout = new QVBoxLayout(this);
+    outerLayout->setContentsMargins(0, 0, 0, 0);
+    outerLayout->addWidget(card);
+
+
     // Titre PAUSED
-    QLabel* title = new QLabel("PAUSED");
+    QLabel* title = new QLabel("En Pause");
     title->setStyleSheet(
         "color: white; font-size: 36px; font-weight: bold;"
         "background: transparent;");
@@ -40,11 +51,11 @@ PauseDialog::PauseDialog(QWidget* parent) : QDialog(parent)
     layout->addSpacing(10);
 
     // Boutons
-    QPushButton* btnResume = createStyledButton("Resume");
-    QPushButton* btnRestart = createStyledButton("Restart");
+    QPushButton* btnResume = createStyledButton("Reprendre");
+    QPushButton* btnRestart = createStyledButton("Recommencer");
     QPushButton* btnOptions = createStyledButton("Options");
-    QPushButton* btnControls = createStyledButton("Controls");
-    QPushButton* btnMainMenu = createStyledButton("Main Menu");
+    QPushButton* btnControls = createStyledButton("Contrôles");
+    QPushButton* btnMainMenu = createStyledButton("Menu Principal");
 
     // Resume
     connect(btnResume, &QPushButton::clicked, [this]() {
@@ -59,8 +70,8 @@ PauseDialog::PauseDialog(QWidget* parent) : QDialog(parent)
         });
 
     // Options — ouvre le dialog options sans fermer la pause
-    connect(btnOptions, &QPushButton::clicked, [this]() {
-        OptionsDialog dlg(this);
+    connect(btnOptions, &QPushButton::clicked, [this, soundManager]() {
+        OptionsDialog dlg(soundManager, this);
         dlg.exec();
         });
 
@@ -85,9 +96,7 @@ PauseDialog::PauseDialog(QWidget* parent) : QDialog(parent)
 
 QPushButton* PauseDialog::createStyledButton(const QString& text)
 {
-    QPushButton* btn = new QPushButton(text);
-    btn->setStyleSheet(BTN_STYLE);
+    AnimatedButton* btn = new AnimatedButton(text);
     btn->setFixedHeight(55);
-    btn->setCursor(Qt::PointingHandCursor);
     return btn;
 }

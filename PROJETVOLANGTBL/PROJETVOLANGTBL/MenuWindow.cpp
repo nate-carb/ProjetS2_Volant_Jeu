@@ -6,6 +6,11 @@
 #include <QScrollArea>
 #include "LeaderboardManager.h"
 #include <QApplication>
+#include <QStackedLayout>
+#include <QScreen>
+#include <QGuiApplication>
+#include <QFontDatabase>
+#include "AnimatedButton.h"
 
 // ===== STYLES =====
 static const QString BTN_STYLE = R"(
@@ -39,8 +44,16 @@ static const QString TITLE_STYLE = R"(
 )";
 
 // ===== CONSTRUCTEUR =====
-MenuWindow::MenuWindow(QWidget* parent) : QMainWindow(parent)
+MenuWindow::MenuWindow(SoundManager* soundManager, QWidget* parent)
+    : QMainWindow(parent), m_soundManager(soundManager)
 {
+    int fontId = QFontDatabase::addApplicationFont("font/PressStart2P-Regular.ttf");
+    QString fontFamily = QFontDatabase::applicationFontFamilies(fontId).at(0);
+    QFont gameFont(fontFamily, 10);
+    QApplication::setFont(gameFont);  
+
+    setWindowTitle("F1 Racing");
+    showFullScreen();
     setWindowTitle("F1 Racing");
     showFullScreen();
 
@@ -55,6 +68,7 @@ MenuWindow::MenuWindow(QWidget* parent) : QMainWindow(parent)
     m_stack->addWidget(createLeaderboardPage(2));
 
     m_stack->setCurrentIndex(PAGE_MAIN);
+    m_stack->setCurrentIndex(0);
 }
 
 MenuWindow::~MenuWindow() {}
@@ -62,10 +76,8 @@ MenuWindow::~MenuWindow() {}
 // ===== HELPERS =====
 QPushButton* MenuWindow::createStyledButton(const QString& text)
 {
-    QPushButton* btn = new QPushButton(text);
-    btn->setStyleSheet(BTN_STYLE);
+    AnimatedButton* btn = new AnimatedButton(text);
     btn->setFixedHeight(60);
-    btn->setCursor(Qt::PointingHandCursor);
     return btn;
 }
 
@@ -94,49 +106,66 @@ QWidget* MenuWindow::createMainMenuPage()
     applyBackground(page);
 
     // GIF background
-    QLabel* bgLabel = new QLabel(page);
-    bgLabel->setGeometry(0, 0, 9999, 9999);
-    bgLabel->setScaledContents(true);
+    QScreen* screen = QGuiApplication::primaryScreen();
+    QSize screenSize = screen->size();
 
-    QMovie* movie = new QMovie("images/menu_bg.gif");
+    QLabel* bgLabel = new QLabel(page);
+    bgLabel->setScaledContents(true);
+    bgLabel->setGeometry(0, 0, screenSize.width(), screenSize.height());
+    QMovie* movie = new QMovie("images/menu/backgroundmenu1.gif");
     if (movie->isValid()) {
         bgLabel->setMovie(movie);
         movie->start();
     }
     else {
         delete movie;
-        bgLabel->setStyleSheet("background-color: #CC2200;");
     }
-    bgLabel->lower();  // derrière tout
+    bgLabel->lower();
 
-    // Layout par-dessus le GIF
+    // Layout principal centré
     QVBoxLayout* layout = new QVBoxLayout(page);
     layout->setAlignment(Qt::AlignCenter);
-    layout->setSpacing(15);
-    layout->setContentsMargins(0, 40, 0, 40);
+    layout->setSpacing(0);
+    layout->setContentsMargins(0, 0, 0, 0);
 
-    // Logo F1
+    // Widget centré de largeur fixe qui contient tout
+    QWidget* centerWidget = new QWidget();
+    centerWidget->setStyleSheet("background: transparent;");
+    centerWidget->setFixedWidth(480);  
+    QVBoxLayout* centerLayout = new QVBoxLayout(centerWidget);
+    centerLayout->setAlignment(Qt::AlignCenter);
+    centerLayout->setSpacing(15);
+    centerLayout->setContentsMargins(20, 40, 20, 40);
+
+    layout->addWidget(centerWidget, 0, Qt::AlignHCenter);
+
+    // Logo GIF
     QLabel* logo = new QLabel();
-    QPixmap logoPx("images/f1_logo.png");
-    if (!logoPx.isNull()) {
-        logo->setPixmap(logoPx.scaled(380, 110,
-            Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    logo->setFixedSize(384, 195);
+    logo->setScaledContents(true);
+    logo->setStyleSheet("background: transparent;");
+    logo->setAlignment(Qt::AlignCenter);
+    QMovie* logoMovie = new QMovie("images/menu/f1.gif");
+    if (logoMovie->isValid()) {
+        logo->setMovie(logoMovie);
+        logoMovie->start();
     }
     else {
+        delete logoMovie;
         logo->setText("F1 RACING");
         logo->setStyleSheet(
             "color: white; font-size: 40px; font-weight: bold;"
             "background-color: #111111; border-radius: 8px; padding: 15px;");
     }
-    logo->setAlignment(Qt::AlignCenter);
-    layout->addWidget(logo);
-    layout->addSpacing(20);
+    centerLayout->addWidget(logo, 0, Qt::AlignHCenter);
+    centerLayout->addSpacing(5);
 
-    QPushButton* btnPlay = createStyledButton("Play !");
-    QPushButton* btnLB = createStyledButton("Leaderboards");
+    // Boutons
+    QPushButton* btnPlay = createStyledButton("Jouer !");
+    QPushButton* btnLB = createStyledButton("Classements");
     QPushButton* btnOpts = createStyledButton("Options");
-    QPushButton* btnCtrl = createStyledButton("Controls");
-    QPushButton* btnQuit = createStyledButton("Quit");
+    QPushButton* btnCtrl = createStyledButton("Contrôles");
+    QPushButton* btnQuit = createStyledButton("Quitter");
 
     btnPlay->setFixedWidth(400);
     btnLB->setFixedWidth(400);
@@ -148,40 +177,58 @@ QWidget* MenuWindow::createMainMenuPage()
     connect(btnLB, &QPushButton::clicked, this, &MenuWindow::onLeaderboards);
     connect(btnOpts, &QPushButton::clicked, this, &MenuWindow::onOptions);
     connect(btnCtrl, &QPushButton::clicked, this, &MenuWindow::onControls);
-    connect(btnQuit, &QPushButton::clicked, []() {
-        QApplication::quit();
-        });
+    connect(btnQuit, &QPushButton::clicked, []() { QApplication::quit(); });
 
-    layout->addWidget(btnPlay);
-    layout->addWidget(btnLB);
-    layout->addWidget(btnOpts);
-    layout->addWidget(btnCtrl);
-    layout->addWidget(btnQuit);
+    centerLayout->addWidget(btnPlay);
+    centerLayout->addWidget(btnLB);
+    centerLayout->addWidget(btnOpts);
+    centerLayout->addWidget(btnCtrl);
+    centerLayout->addWidget(btnQuit);
 
     return page;
 }
-
 // ===== PAGE TRACK SELECTION =====
 QWidget* MenuWindow::createTrackSelectionPage()
 {
     QWidget* page = new QWidget();
+    // GIF background
+    QScreen* screen = QGuiApplication::primaryScreen();
+    QSize screenSize = screen->size();
+    QLabel* bgLabel = new QLabel(page);
+    bgLabel->setScaledContents(true);
+    bgLabel->setGeometry(0, 0, screenSize.width(), screenSize.height());
+    QMovie* movie = new QMovie("images/tracks/background2.gif");
+    if (movie->isValid()) {
+        bgLabel->setMovie(movie);
+        movie->start();
+    }
+    else {
+        delete movie;
+    }
+    bgLabel->lower();
     applyBackground(page);
 
     QVBoxLayout* layout = new QVBoxLayout(page);
     layout->setSpacing(20);
-    layout->setContentsMargins(40, 30, 40, 30);
+    layout->setContentsMargins(150, 30, 150, 30);
 
-    layout->addWidget(createTitle("Track Selection"));
+    QLabel* titleLabel = new QLabel("Sélection de piste");
+    titleLabel->setStyleSheet(
+        "background-color: #111111; color: white; font-size: 24px;"
+        "font-weight: bold; border-radius: 8px; padding: 10px 20px;");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setFixedWidth(600);
+    layout->addWidget(titleLabel, 0, Qt::AlignHCenter);
     layout->addSpacing(10);
 
     QHBoxLayout* tracksLayout = new QHBoxLayout();
     tracksLayout->setSpacing(20);
 
-    QStringList names = { "Track 1", "Track 2", "Track 3" };
-    QStringList images = {
-        "images/track1_preview.png",
-        "images/track2_preview.png",
-        "images/track3_preview.png"
+    QStringList names = { "Espace", "Monaco", "Plage" };
+    QStringList imagePaths = {
+        "images/tracks/track1.png",
+        "images/tracks/track2.png",
+        "images/tracks/track3.png"
     };
 
     for (int i = 0; i < 3; i++) {
@@ -189,20 +236,19 @@ QWidget* MenuWindow::createTrackSelectionPage()
         box->setAlignment(Qt::AlignHCenter);
 
         QLabel* preview = new QLabel();
-        QPixmap px(images[i]);
+        QPixmap px(imagePaths[i]);
         if (px.isNull()) {
             px = QPixmap(200, 200);
             px.fill(QColor(30, 30, 30));
         }
-        preview->setPixmap(px.scaled(200, 200,
+        preview->setPixmap(px.scaled(370, 280,
             Qt::KeepAspectRatio, Qt::SmoothTransformation));
         preview->setAlignment(Qt::AlignCenter);
-        preview->setStyleSheet(
-            "background-color: #111111; border-radius: 8px; padding: 8px;");
-        preview->setFixedSize(220, 220);
+        preview->setStyleSheet("background: transparent;");
+        preview->setFixedSize(380, 290);
 
         QPushButton* btn = createStyledButton(names[i]);
-        btn->setFixedWidth(220);
+        btn->setFixedWidth(380);
         int idx = i;
         connect(btn, &QPushButton::clicked, [this, idx]() {
             onTrackSelected(idx);
@@ -213,11 +259,12 @@ QWidget* MenuWindow::createTrackSelectionPage()
         tracksLayout->addLayout(box);
     }
 
+    layout->addStretch();
     layout->addLayout(tracksLayout);
     layout->addStretch();
 
-    QPushButton* btnBack = createStyledButton("← Back");
-    btnBack->setFixedWidth(150);
+    QPushButton* btnBack = createStyledButton("← Retour");
+    btnBack->setFixedWidth(220);
     connect(btnBack, &QPushButton::clicked, [this]() {
         goToPage(PAGE_MAIN);
         });
@@ -232,27 +279,82 @@ QWidget* MenuWindow::createLeaderboardSelectionPage()
     QWidget* page = new QWidget();
     applyBackground(page);
 
+    // GIF background
+    QScreen* screen = QGuiApplication::primaryScreen();
+    QSize screenSize = screen->size();
+    QLabel* bgLabel = new QLabel(page);
+    bgLabel->setScaledContents(true);
+    bgLabel->setGeometry(0, 0, screenSize.width(), screenSize.height());
+    QMovie* movie = new QMovie("images/classements/background1.gif");
+    if (movie->isValid()) {
+        bgLabel->setMovie(movie);
+        movie->start();
+    }
+    else {
+        delete movie;
+    }
+    bgLabel->lower();
+
     QVBoxLayout* layout = new QVBoxLayout(page);
-    layout->setAlignment(Qt::AlignCenter);
-    layout->setSpacing(15);
-    layout->setContentsMargins(150, 40, 150, 40);
+    layout->setSpacing(20);
+    layout->setContentsMargins(150, 30, 150, 30);
 
-    layout->addWidget(createTitle("Leaderboard Selection"));
-    layout->addSpacing(20);
+    // Titre
+    QLabel* titleLabel = new QLabel("Sélection de classement");
+    titleLabel->setStyleSheet(
+        "background-color: #111111; color: white; font-size: 24px;"
+        "font-weight: bold; border-radius: 8px; padding: 10px 20px;");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setFixedWidth(600);
+    layout->addWidget(titleLabel, 0, Qt::AlignHCenter);
+    layout->addSpacing(10);
 
-    QStringList tracks = { "Track 1", "Track 2", "Track 3" };
+    // 3 tracks côte à côte
+    QHBoxLayout* tracksLayout = new QHBoxLayout();
+    tracksLayout->setSpacing(20);
+
+    QStringList names = { "Classement Espace", "Classement Monaco", "Classement Plage" };
+    QStringList imagePaths = {
+        "images/tracks/track1.png",
+        "images/tracks/track2.png",
+        "images/tracks/track3.png"
+    };
+
     for (int i = 0; i < 3; i++) {
-        QPushButton* btn = createStyledButton(tracks[i]);
+        QVBoxLayout* box = new QVBoxLayout();
+        box->setSpacing(10);
+        box->setAlignment(Qt::AlignHCenter);
+
+        QLabel* preview = new QLabel();
+        QPixmap px(imagePaths[i]);
+        if (px.isNull()) {
+            px = QPixmap(380, 290);
+            px.fill(QColor(30, 30, 30));
+        }
+        preview->setPixmap(px.scaled(370, 280,
+            Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        preview->setAlignment(Qt::AlignCenter);
+        preview->setStyleSheet("background: transparent;");
+        preview->setFixedSize(380, 290);
+
+        QPushButton* btn = createStyledButton(names[i]);
+        btn->setFixedWidth(380);
         int idx = i;
         connect(btn, &QPushButton::clicked, [this, idx]() {
             onLeaderboardTrackSelected(idx);
             });
-        layout->addWidget(btn);
+
+        box->addWidget(preview);
+        box->addWidget(btn);
+        tracksLayout->addLayout(box);
     }
 
     layout->addStretch();
-    QPushButton* btnBack = createStyledButton("← Back");
-    btnBack->setFixedWidth(150);
+    layout->addLayout(tracksLayout);
+    layout->addStretch();
+
+    QPushButton* btnBack = createStyledButton("← Retour");
+    btnBack->setFixedWidth(220);
     connect(btnBack, &QPushButton::clicked, [this]() {
         goToPage(PAGE_MAIN);
         });
@@ -265,28 +367,55 @@ QWidget* MenuWindow::createLeaderboardSelectionPage()
 QWidget* MenuWindow::createLeaderboardPage(int trackIndex)
 {
     QWidget* page = new QWidget();
-    applyBackground(page);
+    QScreen* screen = QGuiApplication::primaryScreen();
+    QSize screenSize = screen->size();
+    QLabel* bgLabel = new QLabel(page);
+    bgLabel->setScaledContents(true);
+    bgLabel->setGeometry(0, 0, screenSize.width(), screenSize.height());
+    QStringList bgGifs = {
+     "images/classements/spacebg.gif",
+     "images/classements/monacobg.gif",
+     "images/classements/beachbg.gif"
+    };
+    QMovie* movie = new QMovie(bgGifs[trackIndex]);
+    if (movie->isValid()) {
+        bgLabel->setMovie(movie);
+        movie->start();
+    }
+    else {
+        delete movie;
+    }
+    bgLabel->lower();
 
     QVBoxLayout* layout = new QVBoxLayout(page);
-    layout->setSpacing(10);
-    layout->setContentsMargins(40, 30, 40, 30);
+    layout->setSpacing(5);
+    layout->setContentsMargins(200, 30, 200, 30);
 
-    layout->addWidget(createTitle(
-        QString("Track %1 Leaderboard").arg(trackIndex + 1)));
+    QStringList trackNames = { "Classement Espace", "Classement Monaco", "Classement Plage" };
+    QLabel* titleLabel = new QLabel(trackNames[trackIndex]);
+    titleLabel->setStyleSheet(
+        "background-color: #111111; color: white; font-size: 24px;"
+        "font-weight: bold; border-radius: 8px; padding: 10px 20px;");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setFixedWidth(600);
+    layout->addWidget(titleLabel, 0, Qt::AlignHCenter);
     layout->addSpacing(10);
 
     // Scroll area pour les scores
     QScrollArea* scroll = new QScrollArea();
     scroll->setWidgetResizable(true);
+    QStringList scrollColors = { "#8B00FF", "#FF7893", "#08CBFC" };  // mauve, orange, bleu
+
     scroll->setStyleSheet(
         "QScrollArea { border: none; background: transparent; }"
         "QScrollBar:vertical { background: #111111; width: 8px; }"
-        "QScrollBar::handle:vertical { background: #CC0000; border-radius: 4px; }");
+        "QScrollBar::handle:vertical { background: " + scrollColors[trackIndex] + "; border-radius: 4px; }");
 
     QWidget* content = new QWidget();
     content->setStyleSheet("background: transparent;");
     QVBoxLayout* scoreLayout = new QVBoxLayout(content);
     scoreLayout->setSpacing(8);
+    scoreLayout->setAlignment(Qt::AlignHCenter);
 
     QVector<LeaderboardManager::Entry> entries =
         LeaderboardManager::load(trackIndex);
@@ -301,10 +430,12 @@ QWidget* MenuWindow::createLeaderboardPage(int trackIndex)
     else {
         for (int i = 0; i < entries.size(); i++) {
             QWidget* row = new QWidget();
+            QStringList borderColors = { "#8B00FF", "#FF7893", "#08CBFC" };
             row->setStyleSheet(
                 "background-color: #111111; border-radius: 6px;"
-                "border-left: 4px solid #CC0000;");
-            row->setFixedHeight(48);
+                "border-left: 4px solid " + borderColors[trackIndex] + ";");
+            row->setFixedHeight(40);
+            row->setMaximumWidth(600);
 
             QHBoxLayout* rowLayout = new QHBoxLayout(row);
             rowLayout->setContentsMargins(15, 4, 15, 4);
@@ -319,7 +450,7 @@ QWidget* MenuWindow::createLeaderboardPage(int trackIndex)
 
             rowLayout->addWidget(makeLabel(
                 QString::number(i + 1) + ".", 18));
-            rowLayout->addWidget(makeLabel(entries[i].name), 1);
+            rowLayout->addWidget(makeLabel(entries[i].name));
             rowLayout->addStretch();
             rowLayout->addWidget(makeLabel(entries[i].formattedTime()));
             scoreLayout->addWidget(row);
@@ -330,8 +461,8 @@ QWidget* MenuWindow::createLeaderboardPage(int trackIndex)
     scroll->setWidget(content);
     layout->addWidget(scroll);
 
-    QPushButton* btnBack = createStyledButton("← Back");
-    btnBack->setFixedWidth(150);
+    QPushButton* btnBack = createStyledButton("← Retour");
+    btnBack->setFixedWidth(220);
     connect(btnBack, &QPushButton::clicked, [this]() {
         goToPage(PAGE_LB_SEL);
         });
@@ -345,8 +476,8 @@ void MenuWindow::onPlay() { goToPage(PAGE_TRACK_SEL); }
 void MenuWindow::onLeaderboards() { goToPage(PAGE_LB_SEL); }
 
 void MenuWindow::onOptions() {
-    OptionsDialog dlg(this);
-    dlg.exec();  // bloquant — retourne au menu après fermeture
+    OptionsDialog dlg(m_soundManager, this);
+    dlg.exec();
 }
 
 void MenuWindow::onControls() {

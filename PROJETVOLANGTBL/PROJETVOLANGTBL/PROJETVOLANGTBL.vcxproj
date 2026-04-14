@@ -98,8 +98,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AnimatedButton.cpp" />
     <ClCompile Include="ArduinoManager.cpp" />
     <ClCompile Include="ControlsDialog.cpp" />
+    <ClCompile Include="DeathDialog.cpp" />
     <ClCompile Include="HUDOverlay.cpp" />
     <ClCompile Include="devmenu.cpp" />
     <ClCompile Include="include\serial\SerialPort.cpp" />
@@ -143,11 +145,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="AnimatedButton.h" />
     <ClInclude Include="ArduinoManager.h" />
     <ClInclude Include="camera2D.h" />
     <QtMoc Include="devmenu.h" />
     <QtMoc Include="ControlsDialog.h" />
     <ClInclude Include="DaeLoader.h" />
+    <QtMoc Include="DeathDialog.h" />
     <ClInclude Include="GameEngine.h" />
     <QtMoc Include="mainwindownate.h" />
     <QtMoc Include="mainWindowView.h" />

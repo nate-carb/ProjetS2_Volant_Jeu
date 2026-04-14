@@ -121,6 +121,12 @@
     <ClCompile Include="PauseDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AnimatedButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DeathDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vehicule.h">
@@ -216,6 +222,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="PauseDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="AnimatedButton.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="DeathDialog.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

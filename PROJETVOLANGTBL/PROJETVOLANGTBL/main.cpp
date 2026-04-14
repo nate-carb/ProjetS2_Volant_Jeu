@@ -21,6 +21,8 @@
 #include "MenuWindow.h"
 #include "RaceEndDialog.h"
 #include "PauseDialog.h"
+#include "DeathDialog.h"
+
 bool isKeyPressed(int vkCode) {
     return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
 }
@@ -30,13 +32,15 @@ int main(int argc, char* argv[])
     qputenv("QT3D_RENDERER", "opengl");
     QApplication app(argc, argv);
 
+    // ===== JEU (créé mais caché) =====
+    MainWindow* window = new MainWindow();
+
     // ===== MENU =====
-    MenuWindow* menu = new MenuWindow();
+    MenuWindow* menu = new MenuWindow(window->soundManager);
     menu->show();
 	MainWindowCreator* creator = new MainWindowCreator();
 	creator->show();
-    // ===== JEU (créé mais caché) =====
-    MainWindow* window = new MainWindow();
+    
     //window->timer->start(16);
     
 	// --- For 3D viewer ---
@@ -98,7 +102,7 @@ int main(int argc, char* argv[])
         //container->setWindowTitle("Racing Game 3D");
         container->setFocusPolicy(Qt::StrongFocus);
         container->installEventFilter(window);
-        container->show();
+        container->showFullScreen();
         container->setFocus();
         hud->show();
 
@@ -111,14 +115,14 @@ int main(int argc, char* argv[])
             hud->hide();
             return;
         }
-        // Don't update anything until a track is loaded
+        
         if (!window->track || window->track->getCenterLine().empty()) return;
         // Menu pause
         static bool pauseDialogOpen = false;
         if (window->isPaused && !pauseDialogOpen) {
             hud->setPaused(true);  // cache la pluie
             pauseDialogOpen = true;
-            PauseDialog* dlg = new PauseDialog(container);
+            PauseDialog* dlg = new PauseDialog(window->soundManager, container);
             dlg->exec();
 
             PauseDialog::Result result = dlg->getResult();
@@ -135,6 +139,7 @@ int main(int argc, char* argv[])
                 window->isPaused = false;
                 container->hide();
                 hud->hide();
+                menu->goToMainMenu();
                 menu->show();
                 window->voiture = Vehicule();
                 window->raceTimes->resetRace();
@@ -147,6 +152,43 @@ int main(int argc, char* argv[])
         }
 
         hud->show();
+
+        // Death screen
+        static bool deathShown = false;
+        if (!deathShown) {
+            QString reason = "";
+            if (window->voiture.getCarburant() <= 0.0f)
+                reason = "Panne de carburant !";
+            else if (window->voiture.getTireWear() <= 0.0f)
+                reason = "Pneus totalement usés !";
+
+            if (!reason.isEmpty()) {
+                deathShown = true;
+                window->isPaused = true;
+                DeathDialog* dlg = new DeathDialog(reason, container);
+                dlg->exec();
+
+                DeathDialog::Result result = dlg->getResult();
+                if (result == DeathDialog::RESTART) {
+                    window->isPaused = false;
+                    window->voiture = Vehicule();
+                    window->raceTimes->resetRace();
+                }
+                else {
+                    window->isPaused = false;
+                    container->hide();
+                    hud->hide();
+                    menu->goToMainMenu();
+                    menu->show();
+                    window->voiture = Vehicule();
+                    window->raceTimes->resetRace();
+                }
+
+                delete dlg;
+                deathShown = false;
+            }
+        }
+
         viewer->updateVehicule(&window->voiture);
 
         // Détecte fin de course
@@ -191,13 +233,8 @@ int main(int argc, char* argv[])
 
         );
 
-        static QPoint lastPos;
-        QPoint currentPos = container->mapToGlobal(QPoint(0, 0));
-        if (currentPos != lastPos) {
-            hud->move(currentPos);
-            hud->resize(container->size());
-            lastPos = currentPos;
-        }
+        hud->move(container->mapToGlobal(QPoint(0, 0)));
+        hud->resize(container->size());
     });
     //viewer->setTrack(window->track);
 

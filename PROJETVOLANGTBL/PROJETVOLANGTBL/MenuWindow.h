@@ -9,14 +9,16 @@
 #include <QMovie>
 #include "OptionsDialog.h"
 #include "ControlsDialog.h"
+#include "SoundManager.h"
 
 class MenuWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MenuWindow(QWidget* parent = nullptr);
+    explicit MenuWindow(SoundManager* soundManager, QWidget* parent = nullptr);
     ~MenuWindow();
+    void goToMainMenu() { goToPage(PAGE_MAIN); }
 
 signals:
     void playRequested(int trackIndex);
@@ -32,6 +34,7 @@ private slots:
 
 private:
     QStackedWidget* m_stack;
+    SoundManager* m_soundManager = nullptr;
 
     // Pages
     QWidget* createMainMenuPage();

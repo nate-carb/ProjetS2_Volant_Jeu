@@ -5,13 +5,14 @@
 #include <QPushButton>
 #include "OptionsDialog.h"
 #include "ControlsDialog.h"
+#include "SoundManager.h"
 
 class PauseDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit PauseDialog(QWidget* parent = nullptr);
+    explicit PauseDialog(SoundManager* soundManager = nullptr, QWidget* parent = nullptr);
 
     enum Result {
         RESUME,
@@ -23,5 +24,6 @@ public:
 
 private:
     Result m_result = RESUME;
+    SoundManager* m_soundManager = nullptr;
     QPushButton* createStyledButton(const QString& text);
 };
