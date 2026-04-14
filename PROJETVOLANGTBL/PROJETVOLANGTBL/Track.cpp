@@ -1586,7 +1586,7 @@ void Track::defaultMapList()
     map1.mapName = "nate";
     map1.mapFilePath = "tracks/nate.trk";
     map1.mapThumbnailPath = "thumbnails/track1.png";
-    map1.skyboxFilePath = "/images/skybox/blueSky/cubemap1";
+    map1.skyboxFilePath = "/images/skybox/sky/cubemap1";
 
     map1.groundData.width = 2000.0f;
     map1.groundData.height = 2000.0f;
@@ -1612,7 +1612,7 @@ void Track::defaultMapList()
     map2.mapName = "nate2";
     map2.mapFilePath = "tracks/nate2.trk";
     map2.mapThumbnailPath = "thumbnails/track2.png";
-    map2.skyboxFilePath = "/images/skybox/blueSky/cubemap1";
+    map2.skyboxFilePath = "/images/skybox/sky/cubemap1";
 
     map2.groundData.width = 2000.0f;
     map2.groundData.height = 2000.0f;
@@ -1638,7 +1638,7 @@ void Track::defaultMapList()
     map3.mapName = "TEST1";
     map3.mapFilePath = "tracks/TEST1.trk";
     map3.mapThumbnailPath = "thumbnails/track3.png";
-    map3.skyboxFilePath = "/images/skybox/blueSky/cubemap1";
+    map3.skyboxFilePath = "/images/skybox/space/cubemap1";
 
     map3.groundData.width = 2000.0f;
     map3.groundData.height = 2000.0f;

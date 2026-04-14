@@ -115,9 +115,20 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
         // Convert smoothed yaw back to radians for position calculation
         float smoothAngle = qDegreesToRadians(-m_cameraYaw);
 
-        // Camera position behind and above the car
-        float camOffsetBack = 15.0f;
-        float camHeight = 10.0f;
+        float camOffsetBack = 0.0f;
+        float camHeight = 0.0f;
+
+        if (carCamthird) {
+            // Camera position behind and above the car 3rd person view
+            camOffsetBack = 15.0f;
+            camHeight = 10.0f;
+        }
+        if (!carCamthird) {
+            // Camera first person view
+            camOffsetBack = 0.5f;
+            camHeight = 2.0f;
+        }
+		
 
         float camX = x - camOffsetBack * qCos(smoothAngle);
         float camZ = y - camOffsetBack * qSin(smoothAngle);
@@ -144,6 +155,27 @@ void Track3DViewer::setFirstPersonMode(bool enabled)
     if (m_fpController)
         m_fpController->setEnabled(false); // we drive the camera manually from vehicule data
 }
+
+void Track3DViewer::changeCameraMode()
+{
+    if (carCamthird) {
+        carCamthird = false; // switch to 1st person
+    } else {
+        carCamthird = true; // switch to 3rd person
+	}
+}
+
+bool Track3DViewer::eventFilter(QObject* obj, QEvent* event)
+{
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent* ke = static_cast<QKeyEvent*>(event);
+        if (ke->key() == Qt::Key_V) changeCameraMode();
+    }
+    return QObject::eventFilter(obj, event);
+}
+
+
+
 
 // ─────────────────────────────────────────────
 // Scene setup
@@ -188,7 +220,7 @@ void Track3DViewer::buildScene(Track* track)
     Qt3DRender::QDirectionalLight* backLight = new Qt3DRender::QDirectionalLight(backEntity);
     backLight->setColor(QColor(200, 200, 200)); // neutral grey
 	backLight->setIntensity(0.3f); // rim light old : 0.2f
-    backLight->setWorldDirection(QVector3D(0.0f, 1.0f, 0.0f).normalized()); // from below
+    backLight->setWorldDirection(QVector3D(0.0f, -1.0f, 0.0f).normalized()); // from below
     backEntity->addComponent(backLight);
 
     // ── Car placeholder ──────────────────────────────────────
@@ -214,12 +246,12 @@ void Track3DViewer::buildSkybox(Track* track)
 {
     // Just use QSkyboxEntity - it works in Qt6 with correct path format
     Qt3DExtras::QSkyboxEntity* skybox = new Qt3DExtras::QSkyboxEntity(m_rootEntity);
-    
+
     QString basePath = "file:///" + QDir::currentPath() + track->getCurrentChoixMapData().skyboxFilePath;
     //QString basePath = "file:///" + QDir::currentPath() + "/images/skybox/space/cubemap1";
     basePath.replace("\\", "/"); // fix Windows backslashes
 
-    qDebug() << "Skybox base path:" << basePath;
+    //qDebug() << "Skybox base path:" << basePath;
 
     skybox->setBaseName(basePath);
     skybox->setExtension(".png");
@@ -1328,6 +1360,11 @@ Qt3DCore::QEntity* Track3DViewer::createBox(Qt3DCore::QEntity* parent,
     entity->addComponent(mat);
 
     return entity;
+}
+
+void Track3DViewer::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_V) changeCameraMode();
 }
 
 void Track3DViewer::onUpdateFrame()

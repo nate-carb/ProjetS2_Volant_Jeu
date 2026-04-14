@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QKeyEvent>
 #include <Qt3DExtras/Qt3DWindow>
 #include <Qt3DCore/QEntity>
 #include <Qt3DRender/QCamera>
@@ -46,6 +47,10 @@ public:
 
     // Switch between first-person and orbit (debug) camera
     void setFirstPersonMode(bool enabled);
+	// Switch camera mode 3rd person / 1st person
+	void changeCameraMode(); 
+    bool eventFilter(QObject* obj, QEvent* event) override;
+
 
     
 public slots:
@@ -63,6 +68,10 @@ private:
     float m_cameraYaw = 15.0f;  // current smoothed angle
     float m_cameraLag = 0.35f; // 0.0 = instant, 1.0 = never catches up
     bool m_firstPersonMode = true;
+
+    // Car camera position
+	bool carCamthird = true; // true = 3rd person, false = 1st person
+    
 
 	// Skybox
     Qt3DExtras::QSkyboxEntity* m_skybox = nullptr;
@@ -119,4 +128,7 @@ private:
     HUDOverlay* m_hud = nullptr;
 signals:
     void trackUpdated(Track* track);
+
+protected:
+    void keyPressEvent(QKeyEvent* event) override;
 };

@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <QPixmap>
-#include "Vehicule.h"
 #include <QElapsedTimer>
 #include <QTimer>
 #include <QTime>
@@ -12,6 +11,7 @@
 #include <QPixmap>
 #include <map>
 #include <SoundManager.h>
+#include "Vehicule.h"
 #include "raceTimes.h"
 #include "ArduinoManager.h"
 

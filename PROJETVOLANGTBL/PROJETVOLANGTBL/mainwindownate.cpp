@@ -283,11 +283,14 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         voiture.shiftUp();
             qDebug()<< "helo";
     }
+    
     if (event->key() == Qt::Key_Q) voiture.shiftDown();
     if (event->key() == Qt::Key_F1) {
         DevMenu* devMenu = new DevMenu(&voiture, this);
         devMenu->show(); // non-bloquant, le jeu continue
     }
+	
+    
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
