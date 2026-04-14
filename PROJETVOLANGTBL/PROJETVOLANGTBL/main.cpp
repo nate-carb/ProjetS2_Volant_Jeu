@@ -123,6 +123,7 @@ int main(int argc, char* argv[])
         if (window->isPaused && !pauseDialogOpen) {
             hud->setPaused(true);  // cache la pluie
             pauseDialogOpen = true;
+            window->timer->stop();
             PauseDialog* dlg = new PauseDialog(window->soundManager, container);
             dlg->exec();
 
@@ -148,7 +149,9 @@ int main(int argc, char* argv[])
 
             delete dlg;
             pauseDialogOpen = false;
+            
             hud->setPaused(false);  // remet la pluie
+            if (!window->isPaused) window->timer->start(16);
             return;
         }
 
@@ -166,6 +169,7 @@ int main(int argc, char* argv[])
             if (!reason.isEmpty()) {
                 deathShown = true;
                 window->isPaused = true;
+                window->timer->stop();
                 DeathDialog* dlg = new DeathDialog(reason, container);
                 dlg->exec();
 
@@ -187,6 +191,7 @@ int main(int argc, char* argv[])
 
                 delete dlg;
                 deathShown = false;
+                if (container->isVisible()) window->timer->start(16);
             }
         }
 
@@ -196,6 +201,7 @@ int main(int argc, char* argv[])
         static bool raceEndShown = false;
         if (!raceEndShown && window->raceTimes->isRaceFinished()) {
             raceEndShown = true;
+            window->timer->stop();
             int trackIndex = 0;
             int bestTime = (int)window->raceTimes->getTotalRaceTimeMs();
             RaceEndDialog* dlg = new RaceEndDialog(trackIndex, bestTime, container);

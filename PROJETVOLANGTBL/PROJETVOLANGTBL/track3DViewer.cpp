@@ -47,21 +47,54 @@ void Track3DViewer::setTrack(Track* track)
 {
     m_track = track;
 
-    // Remove old track entity if it exists
-    if (m_trackEntity) {
-        m_trackEntity->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
-        delete m_trackEntity;
-        m_trackEntity = nullptr;
+    // ── 1. Purge complète de la scène précédente ──────────────
+    // Tous les m_*Entity et controllers sont enfants de m_rootEntity.
+    // deleteLater() en cascade tout le sous-arbre Qt3D proprement.
+    defaultFrameGraph()->setEnabled(false);
+    const auto children = m_rootEntity->children();
+    for (QObject* child : children) {
+        child->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
+        delete child;
     }
+
+    // ── 2. Reset des pointeurs (évite dangling pointers) ──────
+    m_orbitController = nullptr;
+    m_fpController = nullptr;
+
+    m_skybox = nullptr;
+    m_skyTransform = nullptr;
+
+    m_trackEntity = nullptr;
+
+    m_carEntity = nullptr;
+    m_carTransform = nullptr;
+
+    m_groundEntity = nullptr;
+
+    // ── 3. Reset des containers ───────────────────────────────
+    m_decorEntities.clear();
+    m_checkpointEntities.clear();
+    m_wallEntities.clear();
+    m_instancedDecorEntities.clear();
+    m_loaderCache.clear();
+
+    // NOTE : ne touche PAS à m_camera — c'est retourné par camera()
+    // depuis Qt3DWindow et n'appartient pas à m_rootEntity.
+    // buildScene() va juste re-configurer sa position/projection.
+
+    // NOTE : ne touche PAS à m_cameraYaw / m_cameraLag /
+    // m_firstPersonMode / carCamthird — ce sont des settings utilisateur.
+
     qDebug() << "setTrack called - checkpoints:" << track->getCheckpoints().size();
 
+    // ── 4. Rebuild ────────────────────────────────────────────
     buildScene(track);
     buildTrackMesh(track);
-	//buildDecors(track);
     buildBezierWalls(track);
-	buildCheckpoints(track);
+    buildCheckpoints(track);
     buildGround(track);
     buildInstancedDecors(track);
+    defaultFrameGraph()->setEnabled(true);
 }
 void Track3DViewer::updateVehicule(Vehicule* vehicule)
 {
