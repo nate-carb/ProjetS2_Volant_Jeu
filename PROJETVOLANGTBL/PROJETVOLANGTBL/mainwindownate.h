@@ -35,6 +35,14 @@ public:
 	PitStop* getPitStop() { return &pitStop; }  
     bool isPaused = false;
 
+    void resetInputs() {
+        keyW = keyA = keyS = keyD = false;
+        keySpace = keyEnter = keyP = false;
+        keyShiftUp = keyShiftDown = false;
+        prevKeyE = prevKeyQ = prevKeyF1 = false;
+        inPitStop = false;
+    }
+
 protected:
     void paintEvent(QPaintEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;

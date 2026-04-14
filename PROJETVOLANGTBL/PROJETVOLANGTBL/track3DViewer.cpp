@@ -47,55 +47,57 @@ void Track3DViewer::setTrack(Track* track)
 {
     m_track = track;
 
-    // ── 1. Purge complète de la scène précédente ──────────────
-    // Tous les m_*Entity et controllers sont enfants de m_rootEntity.
-    // deleteLater() en cascade tout le sous-arbre Qt3D proprement.
-    defaultFrameGraph()->setEnabled(false);
+    // ── 0. Désactiver et détruire les lights EN PREMIER ──────
+    // Les lights sont tracked séparément par le backend Qt3D,
+    // il faut les désenregistrer explicitement avant le reste.
+    auto killLight = [](Qt3DCore::QEntity*& e) {
+        if (!e) return;
+        // Retire tous les components (détache la light du backend)
+        const auto comps = e->components();
+        for (auto* c : comps) e->removeComponent(c);
+        e->setEnabled(false);
+        e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
+        delete e;
+        e = nullptr;
+        };
+    killLight(m_keyLightEntity);
+    killLight(m_fillLightEntity);
+    killLight(m_backLightEntity);
+
+    // ── 1. Purge du reste ─────────────────────────────────────
     const auto children = m_rootEntity->children();
     for (QObject* child : children) {
         child->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
         delete child;
     }
 
-    // ── 2. Reset des pointeurs (évite dangling pointers) ──────
+    // ── 2. Reset pointeurs ────────────────────────────────────
     m_orbitController = nullptr;
     m_fpController = nullptr;
-
     m_skybox = nullptr;
     m_skyTransform = nullptr;
-
     m_trackEntity = nullptr;
-
     m_carEntity = nullptr;
     m_carTransform = nullptr;
-
     m_groundEntity = nullptr;
 
-    // ── 3. Reset des containers ───────────────────────────────
+    // ── 3. Reset containers ───────────────────────────────────
     m_decorEntities.clear();
     m_checkpointEntities.clear();
     m_wallEntities.clear();
     m_instancedDecorEntities.clear();
     m_loaderCache.clear();
 
-    // NOTE : ne touche PAS à m_camera — c'est retourné par camera()
-    // depuis Qt3DWindow et n'appartient pas à m_rootEntity.
-    // buildScene() va juste re-configurer sa position/projection.
-
-    // NOTE : ne touche PAS à m_cameraYaw / m_cameraLag /
-    // m_firstPersonMode / carCamthird — ce sont des settings utilisateur.
-
     qDebug() << "setTrack called - checkpoints:" << track->getCheckpoints().size();
 
-    // ── 4. Rebuild ────────────────────────────────────────────
     buildScene(track);
     buildTrackMesh(track);
     buildBezierWalls(track);
     buildCheckpoints(track);
     buildGround(track);
     buildInstancedDecors(track);
-    defaultFrameGraph()->setEnabled(true);
 }
+
 void Track3DViewer::updateVehicule(Vehicule* vehicule)
 {
     m_vehicule = vehicule;
@@ -233,28 +235,28 @@ void Track3DViewer::buildScene(Track* track)
     m_orbitController->setEnabled(!m_firstPersonMode);
 
     // ── Key light (sun) - top right front ────────────────────
-    Qt3DCore::QEntity* keyEntity = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DRender::QDirectionalLight* keyLight = new Qt3DRender::QDirectionalLight(keyEntity);
+    m_keyLightEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* keyLight = new Qt3DRender::QDirectionalLight(m_keyLightEntity);
     keyLight->setColor(QColor(255, 250, 240)); // warm white
 	keyLight->setIntensity(0.4f); // main light old : 0.6f
     keyLight->setWorldDirection(QVector3D(-1.0f, -1.0f, 0.0).normalized());
-    keyEntity->addComponent(keyLight);
+    m_keyLightEntity->addComponent(keyLight);
 
     // ── Fill light - top left back ────────────────────────────
-    Qt3DCore::QEntity* fillEntity = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DRender::QDirectionalLight* fillLight = new Qt3DRender::QDirectionalLight(fillEntity);
+    m_fillLightEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* fillLight = new Qt3DRender::QDirectionalLight(m_fillLightEntity);
     fillLight->setColor(QColor(150, 170, 255)); // cool blue fill
 	fillLight->setIntensity(0.4f); // secondary light old : 0.3f
     fillLight->setWorldDirection(QVector3D(1.0f, -0.5f, 1.0f).normalized());
-    fillEntity->addComponent(fillLight);
+    m_fillLightEntity->addComponent(fillLight);
 
     // ── Back light - bottom up ────────────────────────────────
-    Qt3DCore::QEntity* backEntity = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DRender::QDirectionalLight* backLight = new Qt3DRender::QDirectionalLight(backEntity);
+    m_backLightEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* backLight = new Qt3DRender::QDirectionalLight(m_backLightEntity);
     backLight->setColor(QColor(200, 200, 200)); // neutral grey
 	backLight->setIntensity(0.3f); // rim light old : 0.2f
     backLight->setWorldDirection(QVector3D(0.0f, -1.0f, 0.0f).normalized()); // from below
-    backEntity->addComponent(backLight);
+    m_backLightEntity->addComponent(backLight);
 
     // ── Car placeholder ──────────────────────────────────────
     buildCar();

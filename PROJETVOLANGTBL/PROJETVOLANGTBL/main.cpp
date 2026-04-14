@@ -61,6 +61,33 @@ int main(int argc, char* argv[])
     hud->setAttribute(Qt::WA_TranslucentBackground);
     hud->setAttribute(Qt::WA_ShowWithoutActivating);
 
+    auto resetGame = [=]() {
+        // ── 1. Arrêter les timers ─────────────────────────────
+        window->timer->stop();
+        if (window->weatherTimer) window->weatherTimer->stop();
+        window->resetInputs();
+
+
+        // ── 2. Cacher le rendu et le HUD ──────────────────────
+        container->hide();
+        hud->hide();
+
+        // ── 3. Reset état voiture et course ───────────────────
+        window->voiture = Vehicule();
+        window->raceTimes->resetRace();
+        window->isPaused = false;
+        window->currentWeather = Vehicule::SUNNY;
+
+        // ── 4. Reset pit stop ─────────────────────────────────
+        window->pitStop = PitStop();   // ou window->pitStop.reset() si la méthode existe
+
+        // ── 5. Retour au menu ─────────────────────────────────
+        menu->goToMainMenu();
+        menu->show();
+        };
+
+
+
     // ===== QUAND PLAY EST CLIQUÉ =====
     QObject::connect(menu, &MenuWindow::playRequested, [=](int trackIndex) {
         menu->hide();
@@ -138,13 +165,14 @@ int main(int argc, char* argv[])
                 window->raceTimes->resetRace();
             }
             else if (result == PauseDialog::MAIN_MENU) {
-                window->isPaused = false;
-                container->hide();
-                hud->hide();
-                menu->goToMainMenu();
-                menu->show();
-                window->voiture = Vehicule();
-                window->raceTimes->resetRace();
+                //window->isPaused = false;
+                //container->hide();
+                //hud->hide();
+                //menu->goToMainMenu();
+                //menu->show();
+                //window->voiture = Vehicule();
+                //window->raceTimes->resetRace();
+                resetGame();
             }
 
             delete dlg;
@@ -178,15 +206,17 @@ int main(int argc, char* argv[])
                     window->isPaused = false;
                     window->voiture = Vehicule();
                     window->raceTimes->resetRace();
+                    
                 }
                 else {
-                    window->isPaused = false;
-                    container->hide();
-                    hud->hide();
-                    menu->goToMainMenu();
-                    menu->show();
-                    window->voiture = Vehicule();
-                    window->raceTimes->resetRace();
+                    resetGame();
+                    //window->isPaused = false;
+                    //container->hide();
+                    //hud->hide();
+                    //menu->goToMainMenu();
+                    //menu->show();
+                    //window->voiture = Vehicule();
+                    //window->raceTimes->resetRace();
                 }
 
                 delete dlg;
@@ -208,11 +238,12 @@ int main(int argc, char* argv[])
             dlg->exec();
 
             // Retour au menu principal
-            container->hide();
-            hud->hide();
-            menu->show();
-            window->voiture = Vehicule();
-            window->raceTimes->resetRace();
+            //container->hide();
+            //hud->hide();
+            //menu->show();
+            //window->voiture = Vehicule();
+            //window->raceTimes->resetRace();
+            resetGame();
 
             raceEndShown = false;
         }

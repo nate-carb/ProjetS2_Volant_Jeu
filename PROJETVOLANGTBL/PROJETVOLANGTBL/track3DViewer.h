@@ -57,6 +57,12 @@ public slots:
     void onUpdateFrame();
 
 private:
+    // Lights
+    Qt3DCore::QEntity* m_keyLightEntity = nullptr;
+    Qt3DCore::QEntity* m_fillLightEntity = nullptr;
+    Qt3DCore::QEntity* m_backLightEntity = nullptr;
+
+
     // Scene root
     Qt3DCore::QEntity* m_rootEntity = nullptr;
 
