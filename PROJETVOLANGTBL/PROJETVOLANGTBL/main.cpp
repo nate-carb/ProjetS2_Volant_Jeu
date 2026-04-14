@@ -34,6 +34,13 @@ int main(int argc, char* argv[])
 
     // ===== JEU (créé mais caché) =====
     MainWindow* window = new MainWindow();
+    QTimer::singleShot(4000, window, [window]() {   // ← attente 4 secondes
+        bool baseOk = window->arduino->connectBase("\\\\.\\COM3");
+        bool wheelOk = window->arduino->connectWheel("\\\\.\\COM5");
+        qDebug() << "Base connectee:" << baseOk;
+        qDebug() << "Wheel connectee:" << wheelOk;
+        });
+    
 
     // ===== MENU =====
     MenuWindow* menu = new MenuWindow(window->soundManager);
@@ -134,6 +141,7 @@ int main(int argc, char* argv[])
         container->setFocus();
         hud->show();
 
+		window->arduino->update(); // update Arduino state once before starting the game loop - flush data
         window->timer->start(16);  // start game loop AFTER everything is ready
         });
 

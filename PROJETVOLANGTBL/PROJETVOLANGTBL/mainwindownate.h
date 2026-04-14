@@ -22,6 +22,7 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
+    ArduinoManager* arduino = nullptr; // comm arduino
     QTimer* timer;
     Vehicule voiture;
     Track* track = nullptr;
@@ -63,7 +64,6 @@ private slots:
     void changeWeather();
 
 private:
-    ArduinoManager* arduino = nullptr; // comm arduino
 
     QPixmap image;  // Ton image PNG
     float imageX;     // Position X

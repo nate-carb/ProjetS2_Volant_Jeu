@@ -44,6 +44,9 @@ SerialPort::SerialPort(const char *portName, int BAUD)
             dcbSerialParameters.StopBits = ONESTOPBIT;
             dcbSerialParameters.Parity = NOPARITY;
             dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
+            //dcbSerialParameters.fDtrControl = DTR_CONTROL_DISABLE;
+            //dcbSerialParameters.fRtsControl = RTS_CONTROL_DISABLE;
+
             
 
             if (!SetCommState(handler, &dcbSerialParameters))
@@ -114,6 +117,8 @@ bool SerialPort::writeSerialPort(const char *buffer, unsigned int buf_size)
     
     return true;
 }
+
+
 
 // Checking if serial port is connected
 bool SerialPort::isConnected()

@@ -128,6 +128,7 @@ void ArduinoManager::sendToWheel(float rpm, float maxRpm, int gear,
 bool ArduinoManager::SendToSerial(SerialPort* port, json j_msg)
 {
     std::string msg = j_msg.dump();
+	qDebug() << "Sending to wheel:" << QString::fromStdString(msg);
     return port->writeSerialPort(msg.c_str(), msg.length());
 }
 

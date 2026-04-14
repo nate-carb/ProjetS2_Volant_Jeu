@@ -47,6 +47,10 @@ public:
     ArduinoWheelData getWheelData() const { return wheelData; }
     bool prevPaddleUp = false;
     bool prevPaddleDown = false;
+	bool prevtl = false;
+	bool prevtr = false;
+	bool prevbl = false;
+	bool prevbr = false;
 
 private:
     SerialPort* basePort = nullptr;

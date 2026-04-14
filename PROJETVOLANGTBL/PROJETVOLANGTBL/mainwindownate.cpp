@@ -11,7 +11,7 @@
 #include <QPainterPath>
 #include <devmenu.h>
 #include <windows.h>
-
+// 
 
 const float PIXELS_PER_METER = 5.0f;
 
@@ -78,12 +78,12 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Instead, at the end of the constructor, add:
     arduino = new ArduinoManager();
-    QTimer::singleShot(4000, this, [this]() {
-        bool baseOk = arduino->connectBase("\\\\.\\COM16");
-        bool wheelOk = arduino->connectWheel("\\\\.\\COM15");
-        qDebug() << "Base connectee:" << baseOk;
-        qDebug() << "Wheel connectee:" << wheelOk;
-        });
+//    QTimer::singleShot(4000, this, [this]() {
+//        bool baseOk = arduino->connectBase("\\\\.\\COM3");
+//        bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
+//        qDebug() << "Base connectee:" << baseOk;
+//        qDebug() << "Wheel connectee:" << wheelOk;
+//        });
 }
 
 MainWindow::~MainWindow()
@@ -308,11 +308,13 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 void MainWindow::gameLoop()
 {
 
+    // ──── Toujours vider le buffer arduino, même sans map ────
+    arduino->update();
+
 	//wait for track to load before doing anything
     if (!track || track->getCenterLine().empty() || track->getCheckpoints().empty()) return;
     //---------- Info Arduino -------------
-    // Lire Arduino
-    arduino->update();
+    
 
     // Utiliser les données
     ArduinoBaseData  base = arduino->getBaseData();
@@ -359,19 +361,21 @@ void MainWindow::gameLoop()
 
 
 	// ===== INPUTS CLAVIERS =====
-    voiture.setAccel(keyW ? 1.0f : 0.0f);
-    voiture.setBreaking(keyS ? 1.0f : 0.0f);
-    voiture.setBoosting(keySpace);
+    //voiture.setAccel(keyW ? 1.0f : 0.0f);
+    //voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    //voiture.setBoosting(keySpace);
 
-    if (keyA && !keyD) voiture.setSteering(-1.0f);
-    else if (keyD && !keyA) voiture.setSteering(1.0f);
-    else voiture.setSteering(0.0f);
+    //if (keyA && !keyD) voiture.setSteering(-1.0f);
+    //else if (keyD && !keyA) voiture.setSteering(1.0f);
+    //else voiture.setSteering(0.0f);
     
 	// ===== INPUTS WHEEL =====
-    //voiture.setAccel(base.gas);
-    //voiture.setBreaking(base.brake);
-    //voiture.setSteering(base.pos);
-
+    voiture.setAccel(base.gas);
+    voiture.setBreaking(base.brake);
+    voiture.setSteering(base.pos);
+    voiture.setBoosting(wheelData.switchTL);
+    // mettre en sorte que tr est pause, bl est changer vue et br est sortir pitstop
+    // encodeur 1 = scrool leaderboard et encodeur 2 = changer volume, joystick = menu
     //voiture.setAccel(wheelData.switchTR ? 1.0f : 0.0f);
     //voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);
    
@@ -416,7 +420,7 @@ void MainWindow::gameLoop()
 	// ===== SON =====
     soundManager->updateEngine(voiture.getRpm(), voiture.getMaxRpm(), voiture.is_on_grass);
     soundManager->playBrake(keyS, voiture.getSpeed());
-    soundManager->playNos(keySpace && voiture.getNos() > 0);
+    soundManager->playNos(wheelData.switchTL && voiture.getNos() > 0);
     soundManager->playGrass(voiture.is_on_grass);
 
     // Envoi vers Arduino à 20Hz
