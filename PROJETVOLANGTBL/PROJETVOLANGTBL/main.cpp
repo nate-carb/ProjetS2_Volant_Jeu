@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
         //container->setWindowTitle("Racing Game 3D");
         container->setFocusPolicy(Qt::StrongFocus);
         container->installEventFilter(window);
-        container->showFullScreen();
+        container->show();
         container->setFocus();
         hud->show();
 

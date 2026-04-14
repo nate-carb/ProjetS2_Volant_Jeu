@@ -71,7 +71,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(timer, &QTimer::timeout, this, &MainWindow::gameLoop);
 
     // DÉMARRE le timer - déclenche toutes les 10ms (~100 fois par seconde 100Hz)
-    timer->start(10);  // 10 millisecondes ? 100 fois par seconde 100Hz
+    //timer->start(10);  // 10 millisecondes ? 100 fois par seconde 100Hz
 
 
     lastFrameTime = QTime::currentTime();
