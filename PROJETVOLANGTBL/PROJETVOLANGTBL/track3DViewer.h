@@ -59,6 +59,8 @@ public slots:
 private:
     // Scene root
     Qt3DCore::QEntity* m_rootEntity = nullptr;
+    // Sub-root recreated at every setTrack() — holds EVERYTHING built per-race
+    Qt3DCore::QEntity* m_sceneRoot = nullptr;
 
     // Camera
     Qt3DRender::QCamera* m_camera = nullptr;
@@ -110,6 +112,8 @@ private:
     void buildDecors(Track* track);
     void buildGround(Track* track);
     void buildCheckpoints(Track* track);
+    void buildLights();      
+    bool m_lightsBuilt = false;
 
     // decors instance
     QVector<Qt3DCore::QEntity*> m_instancedDecorEntities;

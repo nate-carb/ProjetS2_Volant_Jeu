@@ -61,6 +61,33 @@ int main(int argc, char* argv[])
     hud->setAttribute(Qt::WA_TranslucentBackground);
     hud->setAttribute(Qt::WA_ShowWithoutActivating);
 
+    auto resetGame = [=]() {
+        // ── 1. Arrêter les timers ─────────────────────────────
+        window->timer->stop();
+        if (window->weatherTimer) window->weatherTimer->stop();
+        window->resetInputs();
+
+
+        // ── 2. Cacher le rendu et le HUD ──────────────────────
+        container->hide();
+        hud->hide();
+
+        // ── 3. Reset état voiture et course ───────────────────
+        window->voiture = Vehicule();
+        window->raceTimes->resetRace();
+        window->isPaused = false;
+        window->currentWeather = Vehicule::SUNNY;
+
+        // ── 4. Reset pit stop ─────────────────────────────────
+        window->pitStop = PitStop();   // ou window->pitStop.reset() si la méthode existe
+
+        // ── 5. Retour au menu ─────────────────────────────────
+        menu->goToMainMenu();
+        menu->show();
+        };
+
+
+
     // ===== QUAND PLAY EST CLIQUÉ =====
     QObject::connect(menu, &MenuWindow::playRequested, [=](int trackIndex) {
         menu->hide();
@@ -123,6 +150,7 @@ int main(int argc, char* argv[])
         if (window->isPaused && !pauseDialogOpen) {
             hud->setPaused(true);  // cache la pluie
             pauseDialogOpen = true;
+            window->timer->stop();
             PauseDialog* dlg = new PauseDialog(window->soundManager, container);
             dlg->exec();
 
@@ -137,18 +165,21 @@ int main(int argc, char* argv[])
                 window->raceTimes->resetRace();
             }
             else if (result == PauseDialog::MAIN_MENU) {
-                window->isPaused = false;
-                container->hide();
-                hud->hide();
-                menu->goToMainMenu();
-                menu->show();
-                window->voiture = Vehicule();
-                window->raceTimes->resetRace();
+                //window->isPaused = false;
+                //container->hide();
+                //hud->hide();
+                //menu->goToMainMenu();
+                //menu->show();
+                //window->voiture = Vehicule();
+                //window->raceTimes->resetRace();
+                resetGame();
             }
 
             delete dlg;
             pauseDialogOpen = false;
+            
             hud->setPaused(false);  // remet la pluie
+            if (!window->isPaused) window->timer->start(16);
             return;
         }
 
@@ -166,6 +197,7 @@ int main(int argc, char* argv[])
             if (!reason.isEmpty()) {
                 deathShown = true;
                 window->isPaused = true;
+                window->timer->stop();
                 DeathDialog* dlg = new DeathDialog(reason, container);
                 dlg->exec();
 
@@ -174,19 +206,22 @@ int main(int argc, char* argv[])
                     window->isPaused = false;
                     window->voiture = Vehicule();
                     window->raceTimes->resetRace();
+                    
                 }
                 else {
-                    window->isPaused = false;
-                    container->hide();
-                    hud->hide();
-                    menu->goToMainMenu();
-                    menu->show();
-                    window->voiture = Vehicule();
-                    window->raceTimes->resetRace();
+                    resetGame();
+                    //window->isPaused = false;
+                    //container->hide();
+                    //hud->hide();
+                    //menu->goToMainMenu();
+                    //menu->show();
+                    //window->voiture = Vehicule();
+                    //window->raceTimes->resetRace();
                 }
 
                 delete dlg;
                 deathShown = false;
+                if (container->isVisible()) window->timer->start(16);
             }
         }
 
@@ -196,17 +231,19 @@ int main(int argc, char* argv[])
         static bool raceEndShown = false;
         if (!raceEndShown && window->raceTimes->isRaceFinished()) {
             raceEndShown = true;
+            window->timer->stop();
             int trackIndex = 0;
             int bestTime = (int)window->raceTimes->getTotalRaceTimeMs();
             RaceEndDialog* dlg = new RaceEndDialog(trackIndex, bestTime, container);
             dlg->exec();
 
             // Retour au menu principal
-            container->hide();
-            hud->hide();
-            menu->show();
-            window->voiture = Vehicule();
-            window->raceTimes->resetRace();
+            //container->hide();
+            //hud->hide();
+            //menu->show();
+            //window->voiture = Vehicule();
+            //window->raceTimes->resetRace();
+            resetGame();
 
             raceEndShown = false;
         }

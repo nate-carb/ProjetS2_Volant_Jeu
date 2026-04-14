@@ -32,22 +32,23 @@ AnimatedButton::AnimatedButton(const QString& text, QWidget* parent)
     setCursor(Qt::PointingHandCursor);
 
     m_pulseTimer = new QTimer(this);
-    m_pulseTimer->setInterval(16);  // ~60fps
+    m_pulseTimer->setInterval(33);  // ~60fps
     connect(m_pulseTimer, &QTimer::timeout, this, &AnimatedButton::onPulse);
 }
 
-void AnimatedButton::enterEvent(QEnterEvent* event)
-{
+void AnimatedButton::enterEvent(QEnterEvent* event) {
+    if (!graphicsEffect()) setGraphicsEffect(m_shadow);
     m_hovered = true;
     m_pulseTimer->start();
     QPushButton::enterEvent(event);
 }
 
-void AnimatedButton::leaveEvent(QEvent* event)
-{
+void AnimatedButton::leaveEvent(QEvent* event) {
     m_hovered = false;
     QPushButton::leaveEvent(event);
+    // Le pulse fait le fade-out puis arrête le timer + retire l'effet
 }
+
 
 void AnimatedButton::onPulse()
 {
@@ -71,7 +72,7 @@ void AnimatedButton::onPulse()
             m_pulseTimer->stop();
         }
     }
-    m_shadow->setBlurRadius(m_glowAlpha * 120.0f);
+    m_shadow->setBlurRadius(m_glowAlpha * 25.0f); // 120.0f
     m_shadow->setColor(QColor(0, 200, 255, int(m_glowAlpha * 255)));
 }
 

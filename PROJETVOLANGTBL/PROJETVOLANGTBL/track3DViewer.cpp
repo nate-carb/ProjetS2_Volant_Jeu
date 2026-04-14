@@ -47,12 +47,32 @@ void Track3DViewer::setTrack(Track* track)
 {
     m_track = track;
 
-    // Remove old track entity if it exists
-    if (m_trackEntity) {
-        m_trackEntity->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
-        delete m_trackEntity;
-        m_trackEntity = nullptr;
+    // ── Destroy previous scene atomically ─────────────────
+    if (m_sceneRoot) {
+        m_sceneRoot->setEnabled(false);
+        m_sceneRoot->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
+        delete m_sceneRoot;
+        m_sceneRoot = nullptr;
     }
+
+    // Reset all pointers — they referenced nodes inside the old sceneRoot
+    m_orbitController = nullptr;
+    m_fpController    = nullptr;
+    m_skybox          = nullptr;
+    m_skyTransform    = nullptr;
+    m_trackEntity     = nullptr;
+    m_carEntity       = nullptr;
+    m_carTransform    = nullptr;
+    m_groundEntity    = nullptr;
+    m_decorEntities.clear();
+    m_checkpointEntities.clear();
+    m_wallEntities.clear();
+    m_instancedDecorEntities.clear();
+    m_loaderCache.clear();
+
+    // Fresh scene subtree
+    m_sceneRoot = new Qt3DCore::QEntity(m_rootEntity);
+
     qDebug() << "setTrack called - checkpoints:" << track->getCheckpoints().size();
 
     buildScene(track);
@@ -193,35 +213,13 @@ void Track3DViewer::buildScene(Track* track)
 	m_camera->setUpVector(QVector3D(0, 1, 0)); // Y is up QVector3d(x, y, z)
 
     // ── Orbit controller (useful for debug / top-down view) ──
-    m_orbitController = new Qt3DExtras::QOrbitCameraController(m_rootEntity);
+    m_orbitController = new Qt3DExtras::QOrbitCameraController(m_sceneRoot);
     m_orbitController->setCamera(m_camera);
     m_orbitController->setLinearSpeed(300.0f);
     m_orbitController->setLookSpeed(180.0f);
     m_orbitController->setEnabled(!m_firstPersonMode);
 
-    // ── Key light (sun) - top right front ────────────────────
-    Qt3DCore::QEntity* keyEntity = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DRender::QDirectionalLight* keyLight = new Qt3DRender::QDirectionalLight(keyEntity);
-    keyLight->setColor(QColor(255, 250, 240)); // warm white
-	keyLight->setIntensity(0.4f); // main light old : 0.6f
-    keyLight->setWorldDirection(QVector3D(-1.0f, -1.0f, 0.0).normalized());
-    keyEntity->addComponent(keyLight);
-
-    // ── Fill light - top left back ────────────────────────────
-    Qt3DCore::QEntity* fillEntity = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DRender::QDirectionalLight* fillLight = new Qt3DRender::QDirectionalLight(fillEntity);
-    fillLight->setColor(QColor(150, 170, 255)); // cool blue fill
-	fillLight->setIntensity(0.4f); // secondary light old : 0.3f
-    fillLight->setWorldDirection(QVector3D(1.0f, -0.5f, 1.0f).normalized());
-    fillEntity->addComponent(fillLight);
-
-    // ── Back light - bottom up ────────────────────────────────
-    Qt3DCore::QEntity* backEntity = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DRender::QDirectionalLight* backLight = new Qt3DRender::QDirectionalLight(backEntity);
-    backLight->setColor(QColor(200, 200, 200)); // neutral grey
-	backLight->setIntensity(0.3f); // rim light old : 0.2f
-    backLight->setWorldDirection(QVector3D(0.0f, -1.0f, 0.0f).normalized()); // from below
-    backEntity->addComponent(backLight);
+    buildLights();
 
     // ── Car placeholder ──────────────────────────────────────
     buildCar();
@@ -237,7 +235,36 @@ void Track3DViewer::buildScene(Track* track)
         qDebug() << "FilterKey:" << k->name() << "=" << k->value();
 }
 
+void Track3DViewer::buildLights()
+{
+    if (m_lightsBuilt) return;
 
+    // ── Key light (sun) - top right front ────────────────────
+    Qt3DCore::QEntity* keyEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* keyLight = new Qt3DRender::QDirectionalLight(keyEntity);
+    keyLight->setColor(QColor(255, 250, 240)); // warm white
+    keyLight->setIntensity(0.4f); // main light old : 0.6f
+    keyLight->setWorldDirection(QVector3D(-1.0f, -1.0f, 0.0).normalized());
+    keyEntity->addComponent(keyLight);
+
+    // ── Fill light - top left back ────────────────────────────
+    Qt3DCore::QEntity* fillEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* fillLight = new Qt3DRender::QDirectionalLight(fillEntity);
+    fillLight->setColor(QColor(150, 170, 255)); // cool blue fill
+    fillLight->setIntensity(0.4f); // secondary light old : 0.3f
+    fillLight->setWorldDirection(QVector3D(1.0f, -0.5f, 1.0f).normalized());
+    fillEntity->addComponent(fillLight);
+
+    // ── Back light - bottom up ────────────────────────────────
+    Qt3DCore::QEntity* backEntity = new Qt3DCore::QEntity(m_rootEntity);
+    Qt3DRender::QDirectionalLight* backLight = new Qt3DRender::QDirectionalLight(backEntity);
+    backLight->setColor(QColor(200, 200, 200)); // neutral grey
+    backLight->setIntensity(0.3f); // rim light old : 0.2f
+    backLight->setWorldDirection(QVector3D(0.0f, -1.0f, 0.0f).normalized()); // from below
+    backEntity->addComponent(backLight);
+
+    m_lightsBuilt = true;
+}
 // ─────────────────────────────────────────────
 // Skybox setup
 // ─────────────────────────────────────────────
@@ -245,7 +272,7 @@ void Track3DViewer::buildScene(Track* track)
 void Track3DViewer::buildSkybox(Track* track)
 {
     // Just use QSkyboxEntity - it works in Qt6 with correct path format
-    Qt3DExtras::QSkyboxEntity* skybox = new Qt3DExtras::QSkyboxEntity(m_rootEntity);
+    Qt3DExtras::QSkyboxEntity* skybox = new Qt3DExtras::QSkyboxEntity(m_sceneRoot);
 
     QString basePath = "file:///" + QDir::currentPath() + track->getCurrentChoixMapData().skyboxFilePath;
     //QString basePath = "file:///" + QDir::currentPath() + "/images/skybox/space/cubemap1";
@@ -325,7 +352,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
     }
     qDebug() << "Track mesh built with" << n << "segments.";
     // ── Qt3D geometry objects ────────────────────────────────
-    m_trackEntity = new Qt3DCore::QEntity(m_rootEntity);
+    m_trackEntity = new Qt3DCore::QEntity(m_sceneRoot);
 
 	// Geometry renderer links the geometry to the entity and specifies how to render it
     Qt3DRender::QGeometryRenderer* renderer = new Qt3DRender::QGeometryRenderer(m_trackEntity);
@@ -488,7 +515,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
             QVector<quint32>& idx, QColor color) {
                 if (verts.isEmpty()) return;
 
-                Qt3DCore::QEntity* entity = new Qt3DCore::QEntity(m_rootEntity);
+                Qt3DCore::QEntity* entity = new Qt3DCore::QEntity(m_sceneRoot);
                 Qt3DRender::QGeometryRenderer* renderer = new Qt3DRender::QGeometryRenderer(entity);
                 Qt3DCore::QGeometry* geom = new Qt3DCore::QGeometry(renderer);
 
@@ -600,7 +627,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
                 idx << l1 << r1 << r0;
             }
 
-            Qt3DCore::QEntity* pitEntity = new Qt3DCore::QEntity(m_rootEntity);
+            Qt3DCore::QEntity* pitEntity = new Qt3DCore::QEntity(m_sceneRoot);
             Qt3DRender::QGeometryRenderer* pitRenderer = new Qt3DRender::QGeometryRenderer(pitEntity);
             Qt3DCore::QGeometry* pitGeom = new Qt3DCore::QGeometry(pitRenderer);
 
@@ -743,7 +770,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
                 QVector<quint32> idx = { 0, 2, 1,  0, 3, 2 };
 
 
-                Qt3DCore::QEntity* boxEntity = new Qt3DCore::QEntity(m_rootEntity);
+                Qt3DCore::QEntity* boxEntity = new Qt3DCore::QEntity(m_sceneRoot);
                 Qt3DRender::QGeometryRenderer* renderer = new Qt3DRender::QGeometryRenderer(boxEntity);
                 Qt3DCore::QGeometry* geom = new Qt3DCore::QGeometry(renderer);
 
@@ -835,7 +862,7 @@ void Track3DViewer::buildGround(Track* track)
     
 
 
-    m_groundEntity = new Qt3DCore::QEntity(m_rootEntity);
+    m_groundEntity = new Qt3DCore::QEntity(m_sceneRoot);
 
 	//  Create a large plane mesh for the ground
     Qt3DExtras::QPlaneMesh* planeMesh = new Qt3DExtras::QPlaneMesh();
@@ -899,7 +926,7 @@ void Track3DViewer::buildCheckpoints(Track* track)
     for (int i = 0; i < (int)cps.size(); i++) {
         const CheckpointData& cp = cps[i];
         
-        Qt3DCore::QEntity* cpEntity = new Qt3DCore::QEntity(m_rootEntity);
+        Qt3DCore::QEntity* cpEntity = new Qt3DCore::QEntity(m_sceneRoot);
 
         // Position at center between left and right edge
         QVector2D center2D = (cp.left + cp.right) / 2.0f;
@@ -988,7 +1015,7 @@ void Track3DViewer::buildCheckpoints(Track* track)
 void Track3DViewer::buildCar()
 {
     // Parent entity - holds per-frame position/rotation
-    m_carEntity = new Qt3DCore::QEntity(m_rootEntity);
+    m_carEntity = new Qt3DCore::QEntity(m_sceneRoot);
     m_carTransform = new Qt3DCore::QTransform(m_carEntity);
     m_carTransform->setTranslation(QVector3D(0, 5.0f, 0));
     m_carEntity->addComponent(m_carTransform);
@@ -1065,7 +1092,7 @@ void Track3DViewer::buildDecors(Track* track)
         if (!decor) continue;
 
         // Parent entity for this decor - holds position/rotation
-        Qt3DCore::QEntity* decorEntity = new Qt3DCore::QEntity(m_rootEntity);
+        Qt3DCore::QEntity* decorEntity = new Qt3DCore::QEntity(m_sceneRoot);
 
         // Transform: position from 2D world (x,y) → 3D (x, 0, y)
         Qt3DCore::QTransform* decorTransform = new Qt3DCore::QTransform(decorEntity);
@@ -1196,7 +1223,7 @@ void Track3DViewer::buildBezierWalls(Track* track)
             QVector3D center = (p0 + p1) / 2.0f;
 
             // ── Create wall entity ───────────────────────────
-            Qt3DCore::QEntity* wallEntity = new Qt3DCore::QEntity(m_rootEntity);
+            Qt3DCore::QEntity* wallEntity = new Qt3DCore::QEntity(m_sceneRoot);
 
             Qt3DCore::QTransform* wallTransform = new Qt3DCore::QTransform(wallEntity);
 
@@ -1317,7 +1344,7 @@ void Track3DViewer::buildInstancedDecors(Track* track)
         }
 
         Qt3DCore::QEntity* e = MeshInstance::buildFromList(
-            meshList, transforms, m_rootEntity);
+            meshList, transforms, m_sceneRoot);
 
         if (e) m_instancedDecorEntities.push_back(e);
     }
