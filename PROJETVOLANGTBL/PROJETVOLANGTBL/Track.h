@@ -65,6 +65,7 @@ struct GroundRenderingData {
 	float width;
 	float height;
 	QString texturePath;
+	QColor ambientColor;
 };
 
 struct KerbRenderingData {
@@ -83,6 +84,7 @@ struct TrackRenderingData {
 	QColor trackColor;
 	KerbRenderingData kerbData;
 	QString trackTexturePath;
+	QColor ambientColor;
 };
 
 struct ChoixMapData {
@@ -323,6 +325,8 @@ public:
 	bool isVector2DOnTrack(const QVector2D& point) const;
 
 	bool isVector2DOnPitLane(const QVector2D& point, bool onTrack) const;
+
+	float getStartAngle() const { return startAngle; };
 
 	float getTrackWidth() const { return trackWidth; };
 	void setTrackWidth(float w) { trackWidth = w; }

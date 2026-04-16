@@ -416,7 +416,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
         QDir::currentPath() + track->getCurrentChoixMapData().trackData.trackTexturePath));
 
     material->diffuse()->addTextureImage(trackTex);
-    material->setAmbient(QColor(80, 80, 80)); // QColor(40, 40, 40)
+    material->setAmbient(track->getCurrentChoixMapData().trackData.ambientColor); // QColor(80, 80, 80)
     material->setSpecular(QColor(0, 0, 0));
     material->setShininess(0.0f);
     material->setTextureScale(1.0f);  // répétitions le long de la piste — ajuste au goût
@@ -895,7 +895,7 @@ void Track3DViewer::buildGround(Track* track)
     //grassTex->setSource(QUrl::fromLocalFile(
     //    QDir::currentPath() + "/images/Cartoon_green_texture_grass.jpg"));
     grassMat->diffuse()->addTextureImage(grassTex);
-    grassMat->setAmbient(QColor(80, 200, 80));   // tints shadowed areas green
+    grassMat->setAmbient(track->getCurrentChoixMapData().groundData.ambientColor);   // tints shadowed areas green QColor(80, 200, 80)
     grassMat->setSpecular(QColor(0, 0, 0));
     grassMat->setShininess(0.0f);
     // Texture tiling — higher = more repeats across the ground plane

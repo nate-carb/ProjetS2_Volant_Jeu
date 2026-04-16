@@ -1004,6 +1004,11 @@ void Track::buildFromSegments()
     //qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
     //    << trackEdges.left.size() << "left edge points";
 
+    // For segment-based tracks recompute startAngle from the actual centerline
+    if (!trackSegments.empty() && centerLine.size() >= 2) {
+        QVector2D dir = (centerLine[1] - centerLine[0]).normalized();
+        startAngle = qRadiansToDegrees(atan2f(dir.y(), dir.x()));
+    }
     
 }
 void Track::setCurrentChoixMapData(QString mapName)
@@ -1530,12 +1535,14 @@ bool Track::loadFromFile(const std::string& filename)
 	decors = loadedDecors;
 	
     trackWidth = loadedTrackWidth;
-    startAngle = loadedStartAngle;
-    currentAngle = startAngle;
+    // Use the saved angle only as the initial heading for piece-based construction.
+    // For segment-based tracks, startAngle will be recomputed from the geometry below.
+    currentAngle = loadedStartAngle;
     currentPos = QVector2D(0, 0);
 
     if (!piecesIntList.empty()) {
         // Piece-based track - rebuild from pieces
+        startAngle = loadedStartAngle;
         centerLine.clear();
         centerLine.push_back(currentPos);
         for (int pieceId : piecesIntList)
@@ -1544,12 +1551,20 @@ bool Track::loadFromFile(const std::string& filename)
         closeTrack();
     }
     else if (!trackSegments.empty()) {
-        // Segment-based track - already built during parsing
-        // just close it
+        // Segment-based track - already built during TRACK_SEGMENTS parsing.
+        // buildFromSegments() already set startAngle from the real geometry.
         closeTrack();
     }
 
-    std::cout << "Track loaded successfully from: " << filename << std::endl;
+    // For segment-based tracks recompute startAngle from the actual centerline
+    // direction so the car is always spawned facing the right way.
+    if (!trackSegments.empty() && centerLine.size() >= 2) {
+        QVector2D dir = (centerLine[1] - centerLine[0]).normalized();
+        startAngle = qRadiansToDegrees(atan2f(dir.y(), dir.x()));
+    }
+
+    std::cout << "Track loaded successfully from: " << filename
+              << "  startAngle=" << startAngle << std::endl;
     return true;
 }
 
@@ -1591,6 +1606,7 @@ void Track::defaultMapList()
     map1.groundData.width = 2000.0f;
     map1.groundData.height = 2000.0f;
     //map1.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
+    map1.groundData.ambientColor = QColor(0, 0, 0);
     
 	map1.trackData.trackTexturePath = "/images/rainbow.png";
 	map1.trackData.trackColor = QColor(241, 242, 246); // kenney gray
@@ -1598,7 +1614,7 @@ void Track::defaultMapList()
     map1.trackData.kerbData.height = 0.05f;
     map1.trackData.kerbData.color1 = QColor(220, 30, 30); //red QColor(220, 30, 30)
     map1.trackData.kerbData.color2 = QColor(Qt::white);
-
+    map1.trackData.ambientColor = QColor(80, 80, 80);
     map1.pitData.pitColor = QColor(241, 242, 246);
     map1.pitData.kerbData.width = 5.0f;
     map1.pitData.kerbData.height = 2.0f;
@@ -1618,6 +1634,7 @@ void Track::defaultMapList()
     map2.groundData.width = 2000.0f;
     map2.groundData.height = 2000.0f;
     map2.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
+	map2.groundData.ambientColor = QColor(100, 150, 100); // slightly darker green for ambient lighting
 
     map2.trackData.trackTexturePath = "/images/road_texture.jpg";
     map2.trackData.trackColor = QColor(241, 242, 246); // kenney gray
@@ -1625,6 +1642,7 @@ void Track::defaultMapList()
     map2.trackData.kerbData.height = 0.05f;
     map2.trackData.kerbData.color1 = QColor(220, 30, 30); //red QColor(220, 30, 30)
     map2.trackData.kerbData.color2 = QColor(Qt::white);
+    map2.trackData.ambientColor = QColor(80, 80, 80);
 
     map2.pitData.pitColor = QColor(241, 242, 246);
     map2.pitData.kerbData.width = 5.0f;
@@ -1645,6 +1663,7 @@ void Track::defaultMapList()
     map3.groundData.width = 2000.0f;
     map3.groundData.height = 2000.0f;
     map3.groundData.texturePath = "/images/water.jpg";
+    map3.groundData.ambientColor = QColor(153, 255, 255);
 
 	map3.trackData.trackTexturePath = "/images/sand.jpg";
     map3.trackData.trackColor = QColor(139, 69, 19); // kenney brun
@@ -1652,6 +1671,7 @@ void Track::defaultMapList()
     map3.trackData.kerbData.height = 0.05f;
     map3.trackData.kerbData.color1 = QColor(222, 184, 135); //red QColor(220, 30, 30)
     map3.trackData.kerbData.color2 = QColor(Qt::white);
+    map3.trackData.ambientColor = QColor(250 / 2, 232 /2 , 180/ 2);
 
     map3.pitData.pitColor = QColor(241, 242, 246);
     map3.pitData.kerbData.width = 5.0f;

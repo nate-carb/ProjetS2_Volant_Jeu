@@ -115,7 +115,19 @@ int main(int argc, char* argv[])
         window->track->playTrack(trackNames[trackIndex]);  // uses the name from the menu
         window->pitStop.placePitLane(window->track->getPitLane(), window->track->getTrackWidth());
 
+        // Spawn the car at the start of the track with the correct heading
+        {
+            float startAngleDeg = window->track->getStartAngle();
+            window->voiture.setAngle(qDegreesToRadians(startAngleDeg));
+
+            auto cl = window->track->getCenterLine();
+            if (!cl.empty()) {
+                window->voiture.setPosition(cl[0].x(), cl[0].y());
+            }
+        }
+
         viewer->setTrack(window->track);
+
 
         container->setFocusPolicy(Qt::StrongFocus);
         container->installEventFilter(window);
