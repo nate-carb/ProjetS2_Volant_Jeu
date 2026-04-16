@@ -23,6 +23,7 @@ struct ArduinoWheelData {
     bool  paddleshiftdown = false;
     bool  prevPaddleUp = false;
     bool  prevPaddleDown = false;
+	int muonCount = 0;
 };
 
 class ArduinoManager : public QObject {

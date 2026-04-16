@@ -11,6 +11,7 @@
 #include <QPainterPath>
 #include <devmenu.h>
 #include <windows.h>
+
 // 
 
 const float PIXELS_PER_METER = 5.0f;
@@ -36,7 +37,7 @@ MainWindow::MainWindow(QWidget* parent)
 	//track = Track();
 	//track.loadFromFile("tracks/defaultTrack1.trk");
     track = new Track();       // assigns to the MEMBER pointer
- 
+    rotPeak = new WheelRotationPeak(this);
     //track->playTrack("nate2");
     //pitStop.placePitLane(track->getPitLane(), track->getTrackWidth());
 
@@ -95,6 +96,12 @@ MainWindow::MainWindow(QWidget* parent)
             raceTimes->startRace();
         }
 		});
+
+    // Météo basée sur les muons — boucle : SUNNY→RAINY→STORMY→SUNNY→...
+    // rainyAt=3, stormyAt=7, cycleLength=10
+    muonWeather = new MuonWeather(/*rainyAt=*/3, /*stormyAt=*/7, /*cycleLength=*/10, this);
+    connect(muonWeather, &MuonWeather::weatherChanged,
+            this,        &MainWindow::applyWeather);
 }
 
 MainWindow::~MainWindow()
@@ -116,16 +123,16 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
 void MainWindow::changeWeather()
 {
-    // Cycle SUNNY -> RAINY -> STORMY -> SUNNY
-    if (currentWeather == Vehicule::SUNNY)
-        currentWeather = Vehicule::RAINY;
-    else if (currentWeather == Vehicule::RAINY)
-        currentWeather = Vehicule::STORMY;
-    else
-        currentWeather = Vehicule::SUNNY;
+    //// Cycle SUNNY -> RAINY -> STORMY -> SUNNY
+    //if (currentWeather == Vehicule::SUNNY)
+    //    currentWeather = Vehicule::RAINY;
+    //else if (currentWeather == Vehicule::RAINY)
+    //    currentWeather = Vehicule::STORMY;
+    //else
+    //    currentWeather = Vehicule::SUNNY;
 
-    voiture.setWeather(currentWeather);
-    qDebug() << "M�t�o chang�e !";
+    //voiture.setWeather(currentWeather);
+    //qDebug() << "M�t�o chang�e !";
 }
 
 
@@ -292,7 +299,6 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     if (event->key() == Qt::Key_Return) keyEnter = true;
     if (event->key() == Qt::Key_E) {
         voiture.shiftUp();
-            qDebug()<< "helo";
     }
     
     if (event->key() == Qt::Key_Q) voiture.shiftDown();
@@ -323,18 +329,22 @@ void MainWindow::gameLoop()
 	//wait for track to load before doing anything
     if (!track || track->getCenterLine().empty() || track->getCheckpoints().empty()) return;
     //---------- Info Arduino -------------
-    
+    auto w = arduino->getWheelData();
+    rotPeak->update(w.accelX, w.accelY, w.accelZ, deltaTime);
+
+    //qDebug() << "Muon count:" << w.muonCount;
+    //qDebug() << "Rotation peaks detected:" << rotPeak->getPeakRotAccel();
 
     // Utiliser les données
     ArduinoBaseData  base = arduino->getBaseData();
-    ArduinoWheelData wheelData =  arduino->getWheelData();
-    qDebug() << "=== WHEEL DATA ===";
-    qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
-    qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
-    qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR << "PADGAU" << wheelData.paddleshiftdown << "PADDRO" << wheelData.paddleshiftup;
-    qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
-    qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
-    qDebug() << "GEAR" << voiture.getGear();
+    ArduinoWheelData wheelData = arduino->getWheelData();
+    //qDebug() << "=== WHEEL DATA ===";
+    //qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
+    //qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
+    //qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR << "PADGAU" << wheelData.paddleshiftdown << "PADDRO" << wheelData.paddleshiftup;
+    //qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
+    //qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
+    //qDebug() << "GEAR" << voiture.getGear();
 
     // Lecture directe des touches Windows
     keyW = (GetAsyncKeyState('W') & 0x8000) != 0;
@@ -370,23 +380,27 @@ void MainWindow::gameLoop()
 
 
 	// ===== INPUTS CLAVIERS =====
-    //voiture.setAccel(keyW ? 1.0f : 0.0f);
-    //voiture.setBreaking(keyS ? 1.0f : 0.0f);
-    //voiture.setBoosting(keySpace);
+    float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
+        ? keyW : false;
+    voiture.setAccel(accelInput ? 1.0f : 0.0f);
+    voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    voiture.setBoosting(keySpace);
 
-    //if (keyA && !keyD) voiture.setSteering(-1.0f);
-    //else if (keyD && !keyA) voiture.setSteering(1.0f);
-    //else voiture.setSteering(0.0f);
+    if (keyA && !keyD) voiture.setSteering(-1.0f);
+    else if (keyD && !keyA) voiture.setSteering(1.0f);
+    else voiture.setSteering(0.0f);
+    // Bloque l'accélération jusqu'au GO (ou pendant la pénalité de faux départ)
     
+
 	// ===== INPUTS WHEEL =====
     // Bloque l'accélération jusqu'au GO (ou pendant la pénalité de faux départ)
-    float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
-        ? base.gas : 0.0f;
-    voiture.setAccel(accelInput);
-    voiture.setBreaking(base.brake);
-    voiture.setSteering(base.pos);
+    //float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
+    //    ? base.gas : 0.0f;
+    //voiture.setAccel(accelInput);
+    //voiture.setBreaking(base.brake);
+    //voiture.setSteering(base.pos);
 
-    voiture.setBoosting(wheelData.switchTL);
+    //voiture.setBoosting(wheelData.switchTL);
     
     // ===== ENCODEUR 2 = VOLUME =====
     //if (!arduino->prevEnc2) {
@@ -419,6 +433,18 @@ void MainWindow::gameLoop()
         raceStart->startSequence();
     }
     raceStart->update(deltaTime);
+
+    // ── Détection muon (frontal montant sur muonCount) ──────────
+    // Le volant Arduino incrémente muonCount à chaque muon détecté.
+    // On appelle muonDetected() une seule fois par nouveau muon.
+    {
+        int curMuon = arduino ? arduino->getWheelData().muonCount : 0;
+        if (curMuon != prevMuonCount) {
+            raceStart->muonDetected();
+            muonWeather->onMuon();   // accumule et change la météo si seuil atteint
+            prevMuonCount = curMuon;
+        }
+    }
 
     // Faux départ : détecte si le joueur appuie sur le gaz avant le go
     bool playerGassing = (base.gas > 0.05f || keyW);

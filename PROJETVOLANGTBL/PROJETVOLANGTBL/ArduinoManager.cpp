@@ -189,6 +189,7 @@ void ArduinoManager::parseWheel(const std::string& raw)
         wheelData.joyDir = j.value("JoyDirection", 0);
         wheelData.paddleshiftup = j.value("paddleshiftup", false);  
         wheelData.paddleshiftdown = j.value("paddleshiftdown", false);
+        wheelData.muonCount = j.value("Muon", 0);
         newWheelData = true;
     }
     catch (...) {

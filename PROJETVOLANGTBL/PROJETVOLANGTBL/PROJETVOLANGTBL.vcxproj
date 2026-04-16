@@ -115,6 +115,7 @@
     <ClCompile Include="map2d.cpp" />
     <ClCompile Include="MenuWindow.cpp" />
     <ClCompile Include="Meshinstance.cpp" />
+    <ClCompile Include="MuonWeather.cpp" />
     <ClCompile Include="OptionsDialog.cpp" />
     <ClCompile Include="PauseDialog.cpp" />
     <ClCompile Include="PitStop.cpp" />
@@ -134,6 +135,7 @@
     <ClCompile Include="trackPieces3D.cpp" />
     <ClCompile Include="trackViewer.cpp" />
     <ClCompile Include="Vehicule.cpp" />
+    <ClCompile Include="WheelRotationPeak.cpp" />
     <QtRcc Include="PROJETVOLANGTBL.qrc" />
     <QtUic Include="PROJETVOLANGTBL.ui" />
     <QtMoc Include="PROJETVOLANGTBL.h" />
@@ -146,6 +148,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="WheelRotationPeak.h" />
     <QtMoc Include="AnimatedButton.h" />
     <QtMoc Include="ArduinoManager.h" />
     <ClInclude Include="camera2D.h" />
@@ -170,6 +173,7 @@
     <ClInclude Include="Meshinstance.h" />
     <QtMoc Include="OptionsDialog.h" />
     <QtMoc Include="PauseDialog.h" />
+    <QtMoc Include="MuonWeather.h" />
     <ClInclude Include="PitStop.h" />
     <QtMoc Include="RaceEndDialog.h" />
     <QtMoc Include="RaceStart.h" />

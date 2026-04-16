@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c \"dir /s \\\\\"C:\\\\01-UdeS\\\\S1-PROJET\\\\ProjetS2_Volant_Jeu\\\\PROJETVOLANGTBL\\\\PROJETVOLANGTBL\\\\images\\\\*.jpg\\\\\" \\\\\"C:\\\\01-UdeS\\\\S1-PROJET\\\\ProjetS2_Volant_Jeu\\\\PROJETVOLANGTBL\\\\PROJETVOLANGTBL\\\\images\\\\*.png\\\\\" 2>nul | findstr /v \\\\\"^$\\\\\"\")",
+      "Bash(cmd /c \"dir \\\\\"C:\\\\01-UdeS\\\\S1-PROJET\\\\ProjetS2_Volant_Jeu\\\\PROJETVOLANGTBL\\\\PROJETVOLANGTBL\\\\images\\\\\"\")",
+      "Bash(python3 -c ':*)"
+    ]
+  }
+}

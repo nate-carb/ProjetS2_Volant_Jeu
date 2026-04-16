@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
         QStringList trackNames = {
             "nate",
             "nate2",
-            "TEST1"
+            "NATE3"
         };
         //qDebug() << "Working directory:" << QDir::currentPath();
         //qDebug() << "Track name:" << trackNames[trackIndex];
@@ -125,6 +125,8 @@ int main(int argc, char* argv[])
                 window->voiture.setPosition(cl[0].x(), cl[0].y());
             }
         }
+        window->rotPeak->resetPeaks();
+
 
         viewer->setTrack(window->track);
 

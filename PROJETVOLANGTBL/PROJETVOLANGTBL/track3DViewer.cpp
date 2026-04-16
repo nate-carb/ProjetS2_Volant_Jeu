@@ -586,10 +586,9 @@ void Track3DViewer::buildTrackMesh(Track* track)
     // ───────────────────────────────────────── ─────────────────────────────────────────
         
 
-    // Helper lambda - same pattern as main track mesh
+    // Helper lambda — textured pit mesh, same pattern as buildTrackMesh
     auto buildPitMesh = [&](const std::vector<QVector2D>& left,
-        const std::vector<QVector2D>& right,
-        QColor color) {
+        const std::vector<QVector2D>& right) {
             if (left.size() < 2 || right.size() < 2) {
                 qDebug() << "buildPitMesh skipped - left:" << left.size() << "right:" << right.size();
                 return;
@@ -598,7 +597,6 @@ void Track3DViewer::buildTrackMesh(Track* track)
                 qDebug() << "buildPitMesh size mismatch - left:" << left.size() << "right:" << right.size();
                 return;
             }
-            if (left.size() < 2 || right.size() < 2) return;
             size_t pn = qMin(left.size(), right.size());
 
             QVector<float>   verts;
@@ -614,22 +612,36 @@ void Track3DViewer::buildTrackMesh(Track* track)
                 normals << 0.0f << 1.0f << 0.0f;
 
             for (quint32 i = 0; i < static_cast<quint32>(pn - 1); i++) {
-                quint32 l0 = i;
-                quint32 l1 = i + 1;
+                quint32 l0 = i,      l1 = i + 1;
                 quint32 r0 = static_cast<quint32>(pn) + i;
                 quint32 r1 = static_cast<quint32>(pn) + i + 1;
                 idx << l0 << l1 << r0;
                 idx << l1 << r1 << r0;
             }
 
+            // ── Arc-length UV (same formula as main track) ───────────
+            const float TILE_V = 20.0f;
+            QVector<float> arcLen(static_cast<int>(pn), 0.0f);
+            for (size_t i = 1; i < pn; i++) {
+                QVector2D mid_prev = (left[i - 1] + right[i - 1]) * 0.5f;
+                QVector2D mid_curr = (left[i]     + right[i]    ) * 0.5f;
+                arcLen[static_cast<int>(i)] =
+                    arcLen[static_cast<int>(i - 1)] + (mid_curr - mid_prev).length();
+            }
+            QVector<float> uvs;
+            uvs.reserve(static_cast<int>(pn) * 2 * 2);
+            for (size_t i = 0; i < pn; i++) uvs << 0.0f << (arcLen[static_cast<int>(i)] / TILE_V);
+            for (size_t i = 0; i < pn; i++) uvs << 1.0f << (arcLen[static_cast<int>(i)] / TILE_V);
+
+            // ── Build entity + geometry ──────────────────────────────
             Qt3DCore::QEntity* pitEntity = new Qt3DCore::QEntity(m_sceneRoot);
             Qt3DRender::QGeometryRenderer* pitRenderer = new Qt3DRender::QGeometryRenderer(pitEntity);
             Qt3DCore::QGeometry* pitGeom = new Qt3DCore::QGeometry(pitRenderer);
 
+            // Positions
             Qt3DCore::QBuffer* vb = new Qt3DCore::QBuffer(pitGeom);
             vb->setData(QByteArray(reinterpret_cast<const char*>(verts.constData()),
                 verts.size() * sizeof(float)));
-
             Qt3DCore::QAttribute* posAttr = new Qt3DCore::QAttribute(pitGeom);
             posAttr->setName(Qt3DCore::QAttribute::defaultPositionAttributeName());
             posAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
@@ -640,10 +652,10 @@ void Track3DViewer::buildTrackMesh(Track* track)
             posAttr->setCount(static_cast<uint>(pn * 2));
             pitGeom->addAttribute(posAttr);
 
+            // Normals
             Qt3DCore::QBuffer* nb = new Qt3DCore::QBuffer(pitGeom);
             nb->setData(QByteArray(reinterpret_cast<const char*>(normals.constData()),
                 normals.size() * sizeof(float)));
-
             Qt3DCore::QAttribute* normAttr = new Qt3DCore::QAttribute(pitGeom);
             normAttr->setName(Qt3DCore::QAttribute::defaultNormalAttributeName());
             normAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
@@ -654,10 +666,24 @@ void Track3DViewer::buildTrackMesh(Track* track)
             normAttr->setCount(static_cast<uint>(pn * 2));
             pitGeom->addAttribute(normAttr);
 
+            // UVs
+            Qt3DCore::QBuffer* uvb = new Qt3DCore::QBuffer(pitGeom);
+            uvb->setData(QByteArray(reinterpret_cast<const char*>(uvs.constData()),
+                uvs.size() * sizeof(float)));
+            Qt3DCore::QAttribute* uvAttr = new Qt3DCore::QAttribute(pitGeom);
+            uvAttr->setName(Qt3DCore::QAttribute::defaultTextureCoordinateAttributeName());
+            uvAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
+            uvAttr->setVertexSize(2);
+            uvAttr->setAttributeType(Qt3DCore::QAttribute::VertexAttribute);
+            uvAttr->setBuffer(uvb);
+            uvAttr->setByteStride(2 * sizeof(float));
+            uvAttr->setCount(static_cast<uint>(pn * 2));
+            pitGeom->addAttribute(uvAttr);
+
+            // Indices
             Qt3DCore::QBuffer* ib = new Qt3DCore::QBuffer(pitGeom);
             ib->setData(QByteArray(reinterpret_cast<const char*>(idx.constData()),
                 idx.size() * sizeof(quint32)));
-
             Qt3DCore::QAttribute* idxAttr = new Qt3DCore::QAttribute(pitGeom);
             idxAttr->setAttributeType(Qt3DCore::QAttribute::IndexAttribute);
             idxAttr->setVertexBaseType(Qt3DCore::QAttribute::UnsignedInt);
@@ -667,20 +693,19 @@ void Track3DViewer::buildTrackMesh(Track* track)
 
             pitRenderer->setGeometry(pitGeom);
             pitRenderer->setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
-
-            Qt3DExtras::QPhongMaterial* mat = new Qt3DExtras::QPhongMaterial(pitEntity);
-            mat->setDiffuse(color);
-            mat->setAmbient(QColor(0,0,0));
-            mat->setShininess(0.0f);
-            
-            //Qt3DExtras::QPhongMaterial* pitMat = new Qt3DExtras::QPhongMaterial(m_trackEntity);
-            //QColor pitColor(color); // Kenney's grey
-            //pitMat->setDiffuse(pitColor);
-            //pitMat->setAmbient(pitColor.darker(200)); // 50% darker
-            //pitMat->setSpecular(QColor(0, 0, 0));
-            //pitMat->setShininess(0.0f);
-            //m_trackEntity->addComponent(pitMat);
             pitEntity->addComponent(pitRenderer);
+
+            // ── Textured material — même pattern que buildTrackMesh ──
+            Qt3DExtras::QDiffuseMapMaterial* mat =
+                new Qt3DExtras::QDiffuseMapMaterial(pitEntity);
+            Qt3DRender::QTextureImage* pitTex = new Qt3DRender::QTextureImage();
+            pitTex->setSource(QUrl::fromLocalFile(
+                QDir::currentPath() + track->getCurrentChoixMapData().pitData.pitTexturePath));
+            mat->diffuse()->addTextureImage(pitTex);
+            mat->setAmbient(track->getCurrentChoixMapData().pitData.ambientColor);
+            mat->setSpecular(QColor(0, 0, 0));
+            mat->setShininess(0.0f);
+            mat->setTextureScale(1.0f);
             pitEntity->addComponent(mat);
         };
        
@@ -715,8 +740,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
         }
 
         // ── Single mesh - no z-fighting, no gaps ────────────────────
-        //buildPitMesh(fullLeft, fullRight, QColor(60, 60, 60));
-		buildPitMesh(fullLeft, fullRight, track->getCurrentChoixMapData().pitData.pitColor); // Kenney's exact grey
+        buildPitMesh(fullLeft, fullRight);
         //material->setDiffuse(QColor(60, 60, 60));    // dark grey = tarmac
         //material->setAmbient(QColor(40, 40, 40)); // ambient is usually darker than diffuse
         //material->setShininess(5.0f);

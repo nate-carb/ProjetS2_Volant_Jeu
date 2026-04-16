@@ -130,6 +130,12 @@
     <ClCompile Include="RaceStart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MuonWeather.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WheelRotationPeak.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vehicule.h">
@@ -234,6 +240,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="RaceStart.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="MuonWeather.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="WheelRotationPeak.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

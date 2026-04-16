@@ -14,7 +14,9 @@
 #include "Vehicule.h"
 #include "raceTimes.h"
 #include "ArduinoManager.h"
-#include "RaceStart.h" 
+#include "RaceStart.h"
+#include "MuonWeather.h"
+#include "WheelRotationPeak.h"
 
 class MainWindow : public QMainWindow
 {
@@ -24,6 +26,7 @@ public:
     MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
     ArduinoManager* arduino = nullptr; // comm arduino
+	WheelRotationPeak* rotPeak = nullptr; // pour les pics de rotation
     QTimer* timer;
     Vehicule voiture;
     Track* track = nullptr;
@@ -33,7 +36,8 @@ public:
     QTimer* weatherTimer;  // pour changer la météo automatiquement
     bool eventFilter(QObject* obj, QEvent* event) override;
     PitStop pitStop;
-    RaceStart* raceStart = nullptr;
+    RaceStart*    raceStart    = nullptr;
+    MuonWeather*  muonWeather  = nullptr;
 	PitStop* getPitStop() { return &pitStop; }  
     bool isPaused = false;
 
@@ -43,7 +47,12 @@ public:
         keyShiftUp = keyShiftDown = false;
         prevKeyE = prevKeyQ = prevKeyF1 = false;
         inPitStop = false;
-        if (raceStart) raceStart->reset();
+        prevMuonCount = 0;
+        if (raceStart)    raceStart->reset();
+        if (muonWeather)  muonWeather->reset();
+        currentWeather = Vehicule::SUNNY;
+        voiture.setWeather(Vehicule::SUNNY);
+        weatherTimer->start(10000);   // relance le cycle auto pour la prochaine course
     }
 
 protected:
@@ -64,6 +73,11 @@ protected:
 private slots:
     void gameLoop();
     void changeWeather();
+    void applyWeather(Vehicule::Weather w) {
+        weatherTimer->stop();   // les muons prennent le contrôle, on arrête le cycle auto
+        currentWeather = w;
+        voiture.setWeather(w);
+    }
 
 private:
 
@@ -89,6 +103,7 @@ private:
     bool prevKeyE = false;
     bool prevKeyQ = false;
     bool prevKeyF1 = false;
+    int  prevMuonCount = 0;   // edge detection muon
 };
 
 #endif

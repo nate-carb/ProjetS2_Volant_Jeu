@@ -1580,8 +1580,8 @@ bool Track::playTrack(QString name)
 		setCurrentChoixMapData("nate2");
         loadFromFile((getCurrentChoixMapData().mapFilePath).toStdString());
         return true;
-	}else if (name == "TEST1") {
-        setCurrentChoixMapData("TEST1");
+	}else if (name == "NATE3") {
+        setCurrentChoixMapData("NATE3");
         loadFromFile((getCurrentChoixMapData().mapFilePath).toStdString());
 		
         return true;
@@ -1615,7 +1615,10 @@ void Track::defaultMapList()
     map1.trackData.kerbData.color1 = QColor(220, 30, 30); //red QColor(220, 30, 30)
     map1.trackData.kerbData.color2 = QColor(Qt::white);
     map1.trackData.ambientColor = QColor(80, 80, 80);
+
     map1.pitData.pitColor = QColor(241, 242, 246);
+    map1.pitData.pitTexturePath = "/images/rainbow.jpg";
+    map1.pitData.ambientColor = QColor(80, 80, 80);
     map1.pitData.kerbData.width = 5.0f;
     map1.pitData.kerbData.height = 2.0f;
     map1.pitData.kerbData.color1 = QColor(255, 255, 0);
@@ -1645,6 +1648,8 @@ void Track::defaultMapList()
     map2.trackData.ambientColor = QColor(80, 80, 80);
 
     map2.pitData.pitColor = QColor(241, 242, 246);
+    map2.pitData.pitTexturePath = "/images/road_texture.jpg";
+    map2.pitData.ambientColor = QColor(80, 80, 80);
     map2.pitData.kerbData.width = 5.0f;
     map2.pitData.kerbData.height = 2.0f;
     map2.pitData.kerbData.color1 = QColor(255, 255, 0);
@@ -1655,14 +1660,14 @@ void Track::defaultMapList()
     ChoixMapData map3;
   
     map3.mapIndex = 2;
-    map3.mapName = "TEST1";
-    map3.mapFilePath = "tracks/TEST1.trk";
+    map3.mapName = "NATE3";
+    map3.mapFilePath = "tracks/nate3.trk";
     map3.mapThumbnailPath = "thumbnails/track3.png";
     map3.skyboxFilePath = "/images/skybox/sky/cubemap1";
 
-    map3.groundData.width = 2000.0f;
-    map3.groundData.height = 2000.0f;
-    map3.groundData.texturePath = "/images/water.jpg";
+    map3.groundData.width = 4000.0f;
+    map3.groundData.height = 4000.0f;
+    map3.groundData.texturePath = "/images/water2.jpg";
     map3.groundData.ambientColor = QColor(153, 255, 255);
 
 	map3.trackData.trackTexturePath = "/images/sand.jpg";
@@ -1674,6 +1679,8 @@ void Track::defaultMapList()
     map3.trackData.ambientColor = QColor(250 / 2, 232 /2 , 180/ 2);
 
     map3.pitData.pitColor = QColor(241, 242, 246);
+    map3.pitData.pitTexturePath = "/images/sand.jpg";
+    map3.pitData.ambientColor = QColor(250 / 2, 232 / 2, 180 / 2);
     map3.pitData.kerbData.width = 5.0f;
     map3.pitData.kerbData.height = 2.0f;
     map3.pitData.kerbData.color1 = QColor(255, 255, 0);
