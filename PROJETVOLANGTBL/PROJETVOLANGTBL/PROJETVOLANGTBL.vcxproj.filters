@@ -180,9 +180,6 @@
     <ClInclude Include="Meshinstance.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ArduinoManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LeaderboardManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -228,6 +225,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="DeathDialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ArduinoManager.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

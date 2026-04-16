@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <QObject>
+#include <QTimer>
 #include "include/serial/SerialPort.hpp"
 #include "include/json.hpp"
 
@@ -7,37 +9,36 @@ using json = nlohmann::json;
 
 struct ArduinoBaseData {
     float pos = 0.0f;
-    float gas = 0.0f;   // pot1
-    float brake = 0.0f;   // pot2
+    float gas = 0.0f;
+    float brake = 0.0f;
 };
 
 struct ArduinoWheelData {
     int   enc1 = 0;
     int   enc2 = 0;
-    float accelX = 0.0f;
-    float accelY = 0.0f;
-    float accelZ = 0.0f;
-    bool  switchTL = false;
-    bool  switchTR = false;
-    bool  switchBL = false;
-    bool  switchBR = false;
+    float accelX = 0.0f, accelY = 0.0f, accelZ = 0.0f;
+    bool  switchTL = false, switchTR = false, switchBL = false, switchBR = false;
     int   joyDir = 0;
-    bool  paddleshiftup = false; 
+    bool  paddleshiftup = false;
     bool  paddleshiftdown = false;
-    bool prevPaddleUp = false;
-    bool prevPaddleDown = false;
-
+    bool  prevPaddleUp = false;
+    bool  prevPaddleDown = false;
 };
 
-class ArduinoManager {
+class ArduinoManager : public QObject {
+    Q_OBJECT
 public:
-    ArduinoManager();
+    ArduinoManager(QObject* parent = nullptr);
     ~ArduinoManager();
 
-    bool connectBase(const std::string& port);  // ex: "\\\\.\\COM3"
-    bool connectWheel(const std::string& port);  // ex: "\\\\.\\COM4"
+    bool hasNewWheelData() {
+        bool v = newWheelData;
+        newWheelData = false;
+        return v;
+    }
 
-    void update();  // à appeler dans gameLoop()
+    bool connectBase(const std::string& port);
+    bool connectWheel(const std::string& port);
 
     void sendToWheel(float rpm, float maxRpm, int gear,
         float fuel, float tireWear,
@@ -45,16 +46,26 @@ public:
 
     ArduinoBaseData  getBaseData()  const { return baseData; }
     ArduinoWheelData getWheelData() const { return wheelData; }
+
+    bool isBaseReady()  const { return baseReady; }
+    bool isWheelReady() const { return wheelReady; }
+
     bool prevPaddleUp = false;
     bool prevPaddleDown = false;
-	bool prevtl = false;
-	bool prevtr = false;
-	bool prevbl = false;
-	bool prevbr = false;
+    bool prevtl = false, prevtr = false, prevbl = false, prevbr = false;
+    bool prevEnc1 = false, prevEnc2 = false;
+
+private slots:
+    void update();   // appelé automatiquement par pollTimer
 
 private:
+    bool newWheelData = false;
+    QTimer* pollTimer = nullptr;
+
     SerialPort* basePort = nullptr;
     SerialPort* wheelPort = nullptr;
+    bool baseReady = false;
+    bool wheelReady = false;
 
     ArduinoBaseData  baseData;
     ArduinoWheelData wheelData;
@@ -62,11 +73,7 @@ private:
     std::string baseBuffer;
     std::string wheelBuffer;
 
-    bool RcvFromSerial(SerialPort* port, std::string& msg);
     bool SendToSerial(SerialPort* port, json j_msg);
-
     void parseBase(const std::string& raw);
     void parseWheel(const std::string& raw);
-
 };
-

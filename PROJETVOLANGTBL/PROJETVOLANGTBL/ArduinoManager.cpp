@@ -1,148 +1,161 @@
 #include "ArduinoManager.h"
 #include <iostream>
 #include <QDebug>
-#define BAUD       115200
-#define MSG_MAX    1024
+#define BAUD 115200
+#define MSG_MAX 1024
 
-ArduinoManager::ArduinoManager() {}
+ArduinoManager::ArduinoManager(QObject* parent) : QObject(parent) {
 
-ArduinoManager::~ArduinoManager()
-{
+    pollTimer = new QTimer(this);
+    connect(pollTimer, &QTimer::timeout, this, &ArduinoManager::update);
+    pollTimer->start(20);  // 50Hz, toujours actif
+
+}
+
+
+
+ArduinoManager::~ArduinoManager() {
+
     delete basePort;
     delete wheelPort;
+
 }
 
-bool ArduinoManager::connectBase(const std::string& port)
-{
+
+
+bool ArduinoManager::connectBase(const std::string& port) {
+
+    baseReady = false;
     basePort = new SerialPort(port.c_str(), BAUD);
     if (!basePort->isConnected()) {
-        std::cerr << "Erreur: impossible de connecter la base sur " << port << std::endl;
+
+        std::cerr << "Base non connectee sur " << port << std::endl;
+
+        delete basePort; basePort = nullptr;
+
         return false;
+
     }
-    std::cout << "Base connectee sur " << port << std::endl;
+    baseReady = true;
     return true;
+
 }
 
-bool ArduinoManager::connectWheel(const std::string& port)
-{
+
+
+bool ArduinoManager::connectWheel(const std::string& port) {
+
+    wheelReady = false;
+
     wheelPort = new SerialPort(port.c_str(), BAUD);
+
     if (!wheelPort->isConnected()) {
-        std::cerr << "Erreur: impossible de connecter le volant sur " << port << std::endl;
+
+        std::cerr << "Volant non connecte sur " << port << std::endl;
+
+        delete wheelPort; wheelPort = nullptr;
+
         return false;
+
     }
-    std::cout << "Volant connecte sur " << port << std::endl;
+
+    wheelReady = true;
+
     return true;
+
 }
 
-int reconnectCounter = 0;
-// ── Appelé dans gameLoop() ───────────────────────────────────────────────────
-void ArduinoManager::update()
-{
-/*    // Try reconnect every ~300 frames (~3 seconds at 100Hz)
-    if (++reconnectCounter >= 300) {
-        reconnectCounter = 0;
-        if (!basePort || !basePort->isConnected()) {
-            delete basePort;
-            basePort = new SerialPort("\\\\.\\COM4", 115200);
-        }
-        if (!wheelPort || !wheelPort->isConnected()) {
-            delete wheelPort;
-            wheelPort = new SerialPort("\\\\.\\COM5", 115200);
-        }
-    }*/
+
+
+void ArduinoManager::update() {
 
     char char_buffer[1024];
 
-    // ── BASE ─────────────────────────────────────────
-    if (basePort && basePort->isConnected()) {
+
+
+    if (baseReady && basePort && basePort->isConnected()) {
+
         int size = basePort->readSerialPort(char_buffer, sizeof(char_buffer));
+
         if (size > 0) baseBuffer.append(char_buffer, size);
 
         size_t pos;
-        while ((pos = baseBuffer.find('\n')) != std::string::npos) {
-            std::string line = baseBuffer.substr(0, pos);  // prend UNE ligne
-            baseBuffer = baseBuffer.substr(pos + 1);       // garde le reste
 
-            // Nettoie le \r si présent
+        while ((pos = baseBuffer.find('\n')) != std::string::npos) {
+
+            std::string line = baseBuffer.substr(0, pos);
+
+            baseBuffer = baseBuffer.substr(pos + 1);
+
             if (!line.empty() && line.back() == '\r') line.pop_back();
 
             if (!line.empty()) parseBase(line);
+
         }
+
     }
 
-    // ── VOLANT ───────────────────────────────────────
-    if (wheelPort && wheelPort->isConnected()) {
+
+
+    if (wheelReady && wheelPort && wheelPort->isConnected()) {
+
         int size = wheelPort->readSerialPort(char_buffer, sizeof(char_buffer));
+
         if (size > 0) wheelBuffer.append(char_buffer, size);
 
         size_t pos;
+
         while ((pos = wheelBuffer.find('\n')) != std::string::npos) {
+
             std::string line = wheelBuffer.substr(0, pos);
+
             wheelBuffer = wheelBuffer.substr(pos + 1);
 
             if (!line.empty() && line.back() == '\r') line.pop_back();
 
             if (!line.empty()) parseWheel(line);
+
         }
+
     }
+
 }
-/*void ArduinoManager::update()
-{
-    std::string raw;
 
-    // Lire la base
-    if (basePort && basePort->isConnected()) {
-        if (RcvFromSerial(basePort, raw) && raw.size() > 0)
-            
-            parseBase(raw)
-;
-    }
-    // Lire le volant
-    if (wheelPort && wheelPort->isConnected()) {
-        if (RcvFromSerial(wheelPort, raw) && raw.size() > 0)
-            parseWheel(raw);
-    }
-}*/
 
-// ── Envoyer données du jeu vers le volant ────────────────────────────────────
+
 void ArduinoManager::sendToWheel(float rpm, float maxRpm, int gear,
+
     float fuel, float tireWear,
+
     bool inPit, float speed, float angle)
+
 {
-    if (!wheelPort || !wheelPort->isConnected()) return;
+
+    if (!wheelReady || !wheelPort || !wheelPort->isConnected()) return;
 
     json j;
-    j["rpm"] = rpm;
-    j["rpmMax"] = maxRpm;
-    j["gear"] = gear;
-    j["fuel"] = fuel;
-    j["tires"] = tireWear;
-    j["speed"] = speed;
-    j["pit"] = inPit;
-    j["angle"] = angle;
-
+    j["r"] = rpm;
+    j["rM"] = maxRpm;
+    j["g"] = gear;
+    j["f"] = fuel;
+    j["t"] = tireWear;
+    j["s"] = speed;
+    j["p"] = inPit;
+    j["a"] = angle;
     SendToSerial(wheelPort, j);
+
 }
 
-// ── Fonctions identiques au labo ─────────────────────────────────────────────
-bool ArduinoManager::SendToSerial(SerialPort* port, json j_msg)
-{
-    std::string msg = j_msg.dump();
-	qDebug() << "Sending to wheel:" << QString::fromStdString(msg);
-    return port->writeSerialPort(msg.c_str(), msg.length());
-}
 
-bool ArduinoManager::RcvFromSerial(SerialPort* port, std::string& msg)
-{
-    char char_buffer[MSG_MAX];
-    msg.clear();
-
-    int buffer_size = port->readSerialPort(char_buffer, MSG_MAX);
-    std::string str_buffer;
-    str_buffer.assign(char_buffer, buffer_size);
-    msg.append(str_buffer);
-
-    return true;
+bool ArduinoManager::SendToSerial(SerialPort* port, json j_msg) {
+    if (!port || !port->isConnected()) return false;
+    std::string msg = j_msg.dump() + "\n";   
+    bool ok = port->writeSerialPort(msg.c_str(), msg.length());
+    if (!ok) {
+        if (port == wheelPort) wheelReady = false;
+        if (port == basePort)  baseReady = false;
+    }
+    return ok;
 }
 
 // ── Parsers JSON ─────────────────────────────────────────────────────────────
@@ -176,6 +189,7 @@ void ArduinoManager::parseWheel(const std::string& raw)
         wheelData.joyDir = j.value("JoyDirection", 0);
         wheelData.paddleshiftup = j.value("paddleshiftup", false);  
         wheelData.paddleshiftdown = j.value("paddleshiftdown", false);
+        newWheelData = true;
     }
     catch (...) {
         std::cerr << "Erreur parse volant: " << raw << std::endl;

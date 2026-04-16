@@ -34,35 +34,33 @@ int main(int argc, char* argv[])
 
     // ===== JEU (créé mais caché) =====
     MainWindow* window = new MainWindow();
-    QTimer::singleShot(4000, window, [window]() {   // ← attente 4 secondes
-        bool baseOk = window->arduino->connectBase("\\\\.\\COM3");
-        bool wheelOk = window->arduino->connectWheel("\\\\.\\COM5");
+	// ===== Connexion Arduino après 4 secondes =====
+	QTimer::singleShot(2000, window, [window]() {   // ← attente 4 secondes pour laisser le temps au arduino de resetter et se préparer
+        bool baseOk = window->arduino->connectBase("\\\\.\\COM3"); 
+        bool wheelOk = window->arduino->connectWheel("\\\\.\\COM6");
         qDebug() << "Base connectee:" << baseOk;
         qDebug() << "Wheel connectee:" << wheelOk;
         });
     
 
     // ===== MENU =====
-    MenuWindow* menu = new MenuWindow(window->soundManager);
+    MenuWindow* menu = new MenuWindow(window->soundManager, window->arduino);
     menu->show();
+	// ===== TRACK CREATOR =====
 	MainWindowCreator* creator = new MainWindowCreator();
 	creator->show();
-    
-    //window->timer->start(16);
-    
-	// --- For 3D viewer ---
-    //QWidget* container = nullptr;
-    //Track3DViewer* viewer = nullptr;
-
+	// ===== 3D VIEWER =====
     Track3DViewer* viewer = new Track3DViewer();
-    viewer->setFirstPersonMode(true);
+	viewer->setFirstPersonMode(true); // view on the car, not above it
 
+	// ===== CONTAINER (intègre le viewer dans une fenêtre Qt classique) =====
     QWidget* container = QWidget::createWindowContainer(viewer);
-    container->setMinimumSize(1280, 720);
-    container->resize(1280, 720);
-    container->setWindowTitle("Racing Game 3D");
-    container->installEventFilter(viewer);
+	container->setMinimumSize(1280, 720); 
+	container->resize(1280, 720); 
+	container->setWindowTitle("Racing Game 3D"); 
+	container->installEventFilter(viewer); // pour que le viewer puisse recevoir les événements clavier même quand il est dans le container
 
+	// ===== HUD (overlay transparent au-dessus du viewer) =====
     HUDOverlay* hud = new HUDOverlay();
     hud->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     hud->setAttribute(Qt::WA_TranslucentBackground);
@@ -116,41 +114,31 @@ int main(int argc, char* argv[])
        
         window->track->playTrack(trackNames[trackIndex]);  // uses the name from the menu
         window->pitStop.placePitLane(window->track->getPitLane(), window->track->getTrackWidth());
-        
 
-        
-        //if (window->track) {
-			//bool trackState = window->track->playTrack("nate2");
-		 //   qDebug() << "Track play result:" << trackState;
-   //         window->pitStop.placePitLane(window->track->getPitLane(), window->track->getTrackWidth());
-            //window->track->loadFromFile(
-            //    trackFiles[trackIndex].toStdString());
-        //}
-        // Create 3D viewer AFTER track is loaded
-        //Track3DViewer* viewer = new Track3DViewer();
-        //viewer->setFirstPersonMode(true);
         viewer->setTrack(window->track);
 
-        //QWidget* container = QWidget::createWindowContainer(viewer);
-        //container->setMinimumSize(1280, 720);
-        //container->resize(1280, 720);
-        //container->setWindowTitle("Racing Game 3D");
         container->setFocusPolicy(Qt::StrongFocus);
         container->installEventFilter(window);
         container->show();
         container->setFocus();
         hud->show();
 
-		window->arduino->update(); // update Arduino state once before starting the game loop - flush data
+		//window->arduino->update(); // update Arduino state once before starting the game loop - flush data
         window->timer->start(16);  // start game loop AFTER everything is ready
         });
 
-    //QObject::connect(window->timer, &QTimer::timeout, [=, &container, &viewer]() {
+    
     QObject::connect(window->timer, &QTimer::timeout, [=]() {
         if (!container || !container->isVisible() || container->isMinimized()) {
             hud->hide();
             return;
         }
+
+        if (window->arduino->getWheelData().switchBL && !window->arduino->prevbl) {
+            viewer->changeCameraMode();
+		}
+        window->arduino->prevbl = window->arduino->getWheelData().switchBL;
+
         
         if (!window->track || window->track->getCenterLine().empty()) return;
         // Menu pause
@@ -173,13 +161,7 @@ int main(int argc, char* argv[])
                 window->raceTimes->resetRace();
             }
             else if (result == PauseDialog::MAIN_MENU) {
-                //window->isPaused = false;
-                //container->hide();
-                //hud->hide();
-                //menu->goToMainMenu();
-                //menu->show();
-                //window->voiture = Vehicule();
-                //window->raceTimes->resetRace();
+                
                 resetGame();
             }
 
@@ -218,13 +200,7 @@ int main(int argc, char* argv[])
                 }
                 else {
                     resetGame();
-                    //window->isPaused = false;
-                    //container->hide();
-                    //hud->hide();
-                    //menu->goToMainMenu();
-                    //menu->show();
-                    //window->voiture = Vehicule();
-                    //window->raceTimes->resetRace();
+                   
                 }
 
                 delete dlg;
@@ -245,12 +221,7 @@ int main(int argc, char* argv[])
             RaceEndDialog* dlg = new RaceEndDialog(trackIndex, bestTime, container);
             dlg->exec();
 
-            // Retour au menu principal
-            //container->hide();
-            //hud->hide();
-            //menu->show();
-            //window->voiture = Vehicule();
-            //window->raceTimes->resetRace();
+            
             resetGame();
 
             raceEndShown = false;
@@ -282,8 +253,7 @@ int main(int argc, char* argv[])
         hud->move(container->mapToGlobal(QPoint(0, 0)));
         hud->resize(container->size());
     });
-    //viewer->setTrack(window->track);
-
+    
     return app.exec();
 }
     

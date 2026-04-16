@@ -7,16 +7,27 @@
 #include <QHBoxLayout>
 #include <QWidget>
 #include <QMovie>
+#include <QScrollBar>
+#include <QShowEvent>
+#include <QHideEvent>
 #include "OptionsDialog.h"
 #include "ControlsDialog.h"
 #include "SoundManager.h"
+#include "ArduinoManager.h"
+
+// --- forward declarations ---
+class ArduinoManager;
+class QTimer;
+class QScrollArea;
+class QShowEvent;
+class QHideEvent;
 
 class MenuWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit MenuWindow(SoundManager* soundManager, QWidget* parent = nullptr);
+    explicit MenuWindow(SoundManager* soundManager, ArduinoManager* arduino, QWidget* parent = nullptr);
     ~MenuWindow();
     void goToMainMenu() { goToPage(PAGE_MAIN); }
 
@@ -24,6 +35,7 @@ signals:
     void playRequested(int trackIndex);
 
 private slots:
+    void pollEncoder();
     void onPlay();
     void onLeaderboards();
     void onOptions();
@@ -35,6 +47,13 @@ private slots:
 private:
     QStackedWidget* m_stack;
     SoundManager* m_soundManager = nullptr;
+
+	// For communicating with the Arduino (encoder inputs)
+    ArduinoManager* m_arduino = nullptr;
+    QTimer* m_encoderTimer = nullptr;
+    QScrollArea* m_lbScrolls[3] = { nullptr, nullptr, nullptr };
+    int m_prevEnc2 = 0;
+    bool m_prevEnc2Init = false;
 
     // Pages
     QWidget* createMainMenuPage();
@@ -60,4 +79,7 @@ private:
         PAGE_LB_T2 = 4,
         PAGE_LB_T3 = 5,
     };
+protected:
+    void showEvent(QShowEvent* e) override;
+    void hideEvent(QHideEvent* e) override;
 };

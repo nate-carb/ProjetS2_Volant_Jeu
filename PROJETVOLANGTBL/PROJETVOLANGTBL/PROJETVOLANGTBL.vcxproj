@@ -146,7 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="AnimatedButton.h" />
-    <ClInclude Include="ArduinoManager.h" />
+    <QtMoc Include="ArduinoManager.h" />
     <ClInclude Include="camera2D.h" />
     <QtMoc Include="devmenu.h" />
     <QtMoc Include="ControlsDialog.h" />

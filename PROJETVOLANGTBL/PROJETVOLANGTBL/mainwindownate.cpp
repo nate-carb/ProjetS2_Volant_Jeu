@@ -77,7 +77,11 @@ MainWindow::MainWindow(QWidget* parent)
     lastFrameTime = QTime::currentTime();
 
     // Instead, at the end of the constructor, add:
-    arduino = new ArduinoManager();
+    arduino = new ArduinoManager(this);
+    //bool baseOk = arduino->connectBase("\\\\.\\COM3");
+    //bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
+    //qDebug() << "Base connectee:" << baseOk;
+    //qDebug() << "Wheel connectee:" << wheelOk;
 //    QTimer::singleShot(4000, this, [this]() {
 //        bool baseOk = arduino->connectBase("\\\\.\\COM3");
 //        bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
@@ -308,9 +312,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 void MainWindow::gameLoop()
 {
 
-    // ──── Toujours vider le buffer arduino, même sans map ────
-    arduino->update();
-
+   
 	//wait for track to load before doing anything
     if (!track || track->getCenterLine().empty() || track->getCheckpoints().empty()) return;
     //---------- Info Arduino -------------
@@ -373,13 +375,27 @@ void MainWindow::gameLoop()
     voiture.setAccel(base.gas);
     voiture.setBreaking(base.brake);
     voiture.setSteering(base.pos);
-    voiture.setBoosting(wheelData.switchTL);
-    // mettre en sorte que tr est pause, bl est changer vue et br est sortir pitstop
-    // encodeur 1 = scrool leaderboard et encodeur 2 = changer volume, joystick = menu
-    //voiture.setAccel(wheelData.switchTR ? 1.0f : 0.0f);
-    //voiture.setBreaking(wheelData.switchTL ? 1.0f : 0.0f);
-   
 
+    voiture.setBoosting(wheelData.switchTL);
+    
+    // ===== ENCODEUR 2 = VOLUME =====
+    //if (!arduino->prevEnc2) {
+    //    arduino->prevEnc2 = wheelData.enc2;
+    //    prevEnc2Init = true;
+    //}
+    int delta = wheelData.enc1 - arduino->prevEnc1;
+    if (delta != 0) {
+        float step = 0.02f;  // 2% par cran — ajuste au besoin
+        float newVol = soundManager->getVolume() + delta * step;
+        if (newVol < 0.0f) newVol = 0.0f;
+        if (newVol > 1.0f) newVol = 1.0f;
+        soundManager->setVolume(newVol);
+        //qDebug() << "Volume:" << int(newVol * 100) << "%";
+        arduino->prevEnc1 = wheelData.enc1;
+    }
+    // mettre en sorte que tr est pause DONE, bl est changer vue DONE et br est sortir pitstop DONE
+    // encodeur 1 = changer volume DONE et encodeur 2 = scrool leaderboard, joystick = menu
+    
     bool onTrack = track->isVector2DOnTrack(voiture.getPosition());
 
     if (!raceTimes->isRaceStarted()) { raceTimes->setupRace(3, track);  raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
@@ -403,7 +419,7 @@ void MainWindow::gameLoop()
 
     if (!inPitStop) pitStop.resetLeaving();
 
-    if (inPitStop && !pitStop.isLeaving() && !keyEnter) {
+    if (inPitStop && !pitStop.isLeaving() && (!keyEnter || !wheelData.switchBR)) {
         float carburant = voiture.getCarburant();
         float nos = voiture.getNos();
         float tireWear = voiture.getTireWear();
@@ -415,7 +431,7 @@ void MainWindow::gameLoop()
         return;
     }
 
-    if (inPitStop && keyEnter) pitStop.setLeaving(true);
+    if (inPitStop && (keyEnter || wheelData.switchBR)) pitStop.setLeaving(true);
 
 	// ===== SON =====
     soundManager->updateEngine(voiture.getRpm(), voiture.getMaxRpm(), voiture.is_on_grass);
@@ -426,19 +442,29 @@ void MainWindow::gameLoop()
     // Envoi vers Arduino à 20Hz
     static QElapsedTimer sendTimer;
     if (!sendTimer.isValid()) sendTimer.start();
-    if (sendTimer.elapsed() > 50) {
+    static bool waitingForWheel = false;
+
+    if (arduino->isWheelReady() && !waitingForWheel && sendTimer.elapsed() > 10) {
         arduino->sendToWheel(
             voiture.getRpm(), voiture.getMaxRpm(), voiture.getGear(),
             voiture.getCarburant(), voiture.getTireWear(),
-            inPitStop, voiture.getSpeed() ,
-            voiture.getAngle()
+            inPitStop, voiture.getSpeed(), voiture.getAngle()
         );
         sendTimer.restart();
+        waitingForWheel = true;
     }
-    
+
+    if (arduino->hasNewWheelData()) {
+        waitingForWheel = false;  // le volant a répondu, on peut renvoyer
+    }
+
+    if (waitingForWheel && sendTimer.elapsed() > 500) {  // timeout 500ms
+        waitingForWheel = false;
+    }
     // Toggle pause avec Escape
     static bool escWasPressed = false;
-    bool escNow = (GetAsyncKeyState(VK_ESCAPE) & 0x8000) != 0;
+    bool escNow = (((GetAsyncKeyState(VK_ESCAPE) & 0x8000) != 0) || (wheelData.switchTR && !arduino->prevtr));
+	//arduino->prevtr = wheelData.switchTR;
     if (escNow && !escWasPressed) {
         isPaused = !isPaused;
     }

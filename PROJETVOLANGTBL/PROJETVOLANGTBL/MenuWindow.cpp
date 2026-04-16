@@ -10,7 +10,10 @@
 #include <QScreen>
 #include <QGuiApplication>
 #include <QFontDatabase>
+
 #include "AnimatedButton.h"
+
+
 
 // ===== STYLES =====
 static const QString BTN_STYLE = R"(
@@ -44,7 +47,7 @@ static const QString TITLE_STYLE = R"(
 )";
 
 // ===== CONSTRUCTEUR =====
-MenuWindow::MenuWindow(SoundManager* soundManager, QWidget* parent)
+MenuWindow::MenuWindow(SoundManager* soundManager, ArduinoManager* arduino, QWidget* parent)
     : QMainWindow(parent), m_soundManager(soundManager)
 {
     int fontId = QFontDatabase::addApplicationFont("font/PressStart2P-Regular.ttf");
@@ -69,6 +72,8 @@ MenuWindow::MenuWindow(SoundManager* soundManager, QWidget* parent)
 
     m_stack->setCurrentIndex(PAGE_MAIN);
     m_stack->setCurrentIndex(0);
+
+    m_arduino = arduino;
 }
 
 MenuWindow::~MenuWindow() {}
@@ -93,6 +98,7 @@ void MenuWindow::applyBackground(QWidget* page)
 {
     page->setStyleSheet("background-color: #CC2200;");
 }
+
 
 void MenuWindow::goToPage(int index)
 {
@@ -500,4 +506,50 @@ void MenuWindow::onLeaderboardTrackSelected(int trackIndex)
     m_stack->insertWidget(PAGE_LB_T1 + trackIndex, newPage);
 
     goToPage(PAGE_LB_T1 + trackIndex);
+}
+
+void MenuWindow::pollEncoder()
+{
+    if (!m_arduino) return;
+
+    
+    ArduinoWheelData wd = m_arduino->getWheelData();
+
+    if (!m_prevEnc2Init) {
+        m_prevEnc2 = wd.enc2;
+        m_prevEnc2Init = true;
+        return;
+    }
+
+    int delta = wd.enc2 - m_prevEnc2;
+    if (delta == 0) return;
+    m_prevEnc2 = wd.enc2;
+
+    // Trouver la page de leaderboard courante
+    int page = m_stack->currentIndex();
+    int lbIdx = -1;
+    if (page == PAGE_LB_T1) lbIdx = 0;
+    else if (page == PAGE_LB_T2) lbIdx = 1;
+    else if (page == PAGE_LB_T3) lbIdx = 2;
+    if (lbIdx < 0) return;
+
+    QScrollArea* scroll = m_lbScrolls[lbIdx];
+    if (!scroll) return;
+
+    QScrollBar* vbar = scroll->verticalScrollBar();
+    int step = 20;  // pixels par cran
+    vbar->setValue(vbar->value() + delta * step);
+}
+
+void MenuWindow::showEvent(QShowEvent* e)
+{
+    QMainWindow::showEvent(e);
+    if (m_encoderTimer) m_encoderTimer->start(30);
+    m_prevEnc2Init = false;
+}
+
+void MenuWindow::hideEvent(QHideEvent* e)
+{
+    QMainWindow::hideEvent(e);
+    if (m_encoderTimer) m_encoderTimer->stop();
 }
