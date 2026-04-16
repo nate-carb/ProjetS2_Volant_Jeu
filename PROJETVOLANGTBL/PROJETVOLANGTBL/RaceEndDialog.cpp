@@ -1,7 +1,7 @@
 #include "RaceEndDialog.h"
 #include "AnimatedButton.h"
 
-RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, QWidget* parent)
+RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, float peakRotAccel, QWidget* parent)
     : QDialog(parent), m_trackIndex(trackIndex), m_playerTimeMs(playerTimeMs)
 {
     setObjectName("RaceEndDialog");
@@ -47,6 +47,15 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, QWidget* parent)
     yourTime->setAlignment(Qt::AlignCenter);
     layout->addWidget(yourTime);
     yourTime->setFocusPolicy(Qt::NoFocus);
+
+    QLabel* rotAccel = new QLabel(
+        QString("Peak Rotation Accel: %1").arg(peakRotAccel, 0, 'f', 2));
+    rotAccel->setStyleSheet(
+        "color: white; font-size: 16px; font-weight: bold;"
+        "background-color: #2d0060; border-radius: 6px; padding: 8px;");
+    rotAccel->setAlignment(Qt::AlignCenter);
+    rotAccel->setFocusPolicy(Qt::NoFocus);
+    layout->addWidget(rotAccel);
 
     // ===== LEADERBOARD SCROLLABLE =====
     QScrollArea* scroll = new QScrollArea();

@@ -14,7 +14,7 @@ class RaceEndDialog : public QDialog
 
 public:
     explicit RaceEndDialog(int trackIndex, int playerTimeMs,
-        QWidget* parent = nullptr);
+        float peakRotAccel, QWidget* parent = nullptr);
 
 private slots:
     void onSubmit();

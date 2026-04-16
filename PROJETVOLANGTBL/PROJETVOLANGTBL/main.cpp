@@ -137,12 +137,12 @@ int main(int argc, char* argv[])
         container->setFocus();
         hud->show();
 
-        //// TEST ONLY POUR LA FIN DE COURSE
-        //static bool testDone = false;
-        //if (!testDone) {
-        //    testDone = true;
-        //    window->raceTimes->forceFinish();
-        //}
+        // TEST ONLY POUR LA FIN DE COURSE
+        static bool testDone = false;
+        if (!testDone) {
+            testDone = true;
+            window->raceTimes->forceFinish();
+        }
 
 		//window->arduino->update(); // update Arduino state once before starting the game loop - flush data
         window->timer->start(16);  // start game loop AFTER everything is ready
@@ -313,7 +313,8 @@ int main(int argc, char* argv[])
             window->timer->stop();
             int trackIndex = 0;
             int bestTime = (int)window->raceTimes->getTotalRaceTimeMs();
-            RaceEndDialog* dlg = new RaceEndDialog(trackIndex, bestTime, container);
+            RaceEndDialog* dlg = new RaceEndDialog(trackIndex, bestTime,
+                window->rotPeak ? window->rotPeak->getPeakRotAccel() : 0.0f, container);
             dlg->exec();
 
             
