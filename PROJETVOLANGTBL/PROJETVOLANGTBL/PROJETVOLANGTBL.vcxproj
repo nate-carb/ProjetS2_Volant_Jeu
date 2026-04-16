@@ -119,6 +119,7 @@
     <ClCompile Include="PauseDialog.cpp" />
     <ClCompile Include="PitStop.cpp" />
     <ClCompile Include="RaceEndDialog.cpp" />
+    <ClCompile Include="RaceStart.cpp" />
     <ClCompile Include="raceTimes.cpp" />
     <ClCompile Include="SoundManager.cpp" />
     <ClCompile Include="Track.cpp" />
@@ -171,6 +172,7 @@
     <QtMoc Include="PauseDialog.h" />
     <ClInclude Include="PitStop.h" />
     <QtMoc Include="RaceEndDialog.h" />
+    <QtMoc Include="RaceStart.h" />
     <ClInclude Include="raceTimes.h" />
     <ClInclude Include="resource.h" />
     <QtMoc Include="SoundManager.h" />

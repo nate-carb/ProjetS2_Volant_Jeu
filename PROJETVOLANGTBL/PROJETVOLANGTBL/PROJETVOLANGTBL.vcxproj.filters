@@ -127,6 +127,9 @@
     <ClCompile Include="DeathDialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RaceStart.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vehicule.h">
@@ -228,6 +231,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="ArduinoManager.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="RaceStart.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

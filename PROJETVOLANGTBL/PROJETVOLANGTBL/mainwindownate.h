@@ -14,6 +14,7 @@
 #include "Vehicule.h"
 #include "raceTimes.h"
 #include "ArduinoManager.h"
+#include "RaceStart.h" 
 
 class MainWindow : public QMainWindow
 {
@@ -32,7 +33,7 @@ public:
     QTimer* weatherTimer;  // pour changer la météo automatiquement
     bool eventFilter(QObject* obj, QEvent* event) override;
     PitStop pitStop;
-
+    RaceStart* raceStart = nullptr;
 	PitStop* getPitStop() { return &pitStop; }  
     bool isPaused = false;
 
@@ -42,6 +43,7 @@ public:
         keyShiftUp = keyShiftDown = false;
         prevKeyE = prevKeyQ = prevKeyF1 = false;
         inPitStop = false;
+        if (raceStart) raceStart->reset();
     }
 
 protected:

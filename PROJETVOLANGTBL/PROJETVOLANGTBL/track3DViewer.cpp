@@ -293,102 +293,81 @@ void Track3DViewer::buildSkybox(Track* track)
 void Track3DViewer::buildTrackMesh(Track* track)
 {
     qDebug() << "Start track mesh";
-	// Get left and right edge points from your Track object
     const auto& left = track->getTrackEdges().left;
     const auto& right = track->getTrackEdges().right;
 
-	// We need at least 2 points on each edge to form a quad segment
     if (left.size() < 2 || right.size() < 2) return;
 
-	// Use the smaller of the two edge point counts to avoid out-of-bounds
     size_t n = qMin(left.size(), right.size());
 
-    // ── Build vertex buffer ──────────────────────────────────
-    // Each quad = 4 vertices (left[i], left[i+1], right[i], right[i+1])
-    // Each quad = 2 triangles = 6 indices
-    QVector<float> vertices;
+    // ── Vertex buffer ────────────────────────────────────────
+    QVector<float>   vertices;
     QVector<quint32> indices;
+    vertices.reserve(static_cast<int>(n) * 2 * 3);
+    indices.reserve(static_cast<int>(n - 1) * 6);
 
-	// Reserve space to avoid reallocations
-    vertices.reserve(static_cast<int>(n) * 2 * 3); // x,y,z per vertex
-    indices.reserve(static_cast<int>((n - 1)) * 6);
+    for (size_t i = 0; i < n; i++) vertices << left[i].x() << 0.0f << left[i].y();
+    for (size_t i = 0; i < n; i++) vertices << right[i].x() << 0.0f << right[i].y();
 
-    // Flatten left then right: left[0]…left[n-1], right[0]…right[n-1]
-    // Your 2D (x,y) → 3D (x, 0, y)
-    for (size_t i = 0; i < n; i++) {
-        vertices << left[i].x() << 0.0f << left[i].y();
-    }
-    for (size_t i = 0; i < n; i++) {
-        vertices << right[i].x() << 0.0f << right[i].y();
-    }
-    // Normal buffer – all pointing up since track is flat
+    // ── Normal buffer ────────────────────────────────────────
     QVector<float> normals;
     normals.reserve(static_cast<int>(n) * 2 * 3);
-    for (size_t i = 0; i < n * 2; i++) {
-        normals << 0.0f << 1.0f << 0.0f;
-    }
+    for (size_t i = 0; i < n * 2; i++) normals << 0.0f << 1.0f << 0.0f;
 
-    // Indices: for each segment i, two triangles
-    // left[i]=i,  left[i+1]=i+1
-    // right[i]=n+i, right[i+1]=n+i+1
+    // ── Index buffer ─────────────────────────────────────────
     qDebug() << "before for loop track mesh";
     for (quint32 i = 0; i < static_cast<quint32>(n - 1); i++) {
-		quint32 l0 = i; // left[i]
-		quint32 l1 = i + 1; // left[i+1]
-		quint32 r0 = static_cast<quint32>(n) + i;   // right[i]
-		quint32 r1 = static_cast<quint32>(n) + i + 1;  // right[i+1]
-
-
-        // Triangle 1
-        //indices << l0 << r0 << l1;
-        //// Triangle 2
-        //indices << l1 << r0 << r1;
-
-		//reverse oriantation 
-        //Triangle 1
+        quint32 l0 = i;
+        quint32 l1 = i + 1;
+        quint32 r0 = static_cast<quint32>(n) + i;
+        quint32 r1 = static_cast<quint32>(n) + i + 1;
         indices << l0 << l1 << r0;
-        // Triangle 2
         indices << l1 << r1 << r0;
     }
     qDebug() << "Track mesh built with" << n << "segments.";
+
+    // ── UV buffer — u=0 bord gauche, u=1 bord droit, v=0→1 ──
+        // ── UV buffer — basé sur la longueur d'arc réelle ────────
+    // TILE_V = unités monde par répétition de texture (ajuste au goût)
+    const float TILE_V = 20.0f;
+
+    // Calcule la distance cumulée le long de la piste
+    QVector<float> arcLen(static_cast<int>(n), 0.0f);
+    for (size_t i = 1; i < n; i++) {
+        QVector2D mid_prev = (left[i - 1] + right[i - 1]) * 0.5f;
+        QVector2D mid_curr = (left[i] + right[i]) * 0.5f;
+        arcLen[static_cast<int>(i)] =
+            arcLen[static_cast<int>(i - 1)] + (mid_curr - mid_prev).length();
+    }
+
+    QVector<float> uvs;
+    uvs.reserve(static_cast<int>(n) * 2 * 2);
+    for (size_t i = 0; i < n; i++) uvs << 0.0f << (arcLen[static_cast<int>(i)] / TILE_V);
+    for (size_t i = 0; i < n; i++) uvs << 1.0f << (arcLen[static_cast<int>(i)] / TILE_V);
+
     // ── Qt3D geometry objects ────────────────────────────────
     m_trackEntity = new Qt3DCore::QEntity(m_sceneRoot);
-
-	// Geometry renderer links the geometry to the entity and specifies how to render it
     Qt3DRender::QGeometryRenderer* renderer = new Qt3DRender::QGeometryRenderer(m_trackEntity);
-
-	// Geometry holds vertex and index buffers + attributes
-    //Qt3DCore::QGeometry* geometry = new Qt3DCore::QGeometry(m_trackEntity);
     Qt3DCore::QGeometry* geometry = new Qt3DCore::QGeometry(renderer);
 
-    // Vertex buffer
+    // Position
     Qt3DCore::QBuffer* vertexBuffer = new Qt3DCore::QBuffer(geometry);
-	// We can directly use the raw data from our QVector<float> as a QByteArray for the buffer
-	QByteArray vertexData(reinterpret_cast<const char*>(vertices.constData()), //reinterpret as bytes
-        vertices.size() * sizeof(float));
-    vertexBuffer->setData(vertexData);
-
-	// Position attribute 3 floats per vertex
-	Qt3DCore::QAttribute* posAttr = new Qt3DCore::QAttribute(geometry); //QAttribute describes how to interpret the vertex buffer data
-
-	// We use the default position attribute name so that Qt3D's built-in shaders can recognize it
+    vertexBuffer->setData(QByteArray(reinterpret_cast<const char*>(vertices.constData()),
+        vertices.size() * sizeof(float)));
+    Qt3DCore::QAttribute* posAttr = new Qt3DCore::QAttribute(geometry);
     posAttr->setName(Qt3DCore::QAttribute::defaultPositionAttributeName());
-
-	// We have 3 floats per vertex (x, y, z)
     posAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
     posAttr->setVertexSize(3);
     posAttr->setAttributeType(Qt3DCore::QAttribute::VertexAttribute);
-
-	// Link the attribute to our vertex buffer
     posAttr->setBuffer(vertexBuffer);
-    posAttr->setByteStride(3 * sizeof(float)); 
-	posAttr->setCount(static_cast<uint>(n * 2)); // total vertex count (left + right)
-	geometry->addAttribute(posAttr); // add the attribute to the geometry
+    posAttr->setByteStride(3 * sizeof(float));
+    posAttr->setCount(static_cast<uint>(n * 2));
+    geometry->addAttribute(posAttr);
 
+    // Normals
     Qt3DCore::QBuffer* normalBuffer = new Qt3DCore::QBuffer(geometry);
     normalBuffer->setData(QByteArray(reinterpret_cast<const char*>(normals.constData()),
         normals.size() * sizeof(float)));
-
     Qt3DCore::QAttribute* normAttr = new Qt3DCore::QAttribute(geometry);
     normAttr->setName(Qt3DCore::QAttribute::defaultNormalAttributeName());
     normAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
@@ -399,12 +378,24 @@ void Track3DViewer::buildTrackMesh(Track* track)
     normAttr->setCount(static_cast<uint>(n * 2));
     geometry->addAttribute(normAttr);
 
-	// Index buffer same as above, but with unsigned int indices
-    Qt3DCore::QBuffer* indexBuffer = new Qt3DCore::QBuffer(geometry);
-    QByteArray indexData(reinterpret_cast<const char*>(indices.constData()),
-        indices.size() * sizeof(quint32));
-    indexBuffer->setData(indexData);
+    // UVs
+    Qt3DCore::QBuffer* uvBuffer = new Qt3DCore::QBuffer(geometry);
+    uvBuffer->setData(QByteArray(reinterpret_cast<const char*>(uvs.constData()),
+        uvs.size() * sizeof(float)));
+    Qt3DCore::QAttribute* uvAttr = new Qt3DCore::QAttribute(geometry);
+    uvAttr->setName(Qt3DCore::QAttribute::defaultTextureCoordinateAttributeName());
+    uvAttr->setVertexBaseType(Qt3DCore::QAttribute::Float);
+    uvAttr->setVertexSize(2);
+    uvAttr->setAttributeType(Qt3DCore::QAttribute::VertexAttribute);
+    uvAttr->setBuffer(uvBuffer);
+    uvAttr->setByteStride(2 * sizeof(float));
+    uvAttr->setCount(static_cast<uint>(n * 2));
+    geometry->addAttribute(uvAttr);
 
+    // Indices
+    Qt3DCore::QBuffer* indexBuffer = new Qt3DCore::QBuffer(geometry);
+    indexBuffer->setData(QByteArray(reinterpret_cast<const char*>(indices.constData()),
+        indices.size() * sizeof(quint32)));
     Qt3DCore::QAttribute* indexAttr = new Qt3DCore::QAttribute(geometry);
     indexAttr->setAttributeType(Qt3DCore::QAttribute::IndexAttribute);
     indexAttr->setVertexBaseType(Qt3DCore::QAttribute::UnsignedInt);
@@ -412,21 +403,25 @@ void Track3DViewer::buildTrackMesh(Track* track)
     indexAttr->setCount(static_cast<uint>(indices.size()));
     geometry->addAttribute(indexAttr);
 
-	// Geometry renderer links the geometry to the entity and specifies how to render it
-    //Qt3DRender::QGeometryRenderer* renderer = new Qt3DRender::QGeometryRenderer(m_trackEntity);
     renderer->setGeometry(geometry);
-	renderer->setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles); // the type of primitives we defined in our index buffer (triangles)
+    renderer->setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
+    m_trackEntity->addComponent(renderer);
 
-    // Material – grey tarmac colour
-    Qt3DExtras::QPhongMaterial* material = new Qt3DExtras::QPhongMaterial(m_trackEntity);
-    //material->setDiffuse(QColor(60, 60, 60));    // dark grey = tarmac
-	material->setDiffuse(track->getCurrentChoixMapData().trackData.trackColor);    // tarmac color from map data
-    //material->setDiffuse(QColor(241, 242, 246));  // Kenney's exact grey
-	material->setAmbient(QColor(0, 0, 0)); // ambient is usually darker than diffuse
+    // ── Matériau texturé — même pattern que buildGround ──────
+    Qt3DExtras::QDiffuseMapMaterial* material =
+        new Qt3DExtras::QDiffuseMapMaterial(m_trackEntity);
+
+    Qt3DRender::QTextureImage* trackTex = new Qt3DRender::QTextureImage();
+    trackTex->setSource(QUrl::fromLocalFile(
+        QDir::currentPath() + track->getCurrentChoixMapData().trackData.trackTexturePath));
+
+    material->diffuse()->addTextureImage(trackTex);
+    material->setAmbient(QColor(80, 80, 80)); // QColor(40, 40, 40)
+    material->setSpecular(QColor(0, 0, 0));
     material->setShininess(0.0f);
+    material->setTextureScale(1.0f);  // répétitions le long de la piste — ajuste au goût
 
-	m_trackEntity->addComponent(renderer); // add the geometry renderer to the entity
-	m_trackEntity->addComponent(material); // add the material to the entity
+    m_trackEntity->addComponent(material);
 
     /*
     // TEMPORARY DEBUG – replace custom mesh with a visible box

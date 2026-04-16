@@ -249,6 +249,8 @@ int main(int argc, char* argv[])
 
 
         );
+        hud->updateRaceStart(window->raceStart->getState(),   
+            window->raceStart->getLightsOn());
 
         hud->move(container->mapToGlobal(QPoint(0, 0)));
         hud->resize(container->size());

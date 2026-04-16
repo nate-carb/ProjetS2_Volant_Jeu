@@ -14,6 +14,11 @@ HUDOverlay::HUDOverlay(QWidget* parent) : QWidget(parent)
     m_pixLapTime = QPixmap("./imagehud/laptime.png");
     m_pixSpeedRpm = QPixmap("./imagehud/vitesserpmvide.png");
     m_pixWarning = QPixmap("./imagehud/warning.png");
+	m_pixBoostEmpty = QPixmap("./imagehud/boostvide.png");
+    m_pixLights[0] = QPixmap("./imagehud/startlights0.png"); // tous éteints
+    m_pixLights[1] = QPixmap("./imagehud/startlights1.png"); // 1 allumé
+    m_pixLights[2] = QPixmap("./imagehud/startlights2.png"); // 2 allumés
+    m_pixLights[3] = QPixmap("./imagehud/startlights3.png"); // 3 allumés
     QFontDatabase::addApplicationFont("./font/PressStart2P-Regular.ttf");
 }
 
@@ -75,6 +80,7 @@ void HUDOverlay::paintEvent(QPaintEvent*)
     drawSpeedRpm(painter);
     drawBoostBar(painter);
     drawMinimap(painter);
+    drawStartLights(painter);
 
     if (m_warning) drawWarning(painter);
 }
@@ -465,4 +471,69 @@ void HUDOverlay::drawMinimap(QPainter& p)
     p.drawRect(QRectF(pitMiniPos.x() - 4, pitMiniPos.y() - 4, 8, 8));
 
     p.restore();
+}
+
+void HUDOverlay::updateRaceStart(RaceStart::State state, int lightsOn)
+{
+    // Démarre le chrono dès qu'on passe en RACING (pour l'animation d'extinction)
+    if (state == RaceStart::RACING && m_raceStartState != RaceStart::RACING) {
+        m_racingTimer.start();
+    }
+    m_raceStartState = state;
+    m_raceStartLights = lightsOn;
+    update();
+}
+
+void HUDOverlay::drawStartLights(QPainter& p)
+{
+    // ── Quand ne rien afficher ────────────────────────────────────────────
+    if (m_raceStartState == RaceStart::IDLE) return;
+
+    // Après le GO : affiche les feux éteints 1.5s puis disparaît
+    const qint64 SHOW_AFTER_GO_MS = 1500;
+    if (m_raceStartState == RaceStart::RACING &&
+        m_racingTimer.elapsed() > SHOW_AFTER_GO_MS) return;
+
+    // ── Taille & position centrée (haut-centre de l'écran) ───────────────
+    const int W = 450, H = 225;
+    int x = (width() - W) / 2;
+    int y = height() / 8;        // ajuste si trop haut/bas
+
+    // ── Choisir l'image ──────────────────────────────────────────────────
+    // Mappe 5 feux internes → 3 feux à l'écran
+    // 0→0  1→1  2→1  3→2  4→2  5→3
+    int displayLights = (m_raceStartLights * 3 + 2) / 5;
+    displayLights = qBound(0, displayLights, 3);
+
+    // Après le GO ou pendant la pénalité : feux éteints
+    if (m_raceStartState == RaceStart::RACING ||
+        m_raceStartState == RaceStart::FALSE_START) {
+        displayLights = 0;
+    }
+
+    if (!m_pixLights[displayLights].isNull())
+        p.drawPixmap(x, y, W, H, m_pixLights[displayLights]);
+
+    // ── Texte FAUX DÉPART (clignote en rouge) ────────────────────────────
+    if (m_raceStartState == RaceStart::FALSE_START) {
+        if ((QTime::currentTime().msec() / 300) % 2 == 0) {
+            p.setRenderHint(QPainter::TextAntialiasing, false);
+            p.setFont(QFont("Press Start 2P", 18));
+            p.setPen(Qt::red);
+            p.drawText(QRect(0, y + H + 10, width(), 50),
+                Qt::AlignCenter, "FAUX DEPART !");
+        }
+    }
+
+    // ── Texte GO ! (1.5s après extinction) ───────────────────────────────
+    if (m_raceStartState == RaceStart::RACING) {
+        p.setRenderHint(QPainter::TextAntialiasing, false);
+        p.setFont(QFont("Press Start 2P", 28));
+        // Fondu : opacité diminue sur 1.5s
+        int alpha = (int)(255 * (1.0f - m_racingTimer.elapsed() / (float)SHOW_AFTER_GO_MS));
+        alpha = qBound(0, alpha, 255);
+        p.setPen(QColor(0, 230, 0, alpha));
+        p.drawText(QRect(0, y + H + 10, width(), 60),
+            Qt::AlignCenter, "GO !");
+    }
 }

@@ -1586,12 +1586,13 @@ void Track::defaultMapList()
     map1.mapName = "nate";
     map1.mapFilePath = "tracks/nate.trk";
     map1.mapThumbnailPath = "thumbnails/track1.png";
-    map1.skyboxFilePath = "/images/skybox/sky/cubemap1";
+    map1.skyboxFilePath = "/images/skybox/space/cubemap1";
 
     map1.groundData.width = 2000.0f;
     map1.groundData.height = 2000.0f;
-    map1.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
-
+    //map1.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
+    
+	map1.trackData.trackTexturePath = "/images/rainbow.png";
 	map1.trackData.trackColor = QColor(241, 242, 246); // kenney gray
     map1.trackData.kerbData.width = 5.0f;
     map1.trackData.kerbData.height = 0.05f;
@@ -1618,6 +1619,7 @@ void Track::defaultMapList()
     map2.groundData.height = 2000.0f;
     map2.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
 
+    map2.trackData.trackTexturePath = "/images/road_texture.jpg";
     map2.trackData.trackColor = QColor(241, 242, 246); // kenney gray
     map2.trackData.kerbData.width = 5.0f;
     map2.trackData.kerbData.height = 0.05f;
@@ -1638,16 +1640,17 @@ void Track::defaultMapList()
     map3.mapName = "TEST1";
     map3.mapFilePath = "tracks/TEST1.trk";
     map3.mapThumbnailPath = "thumbnails/track3.png";
-    map3.skyboxFilePath = "/images/skybox/space/cubemap1";
+    map3.skyboxFilePath = "/images/skybox/sky/cubemap1";
 
     map3.groundData.width = 2000.0f;
     map3.groundData.height = 2000.0f;
-    map3.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
+    map3.groundData.texturePath = "/images/water.jpg";
 
-    map3.trackData.trackColor = QColor(241, 242, 246); // kenney gray
+	map3.trackData.trackTexturePath = "/images/sand.jpg";
+    map3.trackData.trackColor = QColor(139, 69, 19); // kenney brun
     map3.trackData.kerbData.width = 5.0f;
     map3.trackData.kerbData.height = 0.05f;
-    map3.trackData.kerbData.color1 = QColor(220, 30, 30); //red QColor(220, 30, 30)
+    map3.trackData.kerbData.color1 = QColor(222, 184, 135); //red QColor(220, 30, 30)
     map3.trackData.kerbData.color2 = QColor(Qt::white);
 
     map3.pitData.pitColor = QColor(241, 242, 246);

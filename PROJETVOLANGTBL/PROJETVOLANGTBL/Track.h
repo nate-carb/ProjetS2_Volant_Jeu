@@ -82,6 +82,7 @@ struct PitRenderingData {
 struct TrackRenderingData {
 	QColor trackColor;
 	KerbRenderingData kerbData;
+	QString trackTexturePath;
 };
 
 struct ChoixMapData {

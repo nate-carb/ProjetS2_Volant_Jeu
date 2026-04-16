@@ -5,6 +5,8 @@
 #include "raceTimes.h"
 #include "Track.h"
 #include "PitStop.h"
+#include "RaceStart.h"
+
 
 class HUDOverlay : public QWidget
 {
@@ -20,7 +22,7 @@ public:
         const Track* track, const PitStop* pitStop,        
         QVector2D carPos, float carAngle);     
     void setPaused(bool paused) { m_paused = paused; update(); }
-
+    void updateRaceStart(RaceStart::State state, int lightsOn);
 protected:
     void paintEvent(QPaintEvent* event) override;
 
@@ -49,6 +51,11 @@ private:
     QPixmap m_pixWarning;
     QPixmap m_pixBoostEmpty;
 
+    QPixmap           m_pixLights[4];
+    RaceStart::State  m_raceStartState = RaceStart::IDLE;
+    int               m_raceStartLights = 0;
+    QElapsedTimer     m_racingTimer;   // chrono pour effacer les feux après GO
+
     // Helpers
     void drawBar(QPainter& p, int x, int y, int w, int h,
         float value, QColor color, const QString& label);
@@ -66,5 +73,6 @@ private:
 
     // Déclare la fonction
     void drawMinimap(QPainter& p);
+    void drawStartLights(QPainter& p);
 
 };
