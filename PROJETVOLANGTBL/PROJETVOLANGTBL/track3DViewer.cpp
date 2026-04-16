@@ -854,6 +854,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
 
 void Track3DViewer::buildGround(Track* track)
 {
+    if (!track->getCurrentChoixMapData().groundData.visible) return;
 	 //Remove old ground entity if it exists
     if (m_groundEntity) {
         m_groundEntity->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));

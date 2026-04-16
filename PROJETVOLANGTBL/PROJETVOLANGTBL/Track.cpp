@@ -1586,11 +1586,12 @@ void Track::defaultMapList()
     map1.mapName = "nate";
     map1.mapFilePath = "tracks/nate.trk";
     map1.mapThumbnailPath = "thumbnails/track1.png";
-    map1.skyboxFilePath = "/images/skybox/sky/cubemap1";
+    map1.skyboxFilePath = "/images/skybox/space/cubemap1";
 
     map1.groundData.width = 2000.0f;
     map1.groundData.height = 2000.0f;
     map1.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
+    map1.groundData.visible = false;
 
 	map1.trackData.trackColor = QColor(241, 242, 246); // kenney gray
     map1.trackData.kerbData.width = 5.0f;
@@ -1614,8 +1615,8 @@ void Track::defaultMapList()
     map2.mapThumbnailPath = "thumbnails/track2.png";
     map2.skyboxFilePath = "/images/skybox/sky/cubemap1";
 
-    map2.groundData.width = 2000.0f;
-    map2.groundData.height = 2000.0f;
+    map2.groundData.width = 5000.0f;
+    map2.groundData.height = 5000.0f;
     map2.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
 
     map2.trackData.trackColor = QColor(241, 242, 246); // kenney gray

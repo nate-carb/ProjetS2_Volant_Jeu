@@ -103,6 +103,11 @@ void MenuWindow::applyBackground(QWidget* page)
 void MenuWindow::goToPage(int index)
 {
     m_stack->setCurrentIndex(index);
+    // Focus sur le premier bouton de la page
+    QWidget* page = m_stack->currentWidget();
+    QList<QPushButton*> buttons = page->findChildren<QPushButton*>();
+    if (!buttons.isEmpty())
+        buttons.first()->setFocus();
 }
 
 // ===== PAGE MAIN MENU =====
@@ -190,6 +195,8 @@ QWidget* MenuWindow::createMainMenuPage()
     centerLayout->addWidget(btnOpts);
     centerLayout->addWidget(btnCtrl);
     centerLayout->addWidget(btnQuit);
+
+    btnPlay->setFocus();
 
     return page;
 }
@@ -426,6 +433,10 @@ QWidget* MenuWindow::createLeaderboardPage(int trackIndex)
     QVector<LeaderboardManager::Entry> entries =
         LeaderboardManager::load(trackIndex);
 
+    scroll->setFocusPolicy(Qt::NoFocus);
+    scroll->verticalScrollBar()->setFocusPolicy(Qt::NoFocus);
+    content->setFocusPolicy(Qt::NoFocus);
+
     if (entries.isEmpty()) {
         QLabel* empty = new QLabel("No scores yet!");
         empty->setStyleSheet(
@@ -482,13 +493,13 @@ void MenuWindow::onPlay() { goToPage(PAGE_TRACK_SEL); }
 void MenuWindow::onLeaderboards() { goToPage(PAGE_LB_SEL); }
 
 void MenuWindow::onOptions() {
-    OptionsDialog dlg(m_soundManager, this);
-    dlg.exec();
+    OptionsDialog* dlg = new OptionsDialog(m_soundManager, this);
+    dlg->show();
 }
 
 void MenuWindow::onControls() {
-    ControlsDialog dlg(this);
-    dlg.exec();
+    ControlsDialog* dlg = new ControlsDialog(this);
+    dlg->show();
 }
 
 void MenuWindow::onTrackSelected(int trackIndex) {

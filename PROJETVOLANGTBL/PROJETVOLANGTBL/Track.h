@@ -65,6 +65,7 @@ struct GroundRenderingData {
 	float width;
 	float height;
 	QString texturePath;
+	bool visible = true;
 };
 
 struct KerbRenderingData {

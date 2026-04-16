@@ -4,6 +4,7 @@
 RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, QWidget* parent)
     : QDialog(parent), m_trackIndex(trackIndex), m_playerTimeMs(playerTimeMs)
 {
+    setObjectName("RaceEndDialog");
     setWindowTitle("Course terminée!");
     setFixedSize(500, 650);
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
@@ -32,6 +33,7 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, QWidget* parent)
         "font-weight: bold; border-radius: 8px; padding: 12px;");
     title->setAlignment(Qt::AlignCenter);
     layout->addWidget(title);
+    title->setFocusPolicy(Qt::NoFocus);
 
     // ===== TEMPS DU JOUEUR =====
     LeaderboardManager::Entry playerEntry;
@@ -44,6 +46,7 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, QWidget* parent)
         "background-color: #4B0082; border-radius: 6px; padding: 8px;");
     yourTime->setAlignment(Qt::AlignCenter);
     layout->addWidget(yourTime);
+    yourTime->setFocusPolicy(Qt::NoFocus);
 
     // ===== LEADERBOARD SCROLLABLE =====
     QScrollArea* scroll = new QScrollArea();
@@ -63,6 +66,8 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, QWidget* parent)
 
     scroll->setWidget(scrollContent);
     layout->addWidget(scroll);
+    scroll->setFocusPolicy(Qt::NoFocus);
+
 
     // ===== ENTRER SON NOM =====
     QLabel* nameLabel = new QLabel("Entrez votre nom:");
@@ -93,6 +98,12 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, QWidget* parent)
     QPushButton* btnClose = createStyledButton("Fermer");
     connect(btnClose, &QPushButton::clicked, this, &QDialog::accept);
     layout->addWidget(btnClose);
+   
+    scrollContent->setFocusPolicy(Qt::NoFocus);
+    nameLabel->setFocusPolicy(Qt::NoFocus);
+    card->setFocusPolicy(Qt::NoFocus);
+    m_nameInput->setFocusPolicy(Qt::StrongFocus);
+    m_nameInput->setFocus();  // focus sur le champ de nom au démarrage
 }
 
 void RaceEndDialog::buildLeaderboard(QVBoxLayout* layout)

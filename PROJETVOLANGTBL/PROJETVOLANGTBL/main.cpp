@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
     MainWindow* window = new MainWindow();
 	// ===== Connexion Arduino après 4 secondes =====
 	QTimer::singleShot(2000, window, [window]() {   // ← attente 4 secondes pour laisser le temps au arduino de resetter et se préparer
-        bool baseOk = window->arduino->connectBase("\\\\.\\COM3"); 
-        bool wheelOk = window->arduino->connectWheel("\\\\.\\COM6");
+        bool baseOk = window->arduino->connectBase("\\\\.\\COM4"); 
+        bool wheelOk = window->arduino->connectWheel("\\\\.\\COM7");
         qDebug() << "Base connectee:" << baseOk;
         qDebug() << "Wheel connectee:" << wheelOk;
         });
@@ -123,12 +123,27 @@ int main(int argc, char* argv[])
         container->setFocus();
         hud->show();
 
+        //// TEST ONLY POUR LA FIN DE COURSE
+        //static bool testDone = false;
+        //if (!testDone) {
+        //    testDone = true;
+        //    window->raceTimes->forceFinish();
+        //}
+
 		//window->arduino->update(); // update Arduino state once before starting the game loop - flush data
         window->timer->start(16);  // start game loop AFTER everything is ready
         });
 
     
     QObject::connect(window->timer, &QTimer::timeout, [=]() {
+        bool raceEndOpen = false;
+        for (QWidget* w : QApplication::allWidgets()) {
+            if (w->objectName() == "RaceEndDialog" && w->isVisible()) {
+                raceEndOpen = true;
+                break;
+            }
+        }
+        if (raceEndOpen) return;
         if (!container || !container->isVisible() || container->isMinimized()) {
             hud->hide();
             return;
@@ -141,6 +156,72 @@ int main(int argc, char* argv[])
 
         
         if (!window->track || window->track->getCenterLine().empty()) return;
+
+        // ===== NAVIGATION JOYSTICK =====
+        static int lastJoyDir = 0;
+        static bool lastBtnSelect = false;
+
+        int joyDir = window->arduino->getWheelData().joyDir;
+        bool btnSelect = window->arduino->getWheelData().switchBR;
+
+        if (joyDir != lastJoyDir && joyDir != 0) {
+            Qt::Key key;
+            switch (joyDir) {
+            case 1: key = Qt::Key_Up;    break;
+            case 2: key = Qt::Key_Down;  break;
+            case 3: key = Qt::Key_Left;  break;
+            case 4: key = Qt::Key_Right; break;
+            default: key = Qt::Key_Down; break;
+            }
+
+            // Envoie au menu si visible, sinon au dialog actif
+            QWidget* target = nullptr;
+            if (menu->isVisible()) {
+                QWidget* page = menu->getCurrentPage();
+                QList<QPushButton*> buttons = page->findChildren<QPushButton*>();
+                for (auto* btn : buttons) {
+                    if (btn->hasFocus()) { target = btn; break; }
+                }
+                if (!target && !buttons.isEmpty()) {
+                    buttons.first()->setFocus();
+                    target = buttons.first();
+                }
+            }
+            else {
+                // Pour pause/raceend dialogs
+                QWidget* activeWindow = QApplication::activeWindow();
+                if (activeWindow) {
+                    QList<QPushButton*> buttons = activeWindow->findChildren<QPushButton*>();
+                    for (auto* btn : buttons) {
+                        if (btn->hasFocus()) { target = btn; break; }
+                    }
+                    if (!target && !buttons.isEmpty()) {
+                        buttons.first()->setFocus();
+                        target = buttons.first();
+                    }
+                }
+            }
+
+            if (target) {
+                QKeyEvent* keyEvent = new QKeyEvent(QEvent::KeyPress, key, Qt::NoModifier);
+                QApplication::sendEvent(target->parentWidget(), keyEvent);
+                delete keyEvent;
+            }
+        }
+        lastJoyDir = joyDir;
+
+       
+
+        // Sélection
+        if (btnSelect && !lastBtnSelect) {
+            QWidget* focused = QApplication::focusWidget();
+            if (focused) {
+                QPushButton* btn = qobject_cast<QPushButton*>(focused);
+                if (btn) btn->click();
+            }
+        }
+        lastBtnSelect = btnSelect;
+
         // Menu pause
         static bool pauseDialogOpen = false;
         if (window->isPaused && !pauseDialogOpen) {
@@ -174,7 +255,7 @@ int main(int argc, char* argv[])
         }
 
         hud->show();
-
+       
         // Death screen
         static bool deathShown = false;
         if (!deathShown) {
@@ -253,7 +334,139 @@ int main(int argc, char* argv[])
         hud->move(container->mapToGlobal(QPoint(0, 0)));
         hud->resize(container->size());
     });
+    // Timer séparé pour le joystick menu — tourne toujours
+    QTimer* joystickTimer = new QTimer();
+    joystickTimer->setInterval(100);
+    QObject::connect(joystickTimer, &QTimer::timeout, [=]() {
+        static int lastJoyDir = 0;
+        static bool lastBtnSelect = false;
+
+        int joyDir = window->arduino->getWheelData().joyDir;
+        bool btnSelect = window->arduino->getWheelData().switchBR;
+
+        if (joyDir != lastJoyDir && joyDir != 0) {
+            Qt::Key key;
+            switch (joyDir) {
+            case 1: key = Qt::Key_Up;    break;
+            case 2: key = Qt::Key_Down;  break;
+            case 3: key = Qt::Key_Right;  break;
+            case 4: key = Qt::Key_Left; break;
+            default: key = Qt::Key_Down; break;
+            }
+
+            QPushButton* focused = nullptr;
+
+            if (menu->isVisible()) {
+                QWidget* page = menu->getCurrentPage();
+                QList<QPushButton*> buttons = page->findChildren<QPushButton*>();
+                for (auto* btn : buttons) {
+                    if (btn->hasFocus()) { focused = btn; break; }
+                }
+                if (!focused && !buttons.isEmpty()) {
+                    buttons.first()->setFocus();
+                    focused = buttons.first();
+                }
+            }
+            else {
+                for (QWidget* w : QApplication::topLevelWidgets()) {
+                    QDialog* dlg = qobject_cast<QDialog*>(w);
+                    if (dlg && dlg->isVisible()) {
+                        QList<QPushButton*> buttons = dlg->findChildren<QPushButton*>();
+                        for (auto* btn : buttons) {
+                            if (btn->hasFocus()) { focused = btn; break; }
+                        }
+                        if (!focused && !buttons.isEmpty()) {
+                            buttons.first()->setFocus();
+                            focused = buttons.first();
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (focused) {
+                QKeyEvent* ev = new QKeyEvent(QEvent::KeyPress, key, Qt::NoModifier);
+                QApplication::sendEvent(focused, ev);
+                delete ev;
+            }
+        }
+        lastJoyDir = joyDir;
+
+        if (btnSelect && !lastBtnSelect) {
+            qDebug() << "BTN SELECT PRESSED";
+            QWidget* focused = QApplication::focusWidget();
+            qDebug() << "Focused widget:" << focused;
+            if (focused) {
+                QPushButton* btn = qobject_cast<QPushButton*>(focused);
+                qDebug() << "Button:" << btn;
+                if (btn) btn->click();
+            }
+        }
+        lastBtnSelect = btnSelect;
+
+        // Encodeur 1 = volume
+        static int lastEnc1 = -1;
+        int enc1 = window->arduino->getWheelData().enc1;
+
+        if (lastEnc1 == -1) {
+            lastEnc1 = enc1;
+        }
+
+        int enc1Delta = enc1 - lastEnc1;
+        lastEnc1 = enc1;
+
+        if (enc1Delta != 0) {
+            float step = 0.02f;
+            float newVol = window->soundManager->getVolume() + enc1Delta * step;
+            newVol = std::clamp(newVol, 0.0f, 1.0f);
+            window->soundManager->setVolume(newVol);
+        }
+
+        //Encodeur2
+        static int lastEnc2 = -1;
+        int enc2 = window->arduino->getWheelData().enc2;
+
+        if (lastEnc2 == -1) {
+            lastEnc2 = enc2;  // initialise sans scroller
+        }
+
+        int enc2Delta = enc2 - lastEnc2;
+        lastEnc2 = enc2;  // update TOUJOURS
+        if (enc2Delta != 0) {
+            QScrollArea* scrollArea = nullptr;
+
+            if (menu->isVisible()) {
+                QList<QScrollArea*> scrollAreas = menu->findChildren<QScrollArea*>();
+                for (QScrollArea* sa : scrollAreas) {
+                    if (sa->isVisible()) {
+                        scrollArea = sa;
+                        break;
+                    }
+                }
+                qDebug() << "Visible ScrollArea:" << scrollArea;
+            }
+            if (scrollArea) {
+                QScrollBar* bar = scrollArea->verticalScrollBar();
+                qDebug() << "ScrollBar min:" << bar->minimum() << "max:" << bar->maximum() << "current:" << bar->value();
+                bar->setValue(bar->value() + enc2Delta * 5);
+            }
+
+            for (QWidget* w : QApplication::topLevelWidgets()) {
+                if (w->isVisible()) {
+                    QScrollArea* sa = w->findChild<QScrollArea*>();
+                    if (sa) { scrollArea = sa; break; }
+                }
+            }
+
+            if (scrollArea) {
+                QScrollBar* bar = scrollArea->verticalScrollBar();
+                bar->setValue(bar->value() + enc2Delta * 5);
+                qDebug() << "Scrolling by" << enc2Delta;
+            }
+        }
+        });
     
+    joystickTimer->start();
+
     return app.exec();
 }
-    

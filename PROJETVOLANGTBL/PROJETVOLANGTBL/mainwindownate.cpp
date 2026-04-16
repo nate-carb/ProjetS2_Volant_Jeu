@@ -366,23 +366,20 @@ void MainWindow::gameLoop()
     //voiture.setAccel(keyW ? 1.0f : 0.0f);
     //voiture.setBreaking(keyS ? 1.0f : 0.0f);
     //voiture.setBoosting(keySpace);
-
+    //
     //if (keyA && !keyD) voiture.setSteering(-1.0f);
     //else if (keyD && !keyA) voiture.setSteering(1.0f);
     //else voiture.setSteering(0.0f);
     
-	// ===== INPUTS WHEEL =====
+	//===== INPUTS WHEEL =====
     voiture.setAccel(base.gas);
     voiture.setBreaking(base.brake);
     voiture.setSteering(base.pos);
-
+    
     voiture.setBoosting(wheelData.switchTL);
     
-    // ===== ENCODEUR 2 = VOLUME =====
-    //if (!arduino->prevEnc2) {
-    //    arduino->prevEnc2 = wheelData.enc2;
-    //    prevEnc2Init = true;
-    //}
+    ////===== ENCODEUR 2 = VOLUME =====
+   
     int delta = wheelData.enc1 - arduino->prevEnc1;
     if (delta != 0) {
         float step = 0.02f;  // 2% par cran — ajuste au besoin
@@ -419,7 +416,7 @@ void MainWindow::gameLoop()
 
     if (!inPitStop) pitStop.resetLeaving();
 
-    if (inPitStop && !pitStop.isLeaving() && (!keyEnter || !wheelData.switchBR)) {
+    if (inPitStop && !pitStop.isLeaving() && !keyEnter && !wheelData.switchBR) {
         float carburant = voiture.getCarburant();
         float nos = voiture.getNos();
         float tireWear = voiture.getTireWear();

@@ -56,7 +56,7 @@ public:
     bool prevEnc1 = false, prevEnc2 = false;
 
 private slots:
-    void update();   // appelé automatiquement par pollTimer
+    void update();   
 
 private:
     bool newWheelData = false;

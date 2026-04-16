@@ -19,6 +19,7 @@ OptionsDialog::OptionsDialog(SoundManager* soundManager, QWidget* parent)
         "font-weight: bold; border-radius: 8px; padding: 10px;");
     title->setAlignment(Qt::AlignCenter);
     layout->addWidget(title);
+    title->setFocusPolicy(Qt::NoFocus);
 
     // Volume slider
     QHBoxLayout* volRow = new QHBoxLayout();
@@ -52,7 +53,8 @@ OptionsDialog::OptionsDialog(SoundManager* soundManager, QWidget* parent)
     volRow->addWidget(volLabel);
     volRow->addWidget(volSlider);
     layout->addLayout(volRow);
-
+    volLabel->setFocusPolicy(Qt::NoFocus);
+    volSlider->setFocusPolicy(Qt::NoFocus);
     layout->addStretch();
 
     // Bouton fermer
@@ -61,4 +63,5 @@ OptionsDialog::OptionsDialog(SoundManager* soundManager, QWidget* parent)
     btnClose->setCursor(Qt::PointingHandCursor);
     connect(btnClose, &QPushButton::clicked, this, &QDialog::accept);
     layout->addWidget(btnClose);
+    btnClose->setFocus();
 }

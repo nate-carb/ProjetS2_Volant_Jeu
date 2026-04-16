@@ -56,6 +56,7 @@ PauseDialog::PauseDialog(SoundManager* soundManager, QWidget* parent)
     QPushButton* btnOptions = createStyledButton("Options");
     QPushButton* btnControls = createStyledButton("Contrôles");
     QPushButton* btnMainMenu = createStyledButton("Menu Principal");
+    card->setFocusPolicy(Qt::NoFocus);
 
     // Resume
     connect(btnResume, &QPushButton::clicked, [this]() {
@@ -71,14 +72,13 @@ PauseDialog::PauseDialog(SoundManager* soundManager, QWidget* parent)
 
     // Options — ouvre le dialog options sans fermer la pause
     connect(btnOptions, &QPushButton::clicked, [this, soundManager]() {
-        OptionsDialog dlg(soundManager, this);
-        dlg.exec();
+        OptionsDialog* dlg = new OptionsDialog(soundManager, this);
+        dlg->show();  // au lieu de exec()
         });
 
-    // Controls — ouvre le dialog controls sans fermer la pause
     connect(btnControls, &QPushButton::clicked, [this]() {
-        ControlsDialog dlg(this);
-        dlg.exec();
+        ControlsDialog* dlg = new ControlsDialog(this);
+        dlg->show();  // au lieu de exec()
         });
 
     // Main Menu
@@ -92,6 +92,7 @@ PauseDialog::PauseDialog(SoundManager* soundManager, QWidget* parent)
     layout->addWidget(btnOptions);
     layout->addWidget(btnControls);
     layout->addWidget(btnMainMenu);
+    btnResume->setFocus();
 }
 
 QPushButton* PauseDialog::createStyledButton(const QString& text)

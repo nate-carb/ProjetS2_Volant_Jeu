@@ -30,6 +30,8 @@ public:
     explicit MenuWindow(SoundManager* soundManager, ArduinoManager* arduino, QWidget* parent = nullptr);
     ~MenuWindow();
     void goToMainMenu() { goToPage(PAGE_MAIN); }
+    QWidget* getCurrentPage() const { return m_stack->currentWidget(); }
+    QWidget* getPage(int index) const { return m_stack->widget(index); }
 
 signals:
     void playRequested(int trackIndex);

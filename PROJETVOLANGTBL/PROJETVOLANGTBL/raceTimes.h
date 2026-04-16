@@ -19,6 +19,7 @@ public:
     bool isRaceStarted() { return raceStarted; }
     bool isRaceFinished() const { return raceFinished; }
     void resetRace() { raceFinished = false; raceStarted = false; }
+    void forceFinish() { raceFinished = true; raceStarted = false; }
 
     QString getLastCheckpointTimeString();
 
