@@ -27,9 +27,16 @@ AnimatedButton::AnimatedButton(const QString& text, QWidget* parent)
     QPushButton:pressed {
         background-color: #2D0052;
     }
+    QPushButton:focus {
+        outline: none;
+    }
 )");
 
     setCursor(Qt::PointingHandCursor);
+    setFocusPolicy(Qt::StrongFocus);
+
+    setDefault(false);
+    setAutoDefault(false);
 
     m_pulseTimer = new QTimer(this);
     m_pulseTimer->setInterval(33);  // ~60fps
@@ -80,3 +87,39 @@ void AnimatedButton::paintEvent(QPaintEvent* event)
 {
     QPushButton::paintEvent(event);
 }
+
+void AnimatedButton::focusInEvent(QFocusEvent* event)
+{
+    m_hovered = true;
+    m_pulseTimer->start();
+    setStyleSheet(styleSheet() + "QPushButton { background-color: #4B0082; border: 2px solid #8B00FF; }");
+    QPushButton::focusInEvent(event);
+}
+
+void AnimatedButton::focusOutEvent(QFocusEvent* event)
+{
+    m_hovered = false;
+    // Remet le style original
+    setStyleSheet(R"(
+        QPushButton {
+            background-color: #111111;
+            color: white;
+            font-weight: bold;
+            border-radius: 12px;
+            padding: 14px;
+            border: 2px solid #333333;
+        }
+        QPushButton:hover {
+            background-color: #4B0082;
+            border: 2px solid #8B00FF;
+        }
+        QPushButton:pressed {
+            background-color: #2D0052;
+        }
+        QPushButton:focus {
+            outline: none;
+        }
+    )");
+    QPushButton::focusOutEvent(event);
+}
+

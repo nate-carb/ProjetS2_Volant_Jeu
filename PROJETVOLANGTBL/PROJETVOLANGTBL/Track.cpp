@@ -1634,8 +1634,8 @@ void Track::defaultMapList()
     map2.mapThumbnailPath = "thumbnails/track2.png";
     map2.skyboxFilePath = "/images/skybox/sky/cubemap1";
 
-    map2.groundData.width = 2000.0f;
-    map2.groundData.height = 2000.0f;
+    map2.groundData.width = 5000.0f;
+    map2.groundData.height = 5000.0f;
     map2.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
 	map2.groundData.ambientColor = QColor(100, 150, 100); // slightly darker green for ambient lighting
 

@@ -59,7 +59,6 @@ private:
     // Helpers
     void drawBar(QPainter& p, int x, int y, int w, int h,
         float value, QColor color, const QString& label);
-    //void drawBoostBar(QPainter& p, int x, int y, float nosRatio);
     void drawLapCounter(QPainter& p);
     void drawLapTimes(QPainter& p);
     void drawSpeedRpm(QPainter& p);

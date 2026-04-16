@@ -402,11 +402,8 @@ void MainWindow::gameLoop()
 
     //voiture.setBoosting(wheelData.switchTL);
     
-    // ===== ENCODEUR 2 = VOLUME =====
-    //if (!arduino->prevEnc2) {
-    //    arduino->prevEnc2 = wheelData.enc2;
-    //    prevEnc2Init = true;
-    //}
+    ////===== ENCODEUR 2 = VOLUME =====
+   
     int delta = wheelData.enc1 - arduino->prevEnc1;
     if (delta != 0) {
         float step = 0.02f;  // 2% par cran — ajuste au besoin
@@ -472,7 +469,7 @@ void MainWindow::gameLoop()
 
     if (!inPitStop) pitStop.resetLeaving();
 
-    if (inPitStop && !pitStop.isLeaving() && (!keyEnter || !wheelData.switchBR)) {
+    if (inPitStop && !pitStop.isLeaving() && !keyEnter && !wheelData.switchBR) {
         float carburant = voiture.getCarburant();
         float nos = voiture.getNos();
         float tireWear = voiture.getTireWear();

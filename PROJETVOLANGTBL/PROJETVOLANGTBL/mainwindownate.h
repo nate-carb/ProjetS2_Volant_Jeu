@@ -40,6 +40,8 @@ public:
     MuonWeather*  muonWeather  = nullptr;
 	PitStop* getPitStop() { return &pitStop; }  
     bool isPaused = false;
+    ArduinoManager* getArduino() const { return arduino; }
+    
 
     void resetInputs() {
         keyW = keyA = keyS = keyD = false;

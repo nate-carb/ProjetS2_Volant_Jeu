@@ -3,6 +3,7 @@
 #include <QTimer>
 #include <QPainter>
 #include <QGraphicsDropShadowEffect>
+#include <QKeyEvent>
 
 class AnimatedButton : public QPushButton
 {
@@ -15,6 +16,8 @@ protected:
     void enterEvent(QEnterEvent* event) override;
     void leaveEvent(QEvent* event) override;
     void paintEvent(QPaintEvent* event) override;
+    void focusInEvent(QFocusEvent* event) override;
+    void focusOutEvent(QFocusEvent* event) override;
 
 private slots:
     void onPulse();
