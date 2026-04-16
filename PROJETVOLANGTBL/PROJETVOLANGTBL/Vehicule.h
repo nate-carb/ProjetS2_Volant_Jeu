@@ -26,6 +26,7 @@ public:
     float getSteering() const { return steering; }
     void setSteering(float s) { steering = s; }
     float getAngle() const { return angle; }
+	void setAngle(float a) { angle = a; }
     float getSpeed() const;
     float getBreaking() const { return breaking; }
     void setBreaking(float b) { breaking = b; }

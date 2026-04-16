@@ -88,6 +88,13 @@ MainWindow::MainWindow(QWidget* parent)
 //        qDebug() << "Base connectee:" << baseOk;
 //        qDebug() << "Wheel connectee:" << wheelOk;
 //        });
+    raceStart = new RaceStart(this);
+    connect(raceStart, &RaceStart::raceStarted, this, [this]() {
+        if (track) {
+            raceTimes->setupRace(3, track);
+            raceTimes->startRace();
+        }
+		});
 }
 
 MainWindow::~MainWindow()
@@ -350,7 +357,7 @@ void MainWindow::gameLoop()
         DevMenu* devMenu = new DevMenu(&voiture, this);
         devMenu->show();
     }
-    if (curKeyE && !prevKeyE)   voiture.shiftUp();
+    if (curKeyE && !prevKeyE) voiture.shiftUp();
     if (curKeyQ && ! prevKeyQ) voiture.shiftDown();
     prevKeyE = curKeyE;
     prevKeyQ = curKeyQ;
@@ -371,8 +378,11 @@ void MainWindow::gameLoop()
     //else if (keyD && !keyA) voiture.setSteering(1.0f);
     //else voiture.setSteering(0.0f);
     
-	//===== INPUTS WHEEL =====
-    voiture.setAccel(base.gas);
+	// ===== INPUTS WHEEL =====
+    // Bloque l'accélération jusqu'au GO (ou pendant la pénalité de faux départ)
+    float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
+        ? base.gas : 0.0f;
+    voiture.setAccel(accelInput);
     voiture.setBreaking(base.brake);
     voiture.setSteering(base.pos);
     
@@ -391,13 +401,30 @@ void MainWindow::gameLoop()
         arduino->prevEnc1 = wheelData.enc1;
     }
     // mettre en sorte que tr est pause DONE, bl est changer vue DONE et br est sortir pitstop DONE
-    // encodeur 1 = changer volume DONE et encodeur 2 = scrool leaderboard, joystick = menu
+    // encodeur 1 = changer volume DONE et encodeur 2 = scrool leaderboard, joystick = menu 
     
     bool onTrack = track->isVector2DOnTrack(voiture.getPosition());
 
-    if (!raceTimes->isRaceStarted()) { raceTimes->setupRace(3, track);  raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
-    //Checkpoint Check
-    raceTimes->checkForCheckpoint(track, voiture.getPosition());
+    //if (!raceTimes->isRaceStarted()) { raceTimes->setupRace(3, track);  raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
+    ////Checkpoint Check
+    //raceTimes->checkForCheckpoint(track, voiture.getPosition());
+    // 
+    // 
+        // ===== SEQUENCE DE DEPART F1 =====
+    // Lance la séquence une seule fois quand la piste est prête
+    if (raceStart->getState() == RaceStart::IDLE) {
+        raceStart->startSequence();
+    }
+    raceStart->update(deltaTime);
+
+    // Faux départ : détecte si le joueur appuie sur le gaz avant le go
+    bool playerGassing = (base.gas > 0.05f || keyW);
+    if (playerGassing) raceStart->playerAccelerated();
+
+    // Checkpoints seulement une fois la course lancée
+    if (raceTimes->isRaceStarted()) {
+        raceTimes->checkForCheckpoint(track, voiture.getPosition());
+    }
 
 
     ////Mecanique de pitstop

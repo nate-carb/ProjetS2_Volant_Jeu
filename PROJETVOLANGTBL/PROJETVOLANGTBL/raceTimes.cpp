@@ -16,6 +16,7 @@ void RaceTimes::startRace()
     lastCheckpointId = 0;
     checkpointCounter = 1;
     raceStarted = true;
+    raceFinished = false;
 }
 
 void RaceTimes::finishRace()
@@ -26,7 +27,7 @@ void RaceTimes::finishRace()
     else {
         qDebug() << "Race finish";
         raceStarted = false;
-        raceFinished = true;  // <-- ajoute
+        raceFinished = true;  
     }
 }
 
