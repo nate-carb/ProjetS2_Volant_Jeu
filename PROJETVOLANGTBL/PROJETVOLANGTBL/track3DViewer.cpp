@@ -73,7 +73,7 @@ void Track3DViewer::setTrack(Track* track)
     // Fresh scene subtree
     m_sceneRoot = new Qt3DCore::QEntity(m_rootEntity);
 
-    qDebug() << "setTrack called - checkpoints:" << track->getCheckpoints().size();
+    //qDebug() << "setTrack called - checkpoints:" << track->getCheckpoints().size();
 
     buildScene(track);
     buildTrackMesh(track);
@@ -226,13 +226,13 @@ void Track3DViewer::buildScene(Track* track)
 	buildSkybox(track);
 
     Qt3DRender::QFrameGraphNode* fg = defaultFrameGraph();
-    qDebug() << "FrameGraph class:" << fg->metaObject()->className();
+    //qDebug() << "FrameGraph class:" << fg->metaObject()->className();
 
     // Print all filter keys in the forward renderer
     QList<Qt3DRender::QFilterKey*> keys =
         fg->findChildren<Qt3DRender::QFilterKey*>();
-    for (Qt3DRender::QFilterKey* k : keys)
-        qDebug() << "FilterKey:" << k->name() << "=" << k->value();
+    //for (Qt3DRender::QFilterKey* k : keys)
+        //qDebug() << "FilterKey:" << k->name() << "=" << k->value();
 }
 
 void Track3DViewer::buildLights()
@@ -292,7 +292,7 @@ void Track3DViewer::buildSkybox(Track* track)
 // ─────────────────────────────────────────────
 void Track3DViewer::buildTrackMesh(Track* track)
 {
-    qDebug() << "Start track mesh";
+    //qDebug() << "Start track mesh";
     const auto& left = track->getTrackEdges().left;
     const auto& right = track->getTrackEdges().right;
 
@@ -315,7 +315,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
     for (size_t i = 0; i < n * 2; i++) normals << 0.0f << 1.0f << 0.0f;
 
     // ── Index buffer ─────────────────────────────────────────
-    qDebug() << "before for loop track mesh";
+    //qDebug() << "before for loop track mesh";
     for (quint32 i = 0; i < static_cast<quint32>(n - 1); i++) {
         quint32 l0 = i;
         quint32 l1 = i + 1;
@@ -324,7 +324,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
         indices << l0 << l1 << r0;
         indices << l1 << r1 << r0;
     }
-    qDebug() << "Track mesh built with" << n << "segments.";
+    //qDebug() << "Track mesh built with" << n << "segments.";
 
     // ── UV buffer — u=0 bord gauche, u=1 bord droit, v=0→1 ──
         // ── UV buffer — basé sur la longueur d'arc réelle ────────
@@ -590,11 +590,11 @@ void Track3DViewer::buildTrackMesh(Track* track)
     auto buildPitMesh = [&](const std::vector<QVector2D>& left,
         const std::vector<QVector2D>& right) {
             if (left.size() < 2 || right.size() < 2) {
-                qDebug() << "buildPitMesh skipped - left:" << left.size() << "right:" << right.size();
+                //qDebug() << "buildPitMesh skipped - left:" << left.size() << "right:" << right.size();
                 return;
             }
             if (left.size() != right.size()) {
-                qDebug() << "buildPitMesh size mismatch - left:" << left.size() << "right:" << right.size();
+                //qDebug() << "buildPitMesh size mismatch - left:" << left.size() << "right:" << right.size();
                 return;
             }
             size_t pn = qMin(left.size(), right.size());
@@ -860,7 +860,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
                 boxEntity->addComponent(renderer);
                 boxEntity->addComponent(mat);
 
-                qDebug() << "Pit stop box built at" << center;
+                //qDebug() << "Pit stop box built at" << center;
             }
         }
 
@@ -873,7 +873,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
 
 void Track3DViewer::buildGround(Track* track)
 {
-    if (!track->getCurrentChoixMapData().groundData.visible) return;
+    //if (!track->getCurrentChoixMapData().groundData.visible) return;
 	 //Remove old ground entity if it exists
     if (m_groundEntity) {
         m_groundEntity->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
@@ -993,17 +993,17 @@ void Track3DViewer::buildCheckpoints(Track* track)
 
         connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
             [modelEntity, i](Qt3DRender::QSceneLoader::Status status) {
-                qDebug() << "Checkpoint" << i << "status:" << status;
+                //qDebug() << "Checkpoint" << i << "status:" << status;
                 // 0=None, 1=Loading, 2=Ready, 3=Error
                 if (status == Qt3DRender::QSceneLoader::Error) {
-                    qDebug() << "Checkpoint" << i << "FAILED TO LOAD";
+                    //qDebug() << "Checkpoint" << i << "FAILED TO LOAD";
                     return;
                 }
                 if (status != Qt3DRender::QSceneLoader::Ready) return;
 
                 QList<Qt3DExtras::QPhongMaterial*> mats =
                     modelEntity->findChildren<Qt3DExtras::QPhongMaterial*>();
-                qDebug() << "Checkpoint" << i << "loaded -" << mats.size() << "materials";
+                //qDebug() << "Checkpoint" << i << "loaded -" << mats.size() << "materials";
 
                 for (Qt3DExtras::QPhongMaterial* mat : mats) {
                     mat->setShininess(0.0f);
@@ -1065,7 +1065,7 @@ void Track3DViewer::buildCar()
     //    });
     connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
         [modelEntity](Qt3DRender::QSceneLoader::Status status) {
-            qDebug() << "Model status:" << status;
+            //qDebug() << "Model status:" << status;
             if (status != Qt3DRender::QSceneLoader::Ready) return;
 
             // Make car materials flat/cartoon like Kenney style
@@ -1085,7 +1085,7 @@ void Track3DViewer::buildCar()
                 ));
             }
 
-            qDebug() << "Car materials flattened -" << mats.size() << "materials found";
+            //qDebug() << "Car materials flattened -" << mats.size() << "materials found";
         });
 }
 
@@ -1130,12 +1130,12 @@ void Track3DViewer::buildDecors(Track* track)
         Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(decorEntity);
 
        
-        qDebug() << "App dir:" << QCoreApplication::applicationDirPath();
+        //qDebug() << "App dir:" << QCoreApplication::applicationDirPath();
 
         QDir sceneDir(QCoreApplication::applicationDirPath() + "/sceneparsers");
 
-        qDebug() << "Sceneparsers exists:" << sceneDir.exists();
-        qDebug() << "Files:" << sceneDir.entryList(QDir::Files);
+        //qDebug() << "Sceneparsers exists:" << sceneDir.exists();
+        //qDebug() << "Files:" << sceneDir.entryList(QDir::Files);
 
         //Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
         //QString modelPath = QDir::currentPath() + decor->getInfo().modelPath;
@@ -1192,7 +1192,7 @@ void Track3DViewer::buildDecors(Track* track)
         m_decorEntities.push_back(decorEntity);
     }
 
-    qDebug() << "Built" << m_decorEntities.size() << "decor entities";
+    //qDebug() << "Built" << m_decorEntities.size() << "decor entities";
     
 }
 
@@ -1303,15 +1303,15 @@ void Track3DViewer::buildBezierWalls(Track* track)
         }
     }
 
-    qDebug() << "Built" << m_wallEntities.size() << "wall segments";
+    //qDebug() << "Built" << m_wallEntities.size() << "wall segments";
 }
 // ─────────────────────────────────────────────
 // buildInstancedDecors – generate decor instance
 // ─────────────────────────────────────────────
 void Track3DViewer::buildInstancedDecors(Track* track)
 {
-    qDebug() << "buildInstancedDecors start, decors:"
-        << (track ? (int)track->getDecors().size() : -1);
+    //qDebug() << "buildInstancedDecors start, decors:"
+        //<< (track ? (int)track->getDecors().size() : -1);
 
     for (Qt3DCore::QEntity* e : m_instancedDecorEntities) {
         e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
@@ -1350,16 +1350,16 @@ void Track3DViewer::buildInstancedDecors(Track* track)
         const QString& modelPath = it.key();
         const QVector<QMatrix4x4>& transforms = it.value();
 
-        qDebug() << "Loading:" << modelPath
-            << "instances:" << transforms.size();
+        //qDebug() << "Loading:" << modelPath
+            //<< "instances:" << transforms.size();
 
         // Load all submeshes with correct per-material colors
         MeshDataList meshList =
             DaeLoader::loadByMaterial(modelPath);
 
         if (!meshList.valid) {
-            qDebug() << "buildInstancedDecors: failed to load"
-                << modelPath;
+            //qDebug() << "buildInstancedDecors: failed to load"
+                //<< modelPath;
             continue;
         }
 
@@ -1369,10 +1369,10 @@ void Track3DViewer::buildInstancedDecors(Track* track)
         if (e) m_instancedDecorEntities.push_back(e);
     }
 
-    qDebug() << "buildInstancedDecors: built"
-        << m_instancedDecorEntities.size()
-        << "instanced groups from"
-        << track->getDecors().size() << "decors";
+    //qDebug() << "buildInstancedDecors: built"
+        //<< m_instancedDecorEntities.size()
+        //<< "instanced groups from"
+        //<< track->getDecors().size() << "decors";
 }
 // ─────────────────────────────────────────────
 // Helper – generic coloured box

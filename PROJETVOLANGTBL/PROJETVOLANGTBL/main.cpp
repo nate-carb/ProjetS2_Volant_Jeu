@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
     MainWindow* window = new MainWindow();
 	// ===== Connexion Arduino après 4 secondes =====
 	QTimer::singleShot(2000, window, [window]() {   // ← attente 4 secondes pour laisser le temps au arduino de resetter et se préparer
-        bool baseOk = window->arduino->connectBase("\\\\.\\COM4"); 
-        bool wheelOk = window->arduino->connectWheel("\\\\.\\COM7");
+        bool baseOk = window->arduino->connectBase("\\\\.\\COM3"); 
+        bool wheelOk = window->arduino->connectWheel("\\\\.\\COM6");
         qDebug() << "Base connectee:" << baseOk;
         qDebug() << "Wheel connectee:" << wheelOk;
         });
