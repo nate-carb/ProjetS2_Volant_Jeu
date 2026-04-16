@@ -26,23 +26,23 @@ private slots:
     void gameLoop();
 
 private:
-    QPixmap image;  // Ton image PNG
-    float imageX;     // Position X
-    float imageY;     // Position Y
+    QPixmap image;  
+    float imageX;     
+    float imageY;     
     Vehicule voiture; 
             
-    float deltaTime;             // Temps en secondes depuis dernière frame
-	QTimer* timer;          // Timer pour la boucle de jeu
-    QTime lastFrameTime; //Temos deouis derniere frame
+    float deltaTime;            
+	QTimer* timer;         
+    QTime lastFrameTime; 
     bool keyW = false;
     bool keyA = false;
     bool keyS = false;
     bool keyD = false;
     bool keySpace = false;
     bool keyEnter = false;
-    QRect pitStop;          // zone du pit stop
-    bool inPitStop;         // est-ce-que lnotre char est dans le pit stop
-    bool pitStopReady;      // recharge terminée, peut partir
+    QRect pitStop;         
+    bool inPitStop;        
+    bool pitStopReady;     
     bool leavingPitStop = false;
 };
 

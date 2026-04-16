@@ -23,7 +23,6 @@ public:
 
     QString getLastCheckpointTimeString();
 
-    // ── Nouveaux getters ──────────────────────────────
     int  getCurrentLap()   const;
     int  getTotalLaps()    const { return numOflaps; }
     qint64 getCurrentLapMs() const;   // temps du lap en cours

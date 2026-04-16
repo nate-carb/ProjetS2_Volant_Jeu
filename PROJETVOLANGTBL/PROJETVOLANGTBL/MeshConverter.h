@@ -5,14 +5,12 @@
 #include <QVector2D>
 #include <QColor>
 
-// One vertex with position, normal and UV
 struct MeshVertex {
     QVector3D position;
     QVector3D normal;
     QVector2D uv;
 };
 
-// One submesh — geometry + one material
 struct MeshData {
     QVector<MeshVertex> vertices;
     QVector<quint32>    indices;
@@ -23,7 +21,6 @@ struct MeshData {
     bool   valid = false;
 };
 
-// All submeshes from one .dae file (one per material)
 struct MeshDataList {
     QVector<MeshData> meshes;
     bool valid = false;

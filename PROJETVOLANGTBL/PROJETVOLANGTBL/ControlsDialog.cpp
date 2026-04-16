@@ -4,7 +4,7 @@
 ControlsDialog::ControlsDialog(QWidget* parent) : QDialog(parent)
 {
     setWindowTitle("Contrôles");
-    setFixedSize(600, 450);
+    setFixedSize(900, 650);
     setStyleSheet("background-color: #4B0082;");
 
     QVBoxLayout* layout = new QVBoxLayout(this);
@@ -23,7 +23,7 @@ ControlsDialog::ControlsDialog(QWidget* parent) : QDialog(parent)
     QLabel* img = new QLabel();
     QPixmap px("images/controller_diagram.png");
     if (!px.isNull()) {
-        img->setPixmap(px.scaled(500, 280,
+        img->setPixmap(px.scaled(800, 500,
             Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
     else {

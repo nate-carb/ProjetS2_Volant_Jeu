@@ -1,4 +1,3 @@
-// TrackPiece3D.h
 #pragma once
 #include <QString>
 #include <QVector3D>
@@ -6,12 +5,12 @@
 #include "Track.h"
 
 struct TrackPiece3DInfo {
-    int pieceId;                  // Same as 2D (STRAIGHT, VIRAGE_45LEFT, etc.)
-    QString modelPath;            // Path to 3D model file (.obj, .fbx)
-    QVector3D size;               // Physical dimensions (length, width, height)
-    float entryAngle;             // Angle at start of piece
-    float exitAngle;              // Angle at end of piece
-    QVector3D exitOffset;         // Where next piece connects
+    int pieceId;                  
+    QString modelPath;            
+    QVector3D size;               
+    float entryAngle;             
+    float exitAngle;              
+    QVector3D exitOffset;         
 };
 
 class TrackPiece3DLibrary {

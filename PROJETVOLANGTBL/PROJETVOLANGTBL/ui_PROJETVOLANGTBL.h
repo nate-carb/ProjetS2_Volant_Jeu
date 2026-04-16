@@ -1,11 +1,3 @@
-/********************************************************************************
-** Form generated from reading UI file 'PROJETVOLANGTBL.ui'
-**
-** Created by: Qt User Interface Compiler version 6.10.2
-**
-** WARNING! All changes made in this file will be lost when recompiling UI file!
-********************************************************************************/
-
 #ifndef UI_PROJETVOLANGTBL_H
 #define UI_PROJETVOLANGTBL_H
 
@@ -48,19 +40,19 @@ public:
         retranslateUi(PROJETVOLANGTBLClass);
 
         QMetaObject::connectSlotsByName(PROJETVOLANGTBLClass);
-    } // setupUi
+    } 
 
     void retranslateUi(QMainWindow *PROJETVOLANGTBLClass)
     {
         PROJETVOLANGTBLClass->setWindowTitle(QCoreApplication::translate("PROJETVOLANGTBLClass", "PROJETVOLANGTBL", nullptr));
-    } // retranslateUi
+    } 
 
 };
 
 namespace Ui {
     class PROJETVOLANGTBLClass: public Ui_PROJETVOLANGTBLClass {};
-} // namespace Ui
+} 
 
 QT_END_NAMESPACE
 
-#endif // UI_PROJETVOLANGTBL_H
+#endif 

@@ -133,16 +133,18 @@ int main(int argc, char* argv[])
 
         container->setFocusPolicy(Qt::StrongFocus);
         container->installEventFilter(window);
-        container->show();
+        container->showFullScreen();
         container->setFocus();
+        container->activateWindow();
+        container->raise();
         hud->show();
 
-        // TEST ONLY POUR LA FIN DE COURSE
-        static bool testDone = false;
-        if (!testDone) {
-            testDone = true;
-            window->raceTimes->forceFinish();
-        }
+        //// TEST ONLY POUR LA FIN DE COURSE
+        //static bool testDone = false;
+        //if (!testDone) {
+        //    testDone = true;
+        //    window->raceTimes->forceFinish();
+        //}
 
 		//window->arduino->update(); // update Arduino state once before starting the game loop - flush data
         window->timer->start(16);  // start game loop AFTER everything is ready

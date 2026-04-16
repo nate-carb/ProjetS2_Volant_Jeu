@@ -19,10 +19,8 @@
 #include <Qt3DExtras/QSkyboxEntity>
 #include <Qt3DRender/QCullFace>
 #include <Qt3DRender/QGeometryRenderer>
-//DECORS IMPORT .DAE
 #include <QMap>
 #include <Qt3DRender/QSceneLoader>
-//Light
 #include <Qt3DRender/QPointLight>
 #include <Qt3DRender/QDirectionalLight>
 #include "Track.h"
@@ -39,15 +37,12 @@ public:
     explicit Track3DViewer(QScreen* screen = nullptr);
     ~Track3DViewer();
 
-    // Call this to load and display a track
     void setTrack(Track* track);
 
-    // Call this every game frame to update car position
     void updateVehicule(Vehicule* vehicule);
 
-    // Switch between first-person and orbit (debug) camera
     void setFirstPersonMode(bool enabled);
-	// Switch camera mode 3rd person / 1st person
+
 	void changeCameraMode(); 
     bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -57,54 +52,49 @@ public slots:
     void onUpdateFrame();
 
 private:
-    // Scene root
+
     Qt3DCore::QEntity* m_rootEntity = nullptr;
-    // Sub-root recreated at every setTrack() — holds EVERYTHING built per-race
+
     Qt3DCore::QEntity* m_sceneRoot = nullptr;
 
-    // Camera
     Qt3DRender::QCamera* m_camera = nullptr;
     Qt3DExtras::QOrbitCameraController* m_orbitController = nullptr;
     Qt3DExtras::QFirstPersonCameraController* m_fpController = nullptr;
 
-    float m_cameraYaw = 15.0f;  // current smoothed angle
-    float m_cameraLag = 0.35f; // 0.0 = instant, 1.0 = never catches up
+    float m_cameraYaw = 15.0f; 
+    float m_cameraLag = 0.35f; 
     bool m_firstPersonMode = true;
 
-    // Car camera position
-	bool carCamthird = true; // true = 3rd person, false = 1st person
+	bool carCamthird = true; 
     
 
 	// Skybox
     Qt3DExtras::QSkyboxEntity* m_skybox = nullptr;
     Qt3DCore::QTransform* m_skyTransform = nullptr;
     
-    // Track mesh entity
+    // Track 
     Qt3DCore::QEntity* m_trackEntity = nullptr;
 
-    // Car entity (simple box for now)
+    // Char 
     Qt3DCore::QEntity* m_carEntity = nullptr;
     Qt3DCore::QTransform* m_carTransform = nullptr;
 
-    // Grass/ground entity
+    // Grass/ground 
     Qt3DCore::QEntity* m_groundEntity = nullptr;
 
-	// Decor entity (for 3D model)
+	// Decor 
     QVector<Qt3DCore::QEntity*> m_decorEntities;
-	//Qt3DCore::QTransform* m_decorTransform = nullptr;
     
-    QMap<QString, Qt3DRender::QSceneLoader*> m_loaderCache; //cache the file path
+    QMap<QString, Qt3DRender::QSceneLoader*> m_loaderCache; 
 
-	// Checkpoint entities
+	// Checkpoints
     QVector<Qt3DCore::QEntity*> m_checkpointEntities;
 
-
-
-	// Bezier walls entities
+	// Bezier 
     void buildBezierWalls(Track* track);
     QVector<Qt3DCore::QEntity*> m_wallEntities;
 
-    // Internal helpers
+    // Helpers
     void buildScene(Track* track);
     void buildSkybox(Track* track);
     void buildTrackMesh(Track* track);
@@ -115,7 +105,7 @@ private:
     void buildLights();      
     bool m_lightsBuilt = false;
 
-    // decors instance
+    // Decors 
     QVector<Qt3DCore::QEntity*> m_instancedDecorEntities;
     void buildInstancedDecors(Track* track);
 
@@ -124,7 +114,6 @@ private:
         QVector3D position,
         QColor color);
 
-    // Stored track pointer (not owned)
     Track* m_track = nullptr;
     Vehicule* m_vehicule = nullptr;
 

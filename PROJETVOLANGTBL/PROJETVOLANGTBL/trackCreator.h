@@ -13,17 +13,13 @@ public:
     explicit TrackCreator(QWidget* parent = nullptr);
     void setTrack(const Track& track);
     void updateTrack(const Track& track);
-    void addPiece(int pieceType);  // Add new piece to track
+    void addPiece(int pieceType);  
 
-	// decor related functions
-	void addDecor(int decor, int variant);// Add new decor piece to track
+	void addDecor(int decor, int variant);
     int  findNearestCenterLineIndex(QVector2D pos);
-	// decor movement functions
-	void rotateDecorRelative(float angle); // Rotate decor by angle (relative)
-	void rotateDecorExact(float angle); // Rotate decor to exact angle
+	void rotateDecorRelative(float angle); 
+	void rotateDecorExact(float angle); 
     
-
-    // track walls related functions
     void addBezierCurve(QVector2D start, QVector2D end);
     void addBezierCurveAtCenter();
     void toggleBezierEditMode(bool enabled);
@@ -31,10 +27,9 @@ public:
     bool getBezierEditMode() const { return m_bezierEditMode; }
     void drawBezierCurves(QPainter& painter);
 
-	// track segment editing functions
     void drawTrackSegments(QPainter& painter);
 
-    void clearTrack();              // Clear and start over
+    void clearTrack();             
     Track getCurrentTrack() const { return currentTrack; }
     void loadTrack(const Track& track);
     std::vector<int> getPiecesList() const { return piecesList; }\
@@ -42,11 +37,10 @@ public:
 
 	QVector2D getCarPos() const { return carPos; }
     
-    void closeTrack();// Close the track by connecting end to start
+    void closeTrack();
     void autoDecors();
     void removeAutoDecors();
 
-	// Segement editing functions for new track editor
     void addCurveSegment();
     void addStraightSegment();
 	void addPitSegment();
@@ -64,18 +58,17 @@ protected:
 
 private:
     Track currentTrack;
-    std::vector<int> piecesList;  // Track the pieces added
-	//std::vector<int> decorsList;  // Track the decors added
+    std::vector<int> piecesList;  
+
     void drawCar(QPainter& painter);
     void drawDecors(QPainter& painter);
 	void drawCheckpoints(QPainter& painter);
-    // Camera/view controls
+
     double zoom;
     QPointF offset;
     QPoint lastMousePos;
     bool dragging;
 
-    // Helper functions
     QPointF worldToScreen(const QVector2D& worldPos);
     QVector2D screenToWorld(const QPointF& screenPos);
     void drawTrack(QPainter& painter);
@@ -84,28 +77,21 @@ private:
     void calculateBounds(float& minX, float& maxX, float& minY, float& maxY);
     void rebuildTrack();
 
-	
-    
-    
-    //Car on track
     QVector2D carPos = QVector2D(20, 20);
     bool draggingCar = false;
     float carRadius = 4.0f;
 
     QVector2D dragOffset;
-	//decor movement
     int  selectedDecorIndex = -1;
     bool isDraggingDecor = false;
 
-	// Bezier curve editing
     int  m_selectedCurveIndex = -1;
-    int  m_selectedPointIndex = -1; // 0=p0, 1=p1, 2=p2, 3=p3
+    int  m_selectedPointIndex = -1; 
     bool m_isDraggingBezier = false;
-    bool m_bezierEditMode = false; // toggle on/off
+    bool m_bezierEditMode = false;
 
-    // Track segment state
     int  m_selectedSegIndex = -1;
-    //int  m_selectedPointIndex = -1;
+
     bool m_isDraggingSegment = false;
 
 };

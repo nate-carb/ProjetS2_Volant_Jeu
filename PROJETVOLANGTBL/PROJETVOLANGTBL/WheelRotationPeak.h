@@ -5,29 +5,6 @@
 #include <QObject>
 #include <cmath>
 
-// ---------------------------------------------------------------------------
-//  WheelRotationPeak
-//
-//  Mesure la plus grosse accélération de rotation du volant à partir
-//  des valeurs brutes X,Y,Z d'un accéléromètre placé sur la jante.
-//
-//  Principe physique :
-//    - Le volant tourne autour de son axe de colonne (axe Z ici).
-//    - L'accéléromètre en jante ressent :
-//        * Accélération centripète   : ac = ω² · r  (vers le centre)
-//        * Accélération tangentielle : at = α · r    (dans le plan, perp.)
-//    - La magnitude dans le plan XY  = sqrt(X²+Y²)
-//      est proportionnelle à la vitesse angulaire ω.
-//    - Le taux de variation de cette magnitude / dt
-//      est proportionnel à l'accélération angulaire α.
-//
-//  On suit :
-//    • peakRotMag   : pic de sqrt(X²+Y²)         → pic de vitesse angulaire
-//    • peakRotAccel : pic du |Δmag/Δt|            → pic d'accélération angulaire
-//
-//  Note : les valeurs sont en unités de l'accéléromètre (ex: m/s² ou g).
-//  Pour convertir en rad/s ou rad/s², divise par le rayon r (en mètres).
-// ---------------------------------------------------------------------------
 class WheelRotationPeak : public QObject
 {
     Q_OBJECT
@@ -49,7 +26,7 @@ public:
     float  getPeakRotAccel() const { return m_peakRotAccel; }
     Sample getCurrent()      const { return m_current; }
 
-    // Remet les pics à zéro (ex: nouveau tour / nouvelle course)
+    // Remet les pics à zéro
     void resetPeaks();
 
 signals:
@@ -65,4 +42,4 @@ private:
     Sample m_current;
 };
 
-#endif // WHEELROTATIONPEAK_H
+#endif 

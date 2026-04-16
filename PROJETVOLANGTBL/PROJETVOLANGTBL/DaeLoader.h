@@ -5,16 +5,10 @@
 #include <QMap>
 #include <QDebug>
 
-// ─────────────────────────────────────────────────────────────
-// DaeLoader
-// Parses a Collada (.dae) file using Qt's built-in XML reader.
-// Returns one MeshData per <triangles> block (i.e. per material).
-// No external dependencies required.
-// ─────────────────────────────────────────────────────────────
 class DaeLoader
 {
 public:
-    // Returns all submeshes, one per material
+    
     static MeshDataList loadByMaterial(const QString& path)
     {
         MeshDataList result;
@@ -27,19 +21,14 @@ public:
 
         QXmlStreamReader xml(&file);
 
-        // ── Float sources keyed by source id ─────────────────
         QMap<QString, QVector<float>> floatSources;
         QString currentSourceId;
 
-        // ── vertices element: maps vertices id → pos source id
         QMap<QString, QString> verticesMap;
         QString activeVerticesId;
 
-        // ── Resolved geometry arrays ──────────────────────────
         QVector<float> positions, normals, uvs;
 
-        // ── Material effects: effect id → diffuse color ───────
-        // e.g. "ID3" → QColor(grey)
         QMap<QString, QColor>  effectDiffuse;
         QMap<QString, QColor>  effectAmbient;
         QMap<QString, QColor>  effectSpecular;
@@ -47,12 +36,9 @@ public:
         QString currentEffectId;
         QString currentColorTag;
 
-        // ── Material → effect mapping ─────────────────────────
-        // e.g. "mat_ID4" → "ID3"
         QMap<QString, QString> materialToEffect;
         QString currentMaterialId;
 
-        // ── Per-triangles state ───────────────────────────────
         struct TriBlock {
             QString      materialId;
             QVector<quint32> posIndices;
@@ -75,12 +61,10 @@ public:
             if (xml.isStartElement()) {
                 const QString tag = xml.name().toString();
 
-                // ── Source tracking ───────────────────────────
                 if (tag == "source")
                     currentSourceId =
                     xml.attributes().value("id").toString();
 
-                // ── Float array ───────────────────────────────
                 if (tag == "float_array") {
                     QString id =
                         xml.attributes().value("id").toString();
@@ -95,12 +79,10 @@ public:
                     floatSources[currentSourceId] = floats;
                 }
 
-                // ── Vertices element ──────────────────────────
                 if (tag == "vertices")
                     activeVerticesId =
                     xml.attributes().value("id").toString();
 
-                // ── Input inside vertices (not triangles) ─────
                 if (tag == "input" && !inTriangles) {
                     QString semantic =
                         xml.attributes().value("semantic")
@@ -124,28 +106,24 @@ public:
                         uvs = floatSources[src];
                 }
 
-                // ── Effect tracking ───────────────────────────
                 if (tag == "effect") {
                     currentEffectId =
                         xml.attributes().value("id").toString();
                     inEffect = true;
                 }
 
-                // ── Material tracking ─────────────────────────
                 if (tag == "material") {
                     currentMaterialId =
                         xml.attributes().value("id").toString();
                     inMaterial = true;
                 }
 
-                // <instance_effect url="#ID3"/>
                 if (tag == "instance_effect" && inMaterial) {
                     QString effectRef = xml.attributes()
                         .value("url").toString().remove('#');
                     materialToEffect[currentMaterialId] = effectRef;
                 }
 
-                // ── Color blocks inside effect ────────────────
                 if (inEffect && (tag == "diffuse" ||
                     tag == "ambient" ||
                     tag == "specular"))
@@ -182,7 +160,6 @@ public:
                         effectShininess[currentEffectId] = val;
                 }
 
-                // ── Triangles block ───────────────────────────
                 if (tag == "triangles" || tag == "polylist") {
                     inTriangles = true;
                     triBlocks.append(TriBlock());
@@ -192,7 +169,6 @@ public:
                         .toString();
                 }
 
-                // ── Input inside triangles ────────────────────
                 if (tag == "input" && inTriangles &&
                     currentBlock)
                 {
@@ -229,7 +205,6 @@ public:
                     }
                 }
 
-                // ── Face indices ──────────────────────────────
                 if (tag == "p" && inTriangles && currentBlock) {
                     QStringList parts =
                         xml.readElementText()
@@ -277,22 +252,17 @@ public:
             return result;
         }
 
-        // ── Build one MeshData per triangles block ────────────
         for (const TriBlock& block : triBlocks) {
             if (block.posIndices.isEmpty()) continue;
 
             MeshData mesh;
 
-            // Resolve material → effect → color
-            // The material symbol in <triangles> matches via
-            // <instance_material symbol="..." target="#mat_ID4"/>
-            // but for simplicity we match by material id directly
             QString effectId;
-            // Try direct match first
+
             if (materialToEffect.contains(block.materialId))
                 effectId = materialToEffect[block.materialId];
             else {
-                // Try finding a material whose id contains the symbol
+
                 for (auto it = materialToEffect.begin();
                     it != materialToEffect.end(); ++it) {
                     if (it.key().contains(block.materialId) ||
@@ -303,7 +273,6 @@ public:
                 }
             }
 
-            // Apply colors from effect
             if (!effectId.isEmpty()) {
                 if (effectDiffuse.contains(effectId))
                     mesh.diffuse = effectDiffuse[effectId];
@@ -320,7 +289,6 @@ public:
                     mesh.shininess = effectShininess[effectId];
             }
             else {
-                // Fallback: use first available effect color
                 if (!effectDiffuse.isEmpty())
                     mesh.diffuse = effectDiffuse.first();
                 mesh.ambient = QColor(
@@ -329,7 +297,6 @@ public:
                     mesh.diffuse.blue() * 0.8f);
             }
 
-            // Build flat vertex list
             mesh.vertices.reserve(block.posIndices.size());
             mesh.indices.reserve(block.posIndices.size());
 
@@ -376,17 +343,13 @@ public:
         return result;
     }
 
-    // Convenience: load as single merged mesh (original behavior)
     static MeshData load(const QString& path)
     {
         MeshDataList list = loadByMaterial(path);
         if (!list.valid || list.meshes.isEmpty()) return MeshData();
 
-        // If only one submesh return it directly
         if (list.meshes.size() == 1) return list.meshes.first();
 
-        // Otherwise merge all submeshes into one
-        // (loses per-material colors but keeps geometry)
         MeshData merged;
         for (const MeshData& m : list.meshes) {
             quint32 offset = static_cast<quint32>(merged.vertices.size());

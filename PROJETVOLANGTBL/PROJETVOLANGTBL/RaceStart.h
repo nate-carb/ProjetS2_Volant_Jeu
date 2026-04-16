@@ -29,7 +29,7 @@ signals:
     void falseStartDetected();
 
 private:
-    void triggerLightsOut();      // logique commune d'extinction des feux
+    void triggerLightsOut();      // logique d'extinction des feux
 
     State         m_state = IDLE;
     int           m_lightsOn = 0;

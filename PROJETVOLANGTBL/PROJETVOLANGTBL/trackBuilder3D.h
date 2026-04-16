@@ -1,4 +1,3 @@
-// Track3DBuilder.h
 #pragma once
 #include <Qt3DCore/QEntity>
 #include <Qt3DCore/QTransform>

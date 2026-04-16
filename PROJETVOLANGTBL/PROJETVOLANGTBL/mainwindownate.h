@@ -69,8 +69,6 @@ protected:
 
     void drawPit(float scale, Track* track, QPainter& painter);
     void drawMinimap(QPainter& painter);
-    
-    
 
 private slots:
     void gameLoop();
@@ -83,14 +81,11 @@ private slots:
 
 private:
 
-    QPixmap image;  // Ton image PNG
-    float imageX;     // Position X
-    float imageY;     // Position Y
- //   Vehicule voiture; 
-	//Track track; // Piste de course
-    float deltaTime;             // Temps en secondes depuis dernière frame
-	//QTimer* timer;          // Timer pour la boucle de jeu
-    QTime lastFrameTime; //Temos deouis derniere frame
+    QPixmap image;                  // PNG
+    float imageX;                   // Position X
+    float imageY;                   // Position Y
+    float deltaTime;                // Temps en secondes depuis dernière frame
+    QTime lastFrameTime;            //Temps deouis derniere frame
     bool keyW = false;
     bool keyA = false;
     bool keyS = false;

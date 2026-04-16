@@ -7,37 +7,26 @@
 #include <QtMath>
 #include <QColor>
 
-//Track.h - Defines the Track class and related structures for representing a racing track, its pieces, and decor elements.
 #define VIRAGE_45RIGHT 1
 #define VIRAGE_45LEFT 2
 #define VIRAGE_90RIGHT 3
 #define VIRAGE_90LEFT 4
 #define STRAIGHT 5
 #define STARTLINE 6
-//#define GARAGE 7
 #define PIT 8
-//#define GRANDSTAND 9
-//#define BRIDGES 10
-// DECORS IDs
 #define GARAGE_INDEX 1
 #define GRANDSTAND_INDEX 2
 #define TREES_INDEX 3
 #define NOSPECIFICDECOR_INDEX 4
-
-
-
-// * ----------------------------------------------------------
-// *  Stuctures 
-// *-----------------------------------------------------------
 
 struct TrackEdges {
 	std::vector<QVector2D> left;
 	std::vector<QVector2D> right;
 };
 struct CheckpointData {
-	QVector2D left;   // left edge point
-	QVector2D right;  // right edge point
-	QVector2D forward; // ADD - direction along track at this checkpoint
+	QVector2D left;  
+	QVector2D right;  
+	QVector2D forward; 
 	int centerLineIndex = -1;
 	bool triggered = false;
 };
@@ -45,15 +34,15 @@ struct CheckpointData {
 struct PitLane {
 	std::vector<QVector2D> centerLine;
 	TrackEdges edges;
-	QVector2D entryPoint;  // where pit splits from main track
-	QVector2D exitPoint;   // where pit rejoins main track
+	QVector2D entryPoint;  
+	QVector2D exitPoint;   
 	std::vector<QVector2D> entryCurve;
 	TrackEdges entryCurveEdges;
 	std::vector<QVector2D> exitCurve;
 	TrackEdges exitCurveEdges;
 	bool isValid = false;
 };
-// For Bezier curve calculations (WALLS)
+
 struct BezierCurveData {
 	QVector2D p0;
 	QVector2D p1;
@@ -103,23 +92,21 @@ struct ChoixMapData {
 	
 };
 
-// For track generation 
+
 enum class TrackSegmentType { CURVE_TRACK, STRAIGHT_TRACK, PIT_TRACK };
 
-// Represents a segment of the track, either a straight or a curve, with necessary data for construction and editing
+
 struct TrackSegment {
 	TrackSegmentType type;
 
-	// Shared - start/end positions (auto-linked)
+	
 	QVector2D start;
 	QVector2D end;
 
-	// CURVE only - bezier control points
+	
 	QVector2D cp1;
 	QVector2D cp2;
 
-	// STRAIGHT only - just start/end, end is draggable
-	// length is implicitly (end - start).length()
 };
 
 QVector2D perpendicular(QVector2D v);
@@ -127,10 +114,6 @@ QVector2D perpendicular(QVector2D v);
 QVector2D move(QVector2D v, float angleDeg, float distance);
 
 float distancePointToSegment(const QVector2D& P, const QVector2D& A, const QVector2D& B);
-
-// * ----------------------------------------------------------
-// *  Classes
-// *-----------------------------------------------------------
 
 class TrackPieces 
 {
@@ -154,7 +137,7 @@ class TrackPieces
 
 	private:
 		float trackWidth = 40.0f;
-		float turnRadius = trackWidth / 2.0f; //trackWidth / 2.0f;
+		float turnRadius = trackWidth / 2.0f; 
 
 	protected:
 		QString spritePath;
@@ -166,7 +149,6 @@ class TrackPieces
 		float stepAngleDeg;
 		std::vector<float> angles;
 		std::vector<float> lengths;
-		//float lengthAngleVirage = trackWidth/8 / cos(qDegreesToRadians(45.0f / 4));
 		
 };
 
@@ -215,21 +197,19 @@ class Pit : public TrackPieces
 		
 };
 
-
-
 struct DecorsInfo {
 	float angle;
 	QVector2D pos;
 	float scale;
-	float width; //in 2D and 3D x direction
-	float height; //not use in 2D, in 3D y direction
-	float length; //in 2D y direction, in 3D z direction
+	float width; 
+	float height; 
+	float length; 
 	QString modelPath;
-	int modelType; // e.g., GARAGE, GRANDSTAND, TREES, NOSPECIFICDECOR
-	int modelIndex; // index in the model list for this decor type
+	int modelType; 
+	int modelIndex; 
 
-	int  segmentIndex = -1;  // which segment spawned this decor (-1 = manual)
-	bool autoPlaced = false; // flipped to false when user moves it
+	int  segmentIndex = -1; 
+	bool autoPlaced = false;
 };
 
 
@@ -241,20 +221,18 @@ class DecorPieces
 		DecorsInfo getInfo() { return info; };
 		DecorsInfo& getInfoRef() { return info; }
 		void setPos(QVector2D p) { info.pos = p; }
-		// For model loading
+		
 		QString getModelPath() { return info.modelPath; };
 		
 		float getScale() { return info.scale; };
 		void setScale(float s) { info.scale = s; };
-		//void setModelPath(QString path) { modelPath = path; };
 
-		// Angle is in degrees
 		void setAngle(float a) { info.angle = qDegreesToRadians(a); };
-		// 
+		
 		void setAutoPlaced(bool b) { info.autoPlaced = b; }
 		void setSegmentIndex(int i) { info.segmentIndex = i; }
 
-		virtual void selectModel(int modelNum) = 0; // Pure virtual function to select a model based on some criteria 
+		virtual void selectModel(int modelNum) = 0; 
 
 protected:
 	DecorsInfo info;
@@ -267,9 +245,9 @@ class CheckpointDecor : public DecorPieces
 		CheckpointDecor(QVector2D positon, float angle);
 		void selectModel(int modelNum);
 	private:
-		int centerlineIndex; // index of the checkpoint on the centerline, can be a float for interpolation between points
-		int leftEdgeIndex; // corresponding index on the left edge
-		int rightEdgeIndex; // corresponding index on the right edge
+		int centerlineIndex; 
+		int leftEdgeIndex; 
+		int rightEdgeIndex; 
 
 };
 
@@ -293,7 +271,7 @@ class TREES : public DecorPieces
 {
 	public:
 		TREES(QVector2D positon, float angle);
-		void randomModel(); // Assign a random tree model from a predefined set
+		void randomModel(); 
 
 		void selectModel(int modelNum);
 	
@@ -312,14 +290,9 @@ public:
 	
 	Track();
 	Track(std::vector<int> listPieces);
-	//virtual ~Track();
-	//virtual void generateTrack() = 0;
 	void calculateTrackEdges();
 	void calculAngLen(int index);
-	
-	//virtual void displayTrack() const = 0;
-	
-	// Save/Load functions
+
 	bool saveToFile(const std::string& filename) const;
 	bool loadFromFile(const std::string& filename);
 	bool playTrack(QString name);
@@ -337,9 +310,9 @@ public:
 	TrackEdges getTrackEdges() const { return trackEdges; };
     std::vector<int> getPiecesList() const { return piecesIntList; }
 
-	// Pit lane related functions
+
 	void generatePitLane(int startIndex, int endIndex);
-	//void generatePitLane();
+
 	PitLane getPitLane() const { return pitLane; }
 	bool hasPitLane() const { return pitLane.isValid; }
 	int getPitStartIndex() const { return pitStartIndex; }
@@ -347,59 +320,50 @@ public:
 	void setPitStartIndex(int index) { pitStartIndex = index; }
 	void setPitEndIndex(int index) { pitEndIndex = index; }
 
-	// decor related functions
+	
 	std::vector<DecorPieces*> getDecors() const { return decors; };
-	void addDecor(int decorType, int decorIndexList); // decorType is the type of decor (e.g., GARAGE_INDEX, GRANDSTAND_INDEX, TREES_INDEX), decorIndexList is the index in the corresponding model list for that decor type
+	void addDecor(int decorType, int decorIndexList);
 	void addDecorDirect(DecorPieces* d) { if (d) decors.push_back(d); }
-	// auto decors functions
+
 	void autoPlaceDecorsForSegment(int segmentIndex);
 	void removeAutoDecorsForSegment(int segmentIndex);
 	void autoPlaceAllDecors();
 	void removeAllAutoDecors();
-	// Curves walls related functions
+	
 	void addBezierCurve(BezierCurveData c) { bezierCurves.push_back(c); }
 	const std::vector<BezierCurveData>& getBezierCurves() const { return bezierCurves; }
 	void clearBezierCurves() { bezierCurves.clear(); }
 	BezierCurveData& getBezierCurveRef(int index) { return bezierCurves[index]; }
 	bool hasBezierCurves() const { return !bezierCurves.empty(); }
 
-	// track closing function
-	void closeTrack(); // bridges gap between end and start
+	void closeTrack(); 
 	bool isClosed() const;
 	float getClosureGap() const;
 
-	// Segment editing functions for new track editor
 	void addCurveSegment();
 	void addStraightSegment();
 	void removeLastSegment();
 
-	void addPitSegment();// Add a pit segment at the end of the track (for testing, can be improved to insert at specific location)
+	void addPitSegment();
 	void buildFromSegments();
 	void addTrackSegment(TrackSegment s) { trackSegments.push_back(s); }
 
-
-	// Choix de map functions
 	ChoixMapData getCurrentChoixMapData() { return currentChoixMapData; }
 	void setCurrentChoixMapData( QString mapName);
 	void addChoixMap(const ChoixMapData& data) { choixMapList.push_back(data); }
 
-	void defaultMapList(); // Populate choixMapList with default maps (can be called in constructor)
+	void defaultMapList(); 
 	
-	
-
-	// Checkpoint related functions
-	//void createStartLine(); // Create a start line segment at the beginning of the track, aligned with the first segment's direction
-	void createCheckpointAtSegment(); // Create a checkpoint at the end of the specified segment
+	void createCheckpointAtSegment(); 
 	const std::vector<CheckpointData>& getCheckpoints() const { return checkpoints; }
 	std::vector<CheckpointData>& getCheckpointsRef() { return checkpoints; }
 	
-	// tools for checkpoints and start and gameplay
 	bool isBetweenPoints(const QVector2D& carPos,
 		const QVector2D& pointA,
 		const QVector2D& pointB,
 		float threshold = 5.0f) const;
 
-	int isCarBetweenCheckpoints(const QVector2D& point) const; // Returns checkpoint index that got pass or -1 if no checkpoint
+	int isCarBetweenCheckpoints(const QVector2D& point) const; 
 
 	const std::vector<TrackSegment>& getTrackSegments() const { return trackSegments; }
 	std::vector<TrackSegment>& getTrackSegmentsRef() { return trackSegments; }
@@ -409,25 +373,21 @@ private:
 	std::vector<TrackPieces*> pieces;
 	std::vector<QVector2D> centerLine;
 	TrackEdges trackEdges;
-	std::vector<BezierCurveData> bezierCurves; // Store Bezier curve data for walls
-	std::vector<TrackSegment> trackSegments; // Store segments for easier editing and wall generation
-	std::vector<CheckpointData> checkpoints; // Store edges for checkpoints
-	 // Path to the 3D model used for checkpoints
+	std::vector<BezierCurveData> bezierCurves; 
+	std::vector<TrackSegment> trackSegments; 
+	std::vector<CheckpointData> checkpoints; 
 	float currentAngle;
 	QVector2D currentPos;
 	float trackWidth;
 	float startAngle = 0.0;
 	std::vector<int> piecesIntList;
 
-	//Pit lane related members
 	PitLane pitLane;
-	int pitStartIndex = -1;  // index in centerLine where pit begins
-	int pitEndIndex = -1;  // index in centerLine where pit ends
+	int pitStartIndex = -1;  
+	int pitEndIndex = -1;  
 
-	// decor pieces
 	std::vector<DecorPieces*> decors;
 
-	// Variables map selection
 	std::vector<ChoixMapData> choixMapList;
 	ChoixMapData currentChoixMapData;
 

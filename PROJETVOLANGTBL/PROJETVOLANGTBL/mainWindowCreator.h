@@ -20,11 +20,6 @@ public:
     MainWindowCreator(QWidget* parent = nullptr);
     ~MainWindowCreator();
 
-    //protected:
-       // void paintEvent(QPaintEvent* event) override;
-       // void mousePressEvent(QMouseEvent* event) override;
-
-
 private slots:
     void onAddPiece(int pieceType);
     void onAddDecor(int decorType, int variant);
@@ -32,9 +27,6 @@ private slots:
     void onClear();
     void onSave();
     void onLoad();
-    //void onView3D();
-
-
 
 private:
     TrackCreator* trackCreator;

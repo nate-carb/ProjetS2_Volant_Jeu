@@ -1,9 +1,6 @@
 #pragma once
 #include <QWidget>
 #include <QPainter>
-//#include <QMouseEvent>
-//#include <QWheelEvent>
-//#include "map2d.h"
 #include "Track.h"
 
 class TrackViewer : public QWidget
@@ -24,11 +21,11 @@ protected:
 private:
     Track currentTrack;
 
-    // Camera/view controls
+    // Camera
     double zoom;
     QPointF offset;
    
-    // Helper functions
+    // Helpers
     QPointF worldToScreen(const QVector2D& worldPos);
     void drawTrack(QPainter& painter);
     void calculateBounds(float& minX, float& maxX, float& minY, float& maxY);

@@ -15,7 +15,6 @@
 #include "SoundManager.h"
 #include "ArduinoManager.h"
 
-// --- forward declarations ---
 class ArduinoManager;
 class QTimer;
 class QScrollArea;
@@ -50,7 +49,6 @@ private:
     QStackedWidget* m_stack;
     SoundManager* m_soundManager = nullptr;
 
-	// For communicating with the Arduino (encoder inputs)
     ArduinoManager* m_arduino = nullptr;
     QTimer* m_encoderTimer = nullptr;
     QScrollArea* m_lbScrolls[3] = { nullptr, nullptr, nullptr };
