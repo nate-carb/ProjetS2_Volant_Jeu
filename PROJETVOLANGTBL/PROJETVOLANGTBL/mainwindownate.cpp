@@ -308,27 +308,27 @@ void MainWindow::gameLoop()
     prevKeyF1 = curKeyF1;
 
 	// ===== INPUTS CLAVIERS =====
-    float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
-        ? keyW : false;
-    voiture.setAccel(accelInput ? 1.0f : 0.0f);
-    voiture.setBreaking(keyS ? 1.0f : 0.0f);
-    voiture.setBoosting(keySpace);
-
-    if (keyA && !keyD) voiture.setSteering(-1.0f);
-    else if (keyD && !keyA) voiture.setSteering(1.0f);
-    else voiture.setSteering(0.0f);
+    //float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
+    //    ? keyW : false;
+    //voiture.setAccel(accelInput ? 1.0f : 0.0f);
+    //voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    //voiture.setBoosting(keySpace);
+    //
+    //if (keyA && !keyD) voiture.setSteering(-1.0f);
+    //else if (keyD && !keyA) voiture.setSteering(1.0f);
+    //else voiture.setSteering(0.0f);
     // Bloque l'accélération jusqu'au GO (ou pendant la pénalité de faux départ)
     
 
 	// ===== INPUTS WHEEL =====
     //Bloque l'accélération jusqu'au GO (ou pendant la pénalité de faux départ)
-    //float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
-    //    ? base.gas : 0.0f;
-    //voiture.setAccel(accelInput);
-    //voiture.setBreaking(base.brake);
-    //voiture.setSteering(base.pos);
-    //
-    //voiture.setBoosting(wheelData.switchTL);
+    float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
+        ? base.gas : 0.0f;
+    voiture.setAccel(accelInput);
+    voiture.setBreaking(base.brake);
+    voiture.setSteering(base.pos);
+    
+    voiture.setBoosting(wheelData.switchTL);
     
     ////===== ENCODEUR 2 = VOLUME =====
    
