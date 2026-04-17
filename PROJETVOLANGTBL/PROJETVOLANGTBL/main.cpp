@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
         container->raise();
         hud->show();
 
-        //// TEST ONLY POUR LA FIN DE COURSE
+        //// Test pour tester la fin de course
         //static bool testDone = false;
         //if (!testDone) {
         //    testDone = true;

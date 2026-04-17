@@ -244,11 +244,11 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     if (event->key() == Qt::Key_D) keyD = true;
     if (event->key() == Qt::Key_Space) keySpace = true;
     if (event->key() == Qt::Key_Return) keyEnter = true;
-    if (event->key() == Qt::Key_E) {
-        voiture.shiftUp();
-    }
-    
-    if (event->key() == Qt::Key_Q) voiture.shiftDown();
+    //if (event->key() == Qt::Key_E) {
+    //    voiture.shiftUp();
+    //}
+    //
+    //if (event->key() == Qt::Key_Q) voiture.shiftDown();
     if (event->key() == Qt::Key_F1) {
         DevMenu* devMenu = new DevMenu(&voiture, this);
         devMenu->show(); 
@@ -269,6 +269,12 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 
 void MainWindow::gameLoop()
 {
+
+    QTime currentTime = QTime::currentTime();
+    int msElapsed = lastFrameTime.msecsTo(currentTime);
+    deltaTime = msElapsed / 1000.0f;
+    lastFrameTime = currentTime;
+
     if (!track || track->getCenterLine().empty() || track->getCheckpoints().empty()) return;
     auto w = arduino->getWheelData();
     rotPeak->update(w.accelX, w.accelY, w.accelZ, deltaTime);
@@ -295,38 +301,34 @@ void MainWindow::gameLoop()
         devMenu->show();
     }
     if (curKeyE && !prevKeyE) voiture.shiftUp();
+    qDebug() << "Shift UP - Gear:" << voiture.getGear() << "Speed:" << voiture.getSpeed() << "isRacing:" << raceStart->isRacing();
     if (curKeyQ && ! prevKeyQ) voiture.shiftDown();
     prevKeyE = curKeyE;
     prevKeyQ = curKeyQ;
     prevKeyF1 = curKeyF1;
 
-    QTime currentTime = QTime::currentTime();
-    int msElapsed = lastFrameTime.msecsTo(currentTime);  
-    deltaTime = msElapsed / 1000.0f;  
-    lastFrameTime = currentTime;  
-
 	// ===== INPUTS CLAVIERS =====
-    //float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
-    //    ? keyW : false;
-    //voiture.setAccel(accelInput ? 1.0f : 0.0f);
-    //voiture.setBreaking(keyS ? 1.0f : 0.0f);
-    //voiture.setBoosting(keySpace);
+    float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
+        ? keyW : false;
+    voiture.setAccel(accelInput ? 1.0f : 0.0f);
+    voiture.setBreaking(keyS ? 1.0f : 0.0f);
+    voiture.setBoosting(keySpace);
 
-    //if (keyA && !keyD) voiture.setSteering(-1.0f);
-    //else if (keyD && !keyA) voiture.setSteering(1.0f);
-    //else voiture.setSteering(0.0f);
+    if (keyA && !keyD) voiture.setSteering(-1.0f);
+    else if (keyD && !keyA) voiture.setSteering(1.0f);
+    else voiture.setSteering(0.0f);
     // Bloque l'accélération jusqu'au GO (ou pendant la pénalité de faux départ)
     
 
 	// ===== INPUTS WHEEL =====
     //Bloque l'accélération jusqu'au GO (ou pendant la pénalité de faux départ)
-    float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
-        ? base.gas : 0.0f;
-    voiture.setAccel(accelInput);
-    voiture.setBreaking(base.brake);
-    voiture.setSteering(base.pos);
-
-    voiture.setBoosting(wheelData.switchTL);
+    //float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
+    //    ? base.gas : 0.0f;
+    //voiture.setAccel(accelInput);
+    //voiture.setBreaking(base.brake);
+    //voiture.setSteering(base.pos);
+    //
+    //voiture.setBoosting(wheelData.switchTL);
     
     ////===== ENCODEUR 2 = VOLUME =====
    
