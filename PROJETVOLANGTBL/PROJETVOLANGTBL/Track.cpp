@@ -660,7 +660,9 @@ NoSpecificDecor::NoSpecificDecor(QVector2D p, float a)
         "decorPieces/NonSpecificModel2.obj",
         "decorPieces/NonSpecificModel3.obj"
     };
-    info.modelPath = modelList[0]; 
+    info.modelPath = modelList[0];
+}
+
 void NoSpecificDecor::selectModel(int modelNum)
 {
     if (modelNum >= 0 && modelNum < (int)modelList.size()) {
