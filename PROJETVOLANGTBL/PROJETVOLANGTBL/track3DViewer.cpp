@@ -11,7 +11,6 @@
 #include <Qt3DRender/QSceneLoader>
 #include <QUrl>
 #include <QCoreApplication>
-// for skybox
 #include <Qt3DExtras/QDiffuseMapMaterial>
 #include <Qt3DRender/QTexture>
 #include <Qt3DRender/QTextureImage>
@@ -22,16 +21,9 @@
 #include <QtMath>
 #include <QTimer>
 
-// ─────────────────────────────────────────────
-// Constructor
-// ─────────────────────────────────────────────
 Track3DViewer::Track3DViewer(QScreen* screen)
     : Qt3DExtras::Qt3DWindow(screen)
 {
-    // Sky colour
-    //defaultFrameGraph()->setClearColor(QColor(135, 206, 235)); // light blue sky
-
-    // Root entity – everything lives under here
     m_rootEntity = new Qt3DCore::QEntity();
     setRootEntity(m_rootEntity);
 
@@ -40,14 +32,10 @@ Track3DViewer::Track3DViewer(QScreen* screen)
 
 Track3DViewer::~Track3DViewer() {}
 
-// ─────────────────────────────────────────────
-// Public API
-// ─────────────────────────────────────────────
 void Track3DViewer::setTrack(Track* track)
 {
     m_track = track;
 
-    // ── Destroy previous scene atomically ─────────────────
     if (m_sceneRoot) {
         m_sceneRoot->setEnabled(false);
         m_sceneRoot->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
@@ -55,7 +43,6 @@ void Track3DViewer::setTrack(Track* track)
         m_sceneRoot = nullptr;
     }
 
-    // Reset all pointers — they referenced nodes inside the old sceneRoot
     m_orbitController = nullptr;
     m_fpController    = nullptr;
     m_skybox          = nullptr;
@@ -70,14 +57,10 @@ void Track3DViewer::setTrack(Track* track)
     m_instancedDecorEntities.clear();
     m_loaderCache.clear();
 
-    // Fresh scene subtree
     m_sceneRoot = new Qt3DCore::QEntity(m_rootEntity);
-
-    //qDebug() << "setTrack called - checkpoints:" << track->getCheckpoints().size();
 
     buildScene(track);
     buildTrackMesh(track);
-	//buildDecors(track);
     buildBezierWalls(track);
 	buildCheckpoints(track);
     buildGround(track);
@@ -92,7 +75,6 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
     float y = vehicule->getPosition().y();
     float angle = vehicule->getAngle(); // en radian
 
-    // For rending only around the car
     const float LOAD_RADIUS = 500.0f;
 
     for (Qt3DCore::QEntity* e : m_decorEntities) {
@@ -101,50 +83,42 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
         float dx = t->translation().x() - x;
         float dz = t->translation().z() - y;
         float dist = std::sqrt(dx * dx + dz * dz);
-        e->setEnabled(dist < LOAD_RADIUS);  // hide far ones instead of deleting
+        e->setEnabled(dist < LOAD_RADIUS); 
     }
 
-    // Car stays at game logic position
-    m_carTransform->setTranslation(QVector3D(x, 0.0f, y)); // 0 = on the ground
+    m_carTransform->setTranslation(QVector3D(x, 0.0f, y));
     QQuaternion rot = QQuaternion::fromAxisAndAngle(QVector3D(0, 1, 0),
         -qRadiansToDegrees(angle));
     m_carTransform->setRotation(rot);
 
-    // ── Smooth camera angle with lag ─────────────────────────
     if (m_firstPersonMode && m_camera) {
 
-        // ── Smooth camera angle with lag ─────────────────────────
         float targetYaw = -qRadiansToDegrees(angle);
 
-        // Normalize targetYaw to -180..180 range
         while (targetYaw > 180.0f) targetYaw -= 360.0f;
         while (targetYaw < -180.0f) targetYaw += 360.0f;
 
-        // Normalize m_cameraYaw to -180..180 range
         while (m_cameraYaw > 180.0f) m_cameraYaw -= 360.0f;
         while (m_cameraYaw < -180.0f) m_cameraYaw += 360.0f;
 
-        // Handle wrap-around difference
         float diff = targetYaw - m_cameraYaw;
         while (diff > 180.0f) diff -= 360.0f;
         while (diff < -180.0f) diff += 360.0f;
 
-        // Smooth lerp
         m_cameraYaw += diff * (1.0f - m_cameraLag);
 
-        // Convert smoothed yaw back to radians for position calculation
         float smoothAngle = qDegreesToRadians(-m_cameraYaw);
 
         float camOffsetBack = 0.0f;
         float camHeight = 0.0f;
 
         if (carCamthird) {
-            // Camera position behind and above the car 3rd person view
+
             camOffsetBack = 15.0f;
             camHeight = 10.0f;
         }
         if (!carCamthird) {
-            // Camera first person view
+
             camOffsetBack = 0.5f;
             camHeight = 2.0f;
         }
@@ -153,7 +127,6 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
         float camX = x - camOffsetBack * qCos(smoothAngle);
         float camZ = y - camOffsetBack * qSin(smoothAngle);
 
-        // Look ahead of the carw
         float lookX = x + 30.0f * qCos(smoothAngle);
         float lookZ = y + 30.0f * qSin(smoothAngle);
 
@@ -161,8 +134,6 @@ void Track3DViewer::updateVehicule(Vehicule* vehicule)
         m_camera->setViewCenter(QVector3D(lookX, 5.0f, lookZ));
         m_camera->setUpVector(QVector3D(0, 1, 0));
     }
-    
-    
 }
 
 void Track3DViewer::setFirstPersonMode(bool enabled)
@@ -173,15 +144,15 @@ void Track3DViewer::setFirstPersonMode(bool enabled)
         m_orbitController->setEnabled(!enabled);
 
     if (m_fpController)
-        m_fpController->setEnabled(false); // we drive the camera manually from vehicule data
+        m_fpController->setEnabled(false); 
 }
 
 void Track3DViewer::changeCameraMode()
 {
     if (carCamthird) {
-        carCamthird = false; // switch to 1st person
+        carCamthird = false; 
     } else {
-        carCamthird = true; // switch to 3rd person
+        carCamthird = true; 
 	}
 }
 
@@ -194,25 +165,18 @@ bool Track3DViewer::eventFilter(QObject* obj, QEvent* event)
     return QObject::eventFilter(obj, event);
 }
 
-
-
-
-// ─────────────────────────────────────────────
-// Scene setup
-// ─────────────────────────────────────────────
 void Track3DViewer::buildScene(Track* track)
 {
     defaultFrameGraph()->setClearColor(Qt::transparent);
-    // Disable frustum culling so skybox always renders
-    defaultFrameGraph()->setFrustumCullingEnabled(false);
-    // ── Camera ──────────────────────────────────────────────
-    m_camera = camera();
-	m_camera->lens()->setPerspectiveProjection(70.0f, 16.0f / 9.0f, 0.1f, 5000.0f); // fov, aspect, near, far
-	m_camera->setPosition(QVector3D(0, 300, 300)); // initial position (overhead) 
-	m_camera->setViewCenter(QVector3D(0, 0, 0)); // look at the origin initially
-	m_camera->setUpVector(QVector3D(0, 1, 0)); // Y is up QVector3d(x, y, z)
 
-    // ── Orbit controller (useful for debug / top-down view) ──
+    defaultFrameGraph()->setFrustumCullingEnabled(false);
+    // ── Camera
+    m_camera = camera();
+	m_camera->lens()->setPerspectiveProjection(70.0f, 16.0f / 9.0f, 0.1f, 5000.0f); 
+	m_camera->setPosition(QVector3D(0, 300, 300)); 
+	m_camera->setViewCenter(QVector3D(0, 0, 0));
+	m_camera->setUpVector(QVector3D(0, 1, 0)); 
+
     m_orbitController = new Qt3DExtras::QOrbitCameraController(m_sceneRoot);
     m_orbitController->setCamera(m_camera);
     m_orbitController->setLinearSpeed(300.0f);
@@ -221,65 +185,49 @@ void Track3DViewer::buildScene(Track* track)
 
     buildLights();
 
-    // ── Car placeholder ──────────────────────────────────────
     buildCar();
 	buildSkybox(track);
 
     Qt3DRender::QFrameGraphNode* fg = defaultFrameGraph();
-    //qDebug() << "FrameGraph class:" << fg->metaObject()->className();
-
-    // Print all filter keys in the forward renderer
     QList<Qt3DRender::QFilterKey*> keys =
         fg->findChildren<Qt3DRender::QFilterKey*>();
-    //for (Qt3DRender::QFilterKey* k : keys)
-        //qDebug() << "FilterKey:" << k->name() << "=" << k->value();
 }
 
 void Track3DViewer::buildLights()
 {
     if (m_lightsBuilt) return;
 
-    // ── Key light (sun) - top right front ────────────────────
     Qt3DCore::QEntity* keyEntity = new Qt3DCore::QEntity(m_rootEntity);
     Qt3DRender::QDirectionalLight* keyLight = new Qt3DRender::QDirectionalLight(keyEntity);
-    keyLight->setColor(QColor(255, 250, 240)); // warm white
-    keyLight->setIntensity(0.4f); // main light old : 0.6f
+    keyLight->setColor(QColor(255, 250, 240));
+    keyLight->setIntensity(0.4f); 
     keyLight->setWorldDirection(QVector3D(-1.0f, -1.0f, 0.0).normalized());
     keyEntity->addComponent(keyLight);
 
-    // ── Fill light - top left back ────────────────────────────
     Qt3DCore::QEntity* fillEntity = new Qt3DCore::QEntity(m_rootEntity);
     Qt3DRender::QDirectionalLight* fillLight = new Qt3DRender::QDirectionalLight(fillEntity);
-    fillLight->setColor(QColor(150, 170, 255)); // cool blue fill
-    fillLight->setIntensity(0.4f); // secondary light old : 0.3f
+    fillLight->setColor(QColor(150, 170, 255));
+    fillLight->setIntensity(0.4f); 
     fillLight->setWorldDirection(QVector3D(1.0f, -0.5f, 1.0f).normalized());
     fillEntity->addComponent(fillLight);
 
-    // ── Back light - bottom up ────────────────────────────────
     Qt3DCore::QEntity* backEntity = new Qt3DCore::QEntity(m_rootEntity);
     Qt3DRender::QDirectionalLight* backLight = new Qt3DRender::QDirectionalLight(backEntity);
-    backLight->setColor(QColor(200, 200, 200)); // neutral grey
-    backLight->setIntensity(0.3f); // rim light old : 0.2f
-    backLight->setWorldDirection(QVector3D(0.0f, -1.0f, 0.0f).normalized()); // from below
+    backLight->setColor(QColor(200, 200, 200)); 
+    backLight->setIntensity(0.3f); 
+    backLight->setWorldDirection(QVector3D(0.0f, -1.0f, 0.0f).normalized()); 
     backEntity->addComponent(backLight);
 
     m_lightsBuilt = true;
 }
-// ─────────────────────────────────────────────
-// Skybox setup
-// ─────────────────────────────────────────────
 
 void Track3DViewer::buildSkybox(Track* track)
 {
-    // Just use QSkyboxEntity - it works in Qt6 with correct path format
+    
     Qt3DExtras::QSkyboxEntity* skybox = new Qt3DExtras::QSkyboxEntity(m_sceneRoot);
 
     QString basePath = "file:///" + QDir::currentPath() + track->getCurrentChoixMapData().skyboxFilePath;
-    //QString basePath = "file:///" + QDir::currentPath() + "/images/skybox/space/cubemap1";
-    basePath.replace("\\", "/"); // fix Windows backslashes
-
-    //qDebug() << "Skybox base path:" << basePath;
-
+    basePath.replace("\\", "/"); 
     skybox->setBaseName(basePath);
     skybox->setExtension(".png");
     skybox->setGammaCorrectEnabled(false);
@@ -287,12 +235,9 @@ void Track3DViewer::buildSkybox(Track* track)
     
 }
 
-// ─────────────────────────────────────────────
-// Track mesh generation
-// ─────────────────────────────────────────────
 void Track3DViewer::buildTrackMesh(Track* track)
 {
-    //qDebug() << "Start track mesh";
+
     const auto& left = track->getTrackEdges().left;
     const auto& right = track->getTrackEdges().right;
 
@@ -300,7 +245,6 @@ void Track3DViewer::buildTrackMesh(Track* track)
 
     size_t n = qMin(left.size(), right.size());
 
-    // ── Vertex buffer ────────────────────────────────────────
     QVector<float>   vertices;
     QVector<quint32> indices;
     vertices.reserve(static_cast<int>(n) * 2 * 3);
@@ -309,13 +253,10 @@ void Track3DViewer::buildTrackMesh(Track* track)
     for (size_t i = 0; i < n; i++) vertices << left[i].x() << 0.0f << left[i].y();
     for (size_t i = 0; i < n; i++) vertices << right[i].x() << 0.0f << right[i].y();
 
-    // ── Normal buffer ────────────────────────────────────────
     QVector<float> normals;
     normals.reserve(static_cast<int>(n) * 2 * 3);
     for (size_t i = 0; i < n * 2; i++) normals << 0.0f << 1.0f << 0.0f;
 
-    // ── Index buffer ─────────────────────────────────────────
-    //qDebug() << "before for loop track mesh";
     for (quint32 i = 0; i < static_cast<quint32>(n - 1); i++) {
         quint32 l0 = i;
         quint32 l1 = i + 1;
@@ -324,14 +265,9 @@ void Track3DViewer::buildTrackMesh(Track* track)
         indices << l0 << l1 << r0;
         indices << l1 << r1 << r0;
     }
-    //qDebug() << "Track mesh built with" << n << "segments.";
-
-    // ── UV buffer — u=0 bord gauche, u=1 bord droit, v=0→1 ──
-        // ── UV buffer — basé sur la longueur d'arc réelle ────────
-    // TILE_V = unités monde par répétition de texture (ajuste au goût)
+ 
     const float TILE_V = 20.0f;
 
-    // Calcule la distance cumulée le long de la piste
     QVector<float> arcLen(static_cast<int>(n), 0.0f);
     for (size_t i = 1; i < n; i++) {
         QVector2D mid_prev = (left[i - 1] + right[i - 1]) * 0.5f;
@@ -345,7 +281,6 @@ void Track3DViewer::buildTrackMesh(Track* track)
     for (size_t i = 0; i < n; i++) uvs << 0.0f << (arcLen[static_cast<int>(i)] / TILE_V);
     for (size_t i = 0; i < n; i++) uvs << 1.0f << (arcLen[static_cast<int>(i)] / TILE_V);
 
-    // ── Qt3D geometry objects ────────────────────────────────
     m_trackEntity = new Qt3DCore::QEntity(m_sceneRoot);
     Qt3DRender::QGeometryRenderer* renderer = new Qt3DRender::QGeometryRenderer(m_trackEntity);
     Qt3DCore::QGeometry* geometry = new Qt3DCore::QGeometry(renderer);
@@ -407,7 +342,7 @@ void Track3DViewer::buildTrackMesh(Track* track)
     renderer->setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
     m_trackEntity->addComponent(renderer);
 
-    // ── Matériau texturé — même pattern que buildGround ──────
+    // ── Matériau texturé 
     Qt3DExtras::QDiffuseMapMaterial* material =
         new Qt3DExtras::QDiffuseMapMaterial(m_trackEntity);
 
@@ -416,33 +351,14 @@ void Track3DViewer::buildTrackMesh(Track* track)
         QDir::currentPath() + track->getCurrentChoixMapData().trackData.trackTexturePath));
 
     material->diffuse()->addTextureImage(trackTex);
-    material->setAmbient(track->getCurrentChoixMapData().trackData.ambientColor); // QColor(80, 80, 80)
+    material->setAmbient(track->getCurrentChoixMapData().trackData.ambientColor); 
     material->setSpecular(QColor(0, 0, 0));
     material->setShininess(0.0f);
-    material->setTextureScale(1.0f);  // répétitions le long de la piste — ajuste au goût
+    material->setTextureScale(1.0f);  
 
     m_trackEntity->addComponent(material);
 
-    /*
-    // TEMPORARY DEBUG – replace custom mesh with a visible box
-    Qt3DCore::QEntity* debugBox = new Qt3DCore::QEntity(m_rootEntity);
-    Qt3DExtras::QCuboidMesh* debugMesh = new Qt3DExtras::QCuboidMesh();
-    debugMesh->setXExtent(100.0f);
-    debugMesh->setYExtent(10.0f);
-    debugMesh->setZExtent(100.0f);
-    Qt3DExtras::QPhongMaterial* debugMat = new Qt3DExtras::QPhongMaterial(debugBox);
-    debugMat->setDiffuse(QColor(255, 0, 255)); // bright pink, hard to miss
-    debugBox->addComponent(debugMesh);
-    debugBox->addComponent(debugMat);
-    */
-    
-    
-    //--------------------------------------------------------------------
-	//red and white kerbs along the edges, alternating every 10 units
-    //--------------------------------------------------------------------
     auto buildKerb = [&](const std::vector<QVector2D>& edge, const std::vector<QVector2D>& center, bool flipWinding) {
-        //float kerbWidth = 5.0f;
-        //float kerbHeight = 0.05f;
 		float kerbWidth = track->getCurrentChoixMapData().trackData.kerbData.width;
 		float kerbHeight = track->getCurrentChoixMapData().trackData.kerbData.height;
         float segmentLength = 10.0f;
@@ -450,11 +366,9 @@ void Track3DViewer::buildTrackMesh(Track* track)
         bool isRed = true;
 
         if(flipWinding) {
-            // If we flip winding, we start with white instead of red to maintain the alternating pattern
 			kerbHeight = 0.15f;
 		}
 
-        // Two batches - one per color
         QVector<float>   redVerts, whiteVerts;
         QVector<quint32> redIdx, whiteIdx;
         QVector<float>   redNormals, whiteNormals;
@@ -505,7 +419,6 @@ void Track3DViewer::buildTrackMesh(Track* track)
             base += 4;
         }
 
-        // Helper to create one entity from batched geometry
         auto makeEntity = [&](QVector<float>& verts, QVector<float>& normals,
             QVector<quint32>& idx, QColor color) {
                 if (verts.isEmpty()) return;
@@ -560,41 +473,26 @@ void Track3DViewer::buildTrackMesh(Track* track)
                 mat->setDiffuse(color);
                 mat->setAmbient(color.darker(150));
                 mat->setShininess(20.0f);
-                
-                //Qt3DExtras::QPhongMaterial* trackMat = new Qt3DExtras::QPhongMaterial(m_trackEntity);
-                //QColor trackColor(241, 242, 246);
-                //trackMat->setDiffuse(trackColor);
-                //trackMat->setAmbient(trackColor.darker(200)); // 50% darker
-                //trackMat->setSpecular(QColor(0, 0, 0));
-                //trackMat->setShininess(0.0f);
-                //m_trackEntity->addComponent(trackMat);
                 entity->addComponent(renderer);
                 entity->addComponent(mat);
             };
 
-        // 2 entities per edge instead of hundreds
         makeEntity(redVerts, redNormals, redIdx, track->getCurrentChoixMapData().trackData.kerbData.color1);
         makeEntity(whiteVerts, whiteNormals, whiteIdx, track->getCurrentChoixMapData().trackData.kerbData.color2);
         };
 
     
-		buildKerb(track->getTrackEdges().left, track->getCenterLine(), true); // left kerb with normal winding
-		buildKerb(track->getTrackEdges().right, track->getCenterLine(), false); // right kerb with flipped winding to keep normals facing up
+		buildKerb(track->getTrackEdges().left, track->getCenterLine(), true); 
+		buildKerb(track->getTrackEdges().right, track->getCenterLine(), false); 
 
-    // ───────────────────────────────────────── ─────────────────────────────────────────
-    // ── Pit lane 3D mesh ─────────────────────────────────────────
-    // ───────────────────────────────────────── ─────────────────────────────────────────
-        
-
-    // Helper lambda — textured pit mesh, same pattern as buildTrackMesh
     auto buildPitMesh = [&](const std::vector<QVector2D>& left,
         const std::vector<QVector2D>& right) {
             if (left.size() < 2 || right.size() < 2) {
-                //qDebug() << "buildPitMesh skipped - left:" << left.size() << "right:" << right.size();
+               
                 return;
             }
             if (left.size() != right.size()) {
-                //qDebug() << "buildPitMesh size mismatch - left:" << left.size() << "right:" << right.size();
+                
                 return;
             }
             size_t pn = qMin(left.size(), right.size());
@@ -619,7 +517,6 @@ void Track3DViewer::buildTrackMesh(Track* track)
                 idx << l1 << r1 << r0;
             }
 
-            // ── Arc-length UV (same formula as main track) ───────────
             const float TILE_V = 20.0f;
             QVector<float> arcLen(static_cast<int>(pn), 0.0f);
             for (size_t i = 1; i < pn; i++) {
@@ -633,12 +530,10 @@ void Track3DViewer::buildTrackMesh(Track* track)
             for (size_t i = 0; i < pn; i++) uvs << 0.0f << (arcLen[static_cast<int>(i)] / TILE_V);
             for (size_t i = 0; i < pn; i++) uvs << 1.0f << (arcLen[static_cast<int>(i)] / TILE_V);
 
-            // ── Build entity + geometry ──────────────────────────────
             Qt3DCore::QEntity* pitEntity = new Qt3DCore::QEntity(m_sceneRoot);
             Qt3DRender::QGeometryRenderer* pitRenderer = new Qt3DRender::QGeometryRenderer(pitEntity);
             Qt3DCore::QGeometry* pitGeom = new Qt3DCore::QGeometry(pitRenderer);
 
-            // Positions
             Qt3DCore::QBuffer* vb = new Qt3DCore::QBuffer(pitGeom);
             vb->setData(QByteArray(reinterpret_cast<const char*>(verts.constData()),
                 verts.size() * sizeof(float)));
@@ -652,7 +547,6 @@ void Track3DViewer::buildTrackMesh(Track* track)
             posAttr->setCount(static_cast<uint>(pn * 2));
             pitGeom->addAttribute(posAttr);
 
-            // Normals
             Qt3DCore::QBuffer* nb = new Qt3DCore::QBuffer(pitGeom);
             nb->setData(QByteArray(reinterpret_cast<const char*>(normals.constData()),
                 normals.size() * sizeof(float)));
@@ -695,7 +589,6 @@ void Track3DViewer::buildTrackMesh(Track* track)
             pitRenderer->setPrimitiveType(Qt3DRender::QGeometryRenderer::Triangles);
             pitEntity->addComponent(pitRenderer);
 
-            // ── Textured material — même pattern que buildTrackMesh ──
             Qt3DExtras::QDiffuseMapMaterial* mat =
                 new Qt3DExtras::QDiffuseMapMaterial(pitEntity);
             Qt3DRender::QTextureImage* pitTex = new Qt3DRender::QTextureImage();
@@ -712,70 +605,47 @@ void Track3DViewer::buildTrackMesh(Track* track)
     if (track->hasPitLane()) {
         PitLane pit = track->getPitLane();
 
-        // ── Build one continuous left and right edge array ──────────
-        // entry curve → pit straight → exit curve = no seams, no overlap
         std::vector<QVector2D> fullLeft, fullRight;
 
-        // Left side: entry curve left → pit straight left → exit curve left
         for (const auto& p : pit.entryCurveEdges.left)  fullLeft.push_back(p);
         for (const auto& p : pit.edges.left)             fullLeft.push_back(p);
         for (const auto& p : pit.exitCurveEdges.left)    fullLeft.push_back(p);
 
-        // Right side: same order
         for (const auto& p : pit.entryCurveEdges.right)  fullRight.push_back(p);
         for (const auto& p : pit.edges.right)             fullRight.push_back(p);
         for (const auto& p : pit.exitCurveEdges.right)    fullRight.push_back(p);
 
-        // ── Remove duplicate junction points to avoid degenerate triangles ──
-        // The last point of entryCurveEdges == first point of edges, so remove duplicate
         if (!fullLeft.empty() && fullLeft.size() > pit.entryCurveEdges.left.size()) {
             fullLeft.erase(fullLeft.begin() + pit.entryCurveEdges.left.size());
             fullRight.erase(fullRight.begin() + pit.entryCurveEdges.right.size());
         }
-        //// Same for the junction between straight and exit curve
+
         size_t exitJunction = pit.entryCurveEdges.left.size() - 1 + pit.edges.left.size();
         if (exitJunction < fullLeft.size()) {
             fullLeft.erase(fullLeft.begin() + exitJunction);
             fullRight.erase(fullRight.begin() + exitJunction);
         }
 
-        // ── Single mesh - no z-fighting, no gaps ────────────────────
         buildPitMesh(fullLeft, fullRight);
-        //material->setDiffuse(QColor(60, 60, 60));    // dark grey = tarmac
-        //material->setAmbient(QColor(40, 40, 40)); // ambient is usually darker than diffuse
-        //material->setShininess(5.0f);
-
-        // ── Kerbs only on the straight section ──────────────────────
-        //if (pit.edges.left.size() == pit.centerLine.size())
-        //    buildKerb(pit.edges.left, pit.centerLine, true);
-        //if (pit.edges.right.size() == pit.centerLine.size())
-        //    buildKerb(pit.edges.right, pit.centerLine, false);
-
-        //qDebug() << "Pit lane mesh built -"
-        //    << "entry:" << pit.entryCurveEdges.left.size()
-        //    << "straight:" << pit.edges.left.size()
-        //    << "exit:" << pit.exitCurveEdges.left.size()
-        //    << "total:" << fullLeft.size();
-        // ── Pit Stop box (flat rectangle on the pit lane surface) ──
+        
         if (track->hasPitLane()) {
             PitLane pit = track->getPitLane();
             if (pit.centerLine.size() >= 2) {
-                // Midpoint of pit lane
+
                 int mid = pit.centerLine.size() / 2;
                 QVector2D center = pit.centerLine[mid];
                 QVector2D dir = (pit.centerLine[mid + 1] - pit.centerLine[mid]).normalized();
                 QVector2D normal(-dir.y(), dir.x());
 
-                float halfLen = 20.0f;   // half-length along pit lane
-                float halfWid = 15.0f;   // half-width across pit lane
+                float halfLen = 20.0f;   
+                float halfWid = 15.0f; 
 
-                // 4 corners of the box in world XZ plane
                 QVector2D c0 = center - dir * halfLen - normal * halfWid;
                 QVector2D c1 = center + dir * halfLen - normal * halfWid;
                 QVector2D c2 = center + dir * halfLen + normal * halfWid;
                 QVector2D c3 = center - dir * halfLen + normal * halfWid;
 
-                float y = 0.15f; // slightly above track surface to avoid z-fighting
+                float y = 0.15f; 
 
                 QVector<float> verts = {
                     c0.x(), y, c0.y(),
@@ -859,22 +729,15 @@ void Track3DViewer::buildTrackMesh(Track* track)
 
                 boxEntity->addComponent(renderer);
                 boxEntity->addComponent(mat);
-
-                //qDebug() << "Pit stop box built at" << center;
             }
         }
 
     }
 }
 
-// ─────────────────────────────────────────────
-// Ground (grass outside the track)
-// ─────────────────────────────────────────────
-
 void Track3DViewer::buildGround(Track* track)
 {
-    //if (!track->getCurrentChoixMapData().groundData.visible) return;
-	 //Remove old ground entity if it exists
+
     if (m_groundEntity) {
         m_groundEntity->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
         delete m_groundEntity;
@@ -884,46 +747,23 @@ void Track3DViewer::buildGround(Track* track)
 
     m_groundEntity = new Qt3DCore::QEntity(m_sceneRoot);
 
-	//  Create a large plane mesh for the ground
     Qt3DExtras::QPlaneMesh* planeMesh = new Qt3DExtras::QPlaneMesh();
-	// world dimensions - large enough to cover the whole track and surroundings
     planeMesh->setWidth(track->getCurrentChoixMapData().groundData.width);
     planeMesh->setHeight(track->getCurrentChoixMapData().groundData.height); 
     planeMesh->setMeshResolution(QSize(2, 2));
 
- //  Material with green colour for grass
- //   Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
- //   grassMat->setDiffuse(QColor(119, 171, 86));   // Kenney's signature green
- //   grassMat->setAmbient(QColor(30, 80, 30));
- //   grassMat->setShininess(0.0f);
- //   //Qt3DExtras::QPhongMaterial* grassMat = new Qt3DExtras::QPhongMaterial(m_groundEntity);
- //   //QColor grassColor(119, 171, 86);
- //   //grassMat->setDiffuse(grassColor);
- //   //grassMat->setAmbient(grassColor.darker(200));
- //   //grassMat->setSpecular(QColor(0, 0, 0));
- //   //grassMat->setShininess(0.0f);
-	//
- //   // QPlaneMesh is in XZ plane by default, centred at origin – perfect
     Qt3DCore::QTransform* groundTransform = new Qt3DCore::QTransform(m_groundEntity);
-	groundTransform->setTranslation(QVector3D(0, -1.0f, 0)); // slightly below track to avoid z-fighting with track surface
-
-	////  Add components to the ground entity
- //   m_groundEntity->addComponent(planeMesh);
- //   m_groundEntity->addComponent(grassMat);
- //   m_groundEntity->addComponent(groundTransform);
+	groundTransform->setTranslation(QVector3D(0, -1.0f, 0)); 
 
     Qt3DExtras::QDiffuseMapMaterial* grassMat = new Qt3DExtras::QDiffuseMapMaterial(m_groundEntity);
 
     Qt3DRender::QTextureImage* grassTex = new Qt3DRender::QTextureImage();
     grassTex->setSource(QUrl::fromLocalFile(
         QDir::currentPath() + track->getCurrentChoixMapData().groundData.texturePath));
-    //grassTex->setSource(QUrl::fromLocalFile(
-    //    QDir::currentPath() + "/images/Cartoon_green_texture_grass.jpg"));
     grassMat->diffuse()->addTextureImage(grassTex);
-    grassMat->setAmbient(track->getCurrentChoixMapData().groundData.ambientColor);   // tints shadowed areas green QColor(80, 200, 80)
+    grassMat->setAmbient(track->getCurrentChoixMapData().groundData.ambientColor);  
     grassMat->setSpecular(QColor(0, 0, 0));
     grassMat->setShininess(0.0f);
-    // Texture tiling — higher = more repeats across the ground plane
     grassMat->setTextureScale(20.0f);
 
     m_groundEntity->addComponent(planeMesh);
@@ -948,62 +788,48 @@ void Track3DViewer::buildCheckpoints(Track* track)
         
         Qt3DCore::QEntity* cpEntity = new Qt3DCore::QEntity(m_sceneRoot);
 
-        // Position at center between left and right edge
         QVector2D center2D = (cp.left + cp.right) / 2.0f;
-        
-        
-		// Calculate forward direction from left to right edge and derive rotation angle
+      
         QVector3D fwdAxis(cp.forward.x(), 0.0f, cp.forward.y());
         QVector3D upAxis(0.0f, 1.0f, 0.0f);
         QVector3D rightAxis = QVector3D::crossProduct(upAxis, fwdAxis).normalized();
 
-        // Transform
         Qt3DCore::QTransform* transform = new Qt3DCore::QTransform(cpEntity);
-        //transform->setTranslation(QVector3D(center2D.x(), 0.0f, center2D.y()));
+
         transform->setTranslation(QVector3D(center2D.x(), 0.0f, center2D.y()));
 		transform->setRotation(Qt3DCore::QTransform::fromAxes(rightAxis, upAxis, fwdAxis));
-        //transform->setRotation(QQuaternion::fromAxisAndAngle(0, 1, 0, angle));
-        //transform->setRotationY(angle);
-        float scale = 40.0f; // base scale to match your .dae model size (tune as needed) 
+        float scale = 40.0f; 
 		transform->setScale(40.0f);
-		//qDebug() << "Checkpoint" << i << "transform:" << transform->translation() << transform->rotationY();
         cpEntity->addComponent(transform);
 
-        // Offset entity to shift model's left-corner origin to center
         Qt3DCore::QEntity* offsetEntity = new Qt3DCore::QEntity(cpEntity);
         Qt3DCore::QTransform* offsetTransform = new Qt3DCore::QTransform(offsetEntity);
 
-        
-        // Starting line model does not have the same center
         if (i == 0) {
             offsetTransform->setTranslation(QVector3D(-1.0f / 2, 0.0f, 0.0f));
         }
-        // model dimensions : x = 1.87f , y = 0.93f , z = 0.33f for every other checkpoint
+
         else {
             offsetTransform->setTranslation(QVector3D(-1.87f / 2, 0.0f, -0.33f / 2));
         }
-        
-        
+      
         offsetEntity->addComponent(offsetTransform);
 
-        // Attach loader to offsetEntity instead of directly to cpEntity
-        Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(offsetEntity); // <-- parent changed
+        Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(offsetEntity);
         
         Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
 
         connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
             [modelEntity, i](Qt3DRender::QSceneLoader::Status status) {
-                //qDebug() << "Checkpoint" << i << "status:" << status;
-                // 0=None, 1=Loading, 2=Ready, 3=Error
+
                 if (status == Qt3DRender::QSceneLoader::Error) {
-                    //qDebug() << "Checkpoint" << i << "FAILED TO LOAD";
+
                     return;
                 }
                 if (status != Qt3DRender::QSceneLoader::Ready) return;
 
                 QList<Qt3DExtras::QPhongMaterial*> mats =
                     modelEntity->findChildren<Qt3DExtras::QPhongMaterial*>();
-                //qDebug() << "Checkpoint" << i << "loaded -" << mats.size() << "materials";
 
                 for (Qt3DExtras::QPhongMaterial* mat : mats) {
                     mat->setShininess(0.0f);
@@ -1016,40 +842,36 @@ void Track3DViewer::buildCheckpoints(Track* track)
         modelEntity->addComponent(loader);
 
         QString modelPath;
-        // Load .dae model
+
         if (i == 0) {
-            modelPath = QDir::currentPath() + "/3dModels/dae/overheadRound.dae"; // Starting line
+            modelPath = QDir::currentPath() + "/3dModels/dae/overheadRound.dae"; 
         }
         else {
-            modelPath = QDir::currentPath() + "/3dModels/dae/overheadRoundColored.dae"; // Checkpoints
+            modelPath = QDir::currentPath() + "/3dModels/dae/overheadRoundColored.dae"; 
         }
-        
-        //qDebug() << "Loading checkpoint from:" << modelPath;
+
         loader->setSource(QUrl::fromLocalFile(modelPath));
 
         m_checkpointEntities.push_back(cpEntity);
     }
 }
 
-//version 3d model .obj
 void Track3DViewer::buildCar()
 {
-    // Parent entity - holds per-frame position/rotation
+
     m_carEntity = new Qt3DCore::QEntity(m_sceneRoot);
     m_carTransform = new Qt3DCore::QTransform(m_carEntity);
     m_carTransform->setTranslation(QVector3D(0, 5.0f, 0));
     m_carEntity->addComponent(m_carTransform);
 
-    // Child entity - holds the scene loader
+  
     Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(m_carEntity);
 
     Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
     loader->setSource(QUrl::fromLocalFile(
         QDir::currentPath() + "/3dModels/dae/raceCarGreen.dae"
     ));
-   
-   
-    // Optional: scale/reorient the model
+
     Qt3DCore::QTransform* modelTransform = new Qt3DCore::QTransform(modelEntity);
     modelTransform->setScale(5.0f);
     modelTransform->setRotation(QQuaternion::fromAxisAndAngle(0, 1, 0, -90));
@@ -1057,18 +879,12 @@ void Track3DViewer::buildCar()
     modelEntity->addComponent(loader);
     modelEntity->addComponent(modelTransform);
 
-    //// Debug: print when loaded
-    //connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
-    //    [](Qt3DRender::QSceneLoader::Status status) {
-    //        qDebug() << "Model status:" << status;
-    //        // Ready = 2, Error = 3
-    //    });
     connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
         [modelEntity](Qt3DRender::QSceneLoader::Status status) {
-            //qDebug() << "Model status:" << status;
+
             if (status != Qt3DRender::QSceneLoader::Ready) return;
 
-            // Make car materials flat/cartoon like Kenney style
+          
             QList<Qt3DExtras::QPhongMaterial*> mats =
                 modelEntity->findChildren<Qt3DExtras::QPhongMaterial*>();
 
@@ -1076,7 +892,6 @@ void Track3DViewer::buildCar()
                 mat->setShininess(0.0f);
                 mat->setSpecular(QColor(0, 0, 0));
 
-                // Boost ambient to 80% of diffuse for flat cartoon look
                 QColor diff = mat->diffuse();
                 mat->setAmbient(QColor(
                     diff.red() * 0.8f,
@@ -1085,18 +900,13 @@ void Track3DViewer::buildCar()
                 ));
             }
 
-            //qDebug() << "Car materials flattened -" << mats.size() << "materials found";
         });
 }
-
-//------------------------------------------
-//--- buildDecor - version 3d model .obj ---
-//------------------------------------------
 
 void Track3DViewer::buildDecors(Track* track)
 {
     m_loaderCache.clear();
-    // Remove old decor entities if they exist
+
     for (Qt3DCore::QEntity* e : m_decorEntities) {
         e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
         delete e;
@@ -1111,10 +921,8 @@ void Track3DViewer::buildDecors(Track* track)
     for (DecorPieces* decor : decors) {
         if (!decor) continue;
 
-        // Parent entity for this decor - holds position/rotation
         Qt3DCore::QEntity* decorEntity = new Qt3DCore::QEntity(m_sceneRoot);
 
-        // Transform: position from 2D world (x,y) → 3D (x, 0, y)
         Qt3DCore::QTransform* decorTransform = new Qt3DCore::QTransform(decorEntity);
         float x = decor->getInfo().pos.x();
         float y = decor->getInfo().pos.y();
@@ -1126,26 +934,15 @@ void Track3DViewer::buildDecors(Track* track)
                 -qRadiansToDegrees(angle)));
         decorEntity->addComponent(decorTransform);
 
-        // Child entity holds the actual 3D model
         Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(decorEntity);
 
-       
-        //qDebug() << "App dir:" << QCoreApplication::applicationDirPath();
-
         QDir sceneDir(QCoreApplication::applicationDirPath() + "/sceneparsers");
-
-        //qDebug() << "Sceneparsers exists:" << sceneDir.exists();
-        //qDebug() << "Files:" << sceneDir.entryList(QDir::Files);
-
-        //Qt3DRender::QSceneLoader* loader = new Qt3DRender::QSceneLoader(modelEntity);
-        //QString modelPath = QDir::currentPath() + decor->getInfo().modelPath;
-        //loader->setSource(QUrl::fromLocalFile(modelPath));
 
         QString modelPath = QDir::currentPath() + decor->getInfo().modelPath;
         Qt3DRender::QSceneLoader* loader;
 
         if (m_loaderCache.contains(modelPath)) {
-            // Reuse the already-loaded scene loader source
+
             loader = new Qt3DRender::QSceneLoader(modelEntity);
             loader->setSource(m_loaderCache[modelPath]->source());
         }
@@ -1154,23 +951,15 @@ void Track3DViewer::buildDecors(Track* track)
             loader->setSource(QUrl::fromLocalFile(modelPath));
             m_loaderCache[modelPath] = loader;
         }
-        
 
-        // Scale based on decor info
         Qt3DCore::QTransform* modelTransform = new Qt3DCore::QTransform(modelEntity);
         modelTransform->setScale3D(QVector3D(
-            decor->getInfo().width * decor->getScale(),  // match world units
+            decor->getInfo().width * decor->getScale(),  
             decor->getInfo().height * decor->getScale(),
             decor->getInfo().length * decor->getScale()));
         modelEntity->addComponent(loader);
         modelEntity->addComponent(modelTransform);
 
-        //// Debug when each model loads
-        //connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
-        //    [modelPath](Qt3DRender::QSceneLoader::Status status) {
-        //        qDebug() << "Decor model" << modelPath << "status:" << status;
-        //    });
-        // -------------- connect -----------
         connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
            [modelEntity](Qt3DRender::QSceneLoader::Status status) {
                 if (status != Qt3DRender::QSceneLoader::Ready) return;
@@ -1192,17 +981,11 @@ void Track3DViewer::buildDecors(Track* track)
         m_decorEntities.push_back(decorEntity);
     }
 
-    //qDebug() << "Built" << m_decorEntities.size() << "decor entities";
-    
 }
 
-
-//------------------------------------------
-//--- buildWalls - version 3d model .dae ---
-//------------------------------------------
 void Track3DViewer::buildBezierWalls(Track* track)
 {
-    // Clear old wall entities
+
     for (Qt3DCore::QEntity* e : m_wallEntities) {
         e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
         delete e;
@@ -1213,7 +996,7 @@ void Track3DViewer::buildBezierWalls(Track* track)
 
     const auto& curves = track->getBezierCurves();
 
-    // Helper to evaluate bezier point
+
     auto evalBezier = [](const BezierCurveData& c, float t) -> QVector3D {
         float u = 1.0f - t;
         QVector2D p = c.p0 * (u * u * u)
@@ -1223,8 +1006,8 @@ void Track3DViewer::buildBezierWalls(Track* track)
         return QVector3D(p.x(), 0.0f, p.y());
         };
 	float scale = 20.0f; 
-    int   segmentsPerCurve = 20;    // how many wall pieces per curve
-    float wallModelLength = 0.12 * scale; // length of your .dae wall model along Z
+    int   segmentsPerCurve = 20;  
+    float wallModelLength = 0.12 * scale; 
 
     for (const BezierCurveData& curve : curves) {
         for (int i = 0; i < segmentsPerCurve; i++) {
@@ -1234,40 +1017,32 @@ void Track3DViewer::buildBezierWalls(Track* track)
             QVector3D p0 = evalBezier(curve, t0);
             QVector3D p1 = evalBezier(curve, t1);
 
-            // Segment length and direction
             QVector3D dir = (p1 - p0);
             float     segLen = dir.length();
             QVector3D dirN = dir.normalized();
 
-            // Center position of this segment
             QVector3D center = (p0 + p1) / 2.0f;
 
-            // ── Create wall entity ───────────────────────────
             Qt3DCore::QEntity* wallEntity = new Qt3DCore::QEntity(m_sceneRoot);
 
             Qt3DCore::QTransform* wallTransform = new Qt3DCore::QTransform(wallEntity);
 
-            // Position at segment center
             wallTransform->setTranslation(center);
 
-            // Rotate to align x axis with segment direction
             QQuaternion rot = QQuaternion::rotationTo(
-                QVector3D(1, 0, 0), // model faces X
-                dirN                // target direction
+                QVector3D(1, 0, 0),
+                dirN              
             );
             wallTransform->setRotation(rot);
 
-            // Scale Z to match segment length
-            // Z and Y stay at 1.0 to keep wall proportions
             wallTransform->setScale3D(QVector3D(
                 segLen / wallModelLength * scale,
                 1.0f * scale,
-                1.0f * scale // stretch X to fit segment
+                1.0f * scale 
             ));
 
             wallEntity->addComponent(wallTransform);
 
-            // ── Load .dae model ──────────────────────────────
             Qt3DCore::QEntity* modelEntity = new Qt3DCore::QEntity(wallEntity);
             Qt3DRender::QSceneLoader* loader =
                 new Qt3DRender::QSceneLoader(modelEntity);
@@ -1275,11 +1050,6 @@ void Track3DViewer::buildBezierWalls(Track* track)
             loader->setSource(QUrl::fromLocalFile(
                 QDir::currentPath() + "/3dModels/dae/barrierWhite.dae"));
 
-            //connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
-            //    [i](Qt3DRender::QSceneLoader::Status status) {
-            //        if (status == Qt3DRender::QSceneLoader::Error)
-            //            qDebug() << "Wall segment" << i << "failed to load";
-            //    });
             connect(loader, &Qt3DRender::QSceneLoader::statusChanged,
                 [modelEntity](Qt3DRender::QSceneLoader::Status status) {
                     if (status != Qt3DRender::QSceneLoader::Ready) return;
@@ -1303,16 +1073,11 @@ void Track3DViewer::buildBezierWalls(Track* track)
         }
     }
 
-    //qDebug() << "Built" << m_wallEntities.size() << "wall segments";
 }
-// ─────────────────────────────────────────────
-// buildInstancedDecors – generate decor instance
-// ─────────────────────────────────────────────
+
 void Track3DViewer::buildInstancedDecors(Track* track)
 {
-    //qDebug() << "buildInstancedDecors start, decors:"
-        //<< (track ? (int)track->getDecors().size() : -1);
-
+ 
     for (Qt3DCore::QEntity* e : m_instancedDecorEntities) {
         e->setParent(static_cast<Qt3DCore::QEntity*>(nullptr));
         delete e;
@@ -1321,7 +1086,6 @@ void Track3DViewer::buildInstancedDecors(Track* track)
 
     if (!track || track->getDecors().empty()) return;
 
-    // Group transforms by model path
     QMap<QString, QVector<QMatrix4x4>> transformsByModel;
 
     for (DecorPieces* d : track->getDecors()) {
@@ -1342,24 +1106,17 @@ void Track3DViewer::buildInstancedDecors(Track* track)
         transformsByModel[modelPath].append(mat);
     }
 
-    // Build one instanced group per unique model
-    // Each group has one draw call per submesh (material)
     for (auto it = transformsByModel.begin();
         it != transformsByModel.end(); ++it)
     {
         const QString& modelPath = it.key();
         const QVector<QMatrix4x4>& transforms = it.value();
 
-        //qDebug() << "Loading:" << modelPath
-            //<< "instances:" << transforms.size();
-
-        // Load all submeshes with correct per-material colors
         MeshDataList meshList =
             DaeLoader::loadByMaterial(modelPath);
 
         if (!meshList.valid) {
-            //qDebug() << "buildInstancedDecors: failed to load"
-                //<< modelPath;
+
             continue;
         }
 
@@ -1369,39 +1126,28 @@ void Track3DViewer::buildInstancedDecors(Track* track)
         if (e) m_instancedDecorEntities.push_back(e);
     }
 
-    //qDebug() << "buildInstancedDecors: built"
-        //<< m_instancedDecorEntities.size()
-        //<< "instanced groups from"
-        //<< track->getDecors().size() << "decors";
 }
-// ─────────────────────────────────────────────
-// Helper – generic coloured box
-// ─────────────────────────────────────────────
-// Tool to create box entities with specified size, position, and color. Useful for debugging or simple objects.
+
 Qt3DCore::QEntity* Track3DViewer::createBox(Qt3DCore::QEntity* parent,
     QVector3D size,
     QVector3D position,
     QColor color)
 {
-	// Create a new entity under the specified parent
+
     Qt3DCore::QEntity* entity = new Qt3DCore::QEntity(parent);
 
-	// QCuboidMesh is a simple box mesh provided by Qt3D. We set its extents to define the size of the box.
     Qt3DExtras::QCuboidMesh* mesh = new Qt3DExtras::QCuboidMesh();
     mesh->setXExtent(size.x());
     mesh->setYExtent(size.y());
     mesh->setZExtent(size.z());
 
-	// Transform to position the box in the world
     Qt3DCore::QTransform* transform = new Qt3DCore::QTransform(entity);
     transform->setTranslation(position);
 
-	// Material with specified color
     Qt3DExtras::QPhongMaterial* mat = new Qt3DExtras::QPhongMaterial(entity);
     mat->setDiffuse(color);
     mat->setAmbient(color.darker(150));
 
-	// Add components to the entity
     entity->addComponent(mesh);
     entity->addComponent(transform);
     entity->addComponent(mat);

@@ -161,7 +161,6 @@ bool ArduinoManager::SendToSerial(SerialPort* port, json j_msg) {
 // ── Parsers JSON ─────────────────────────────────────────────────────────────
 void ArduinoManager::parseBase(const std::string& raw)
 {
-    //qDebug() << "raw data" << QString::fromStdString(raw);
     try {
         json j = json::parse(raw);
         baseData.pos = j.value("pos", 0.0f);

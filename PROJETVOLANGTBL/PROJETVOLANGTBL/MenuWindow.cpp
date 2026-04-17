@@ -13,9 +13,6 @@
 
 #include "AnimatedButton.h"
 
-
-
-// ===== STYLES =====
 static const QString BTN_STYLE = R"(
     QPushButton {
         background-color: #111111;
@@ -46,7 +43,6 @@ static const QString TITLE_STYLE = R"(
     }
 )";
 
-// ===== CONSTRUCTEUR =====
 MenuWindow::MenuWindow(SoundManager* soundManager, ArduinoManager* arduino, QWidget* parent)
     : QMainWindow(parent), m_soundManager(soundManager)
 {
@@ -78,7 +74,6 @@ MenuWindow::MenuWindow(SoundManager* soundManager, ArduinoManager* arduino, QWid
 
 MenuWindow::~MenuWindow() {}
 
-// ===== HELPERS =====
 QPushButton* MenuWindow::createStyledButton(const QString& text)
 {
     AnimatedButton* btn = new AnimatedButton(text);
@@ -110,13 +105,11 @@ void MenuWindow::goToPage(int index)
         buttons.first()->setFocus();
 }
 
-// ===== PAGE MAIN MENU =====
 QWidget* MenuWindow::createMainMenuPage()
 {
     QWidget* page = new QWidget();
     applyBackground(page);
 
-    // GIF background
     QScreen* screen = QGuiApplication::primaryScreen();
     QSize screenSize = screen->size();
 
@@ -133,13 +126,13 @@ QWidget* MenuWindow::createMainMenuPage()
     }
     bgLabel->lower();
 
-    // Layout principal centré
+    // Layout principal
     QVBoxLayout* layout = new QVBoxLayout(page);
     layout->setAlignment(Qt::AlignCenter);
     layout->setSpacing(0);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    // Widget centré de largeur fixe qui contient tout
+    // Widget centré qui contient tout
     QWidget* centerWidget = new QWidget();
     centerWidget->setStyleSheet("background: transparent;");
     centerWidget->setFixedWidth(480);  
@@ -200,11 +193,10 @@ QWidget* MenuWindow::createMainMenuPage()
 
     return page;
 }
-// ===== PAGE TRACK SELECTION =====
+
 QWidget* MenuWindow::createTrackSelectionPage()
 {
     QWidget* page = new QWidget();
-    // GIF background
     QScreen* screen = QGuiApplication::primaryScreen();
     QSize screenSize = screen->size();
     QLabel* bgLabel = new QLabel(page);
@@ -286,13 +278,11 @@ QWidget* MenuWindow::createTrackSelectionPage()
     return page;
 }
 
-// ===== PAGE LEADERBOARD SELECTION =====
 QWidget* MenuWindow::createLeaderboardSelectionPage()
 {
     QWidget* page = new QWidget();
     applyBackground(page);
 
-    // GIF background
     QScreen* screen = QGuiApplication::primaryScreen();
     QSize screenSize = screen->size();
     QLabel* bgLabel = new QLabel(page);
@@ -376,7 +366,6 @@ QWidget* MenuWindow::createLeaderboardSelectionPage()
     return page;
 }
 
-// ===== PAGE LEADERBOARD =====
 QWidget* MenuWindow::createLeaderboardPage(int trackIndex)
 {
     QWidget* page = new QWidget();
@@ -488,7 +477,6 @@ QWidget* MenuWindow::createLeaderboardPage(int trackIndex)
     return page;
 }
 
-// ===== SLOTS =====
 void MenuWindow::onPlay() { goToPage(PAGE_TRACK_SEL); }
 void MenuWindow::onLeaderboards() { goToPage(PAGE_LB_SEL); }
 
@@ -508,7 +496,6 @@ void MenuWindow::onTrackSelected(int trackIndex) {
 
 void MenuWindow::onLeaderboardTrackSelected(int trackIndex)
 {
-    // Remplace la page existante par une nouvelle à jour
     QWidget* oldPage = m_stack->widget(PAGE_LB_T1 + trackIndex);
     m_stack->removeWidget(oldPage);
     delete oldPage;
@@ -536,7 +523,6 @@ void MenuWindow::pollEncoder()
     if (delta == 0) return;
     m_prevEnc2 = wd.enc2;
 
-    // Trouver la page de leaderboard courante
     int page = m_stack->currentIndex();
     int lbIdx = -1;
     if (page == PAGE_LB_T1) lbIdx = 0;
@@ -548,7 +534,7 @@ void MenuWindow::pollEncoder()
     if (!scroll) return;
 
     QScrollBar* vbar = scroll->verticalScrollBar();
-    int step = 20;  // pixels par cran
+    int step = 20;  
     vbar->setValue(vbar->value() + delta * step);
 }
 

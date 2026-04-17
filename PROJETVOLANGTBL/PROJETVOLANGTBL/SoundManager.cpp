@@ -10,31 +10,30 @@ SoundManager::SoundManager(QObject* parent) : QObject(parent)
     menuMusic->setSource(QUrl::fromLocalFile("sounds/musique_menu.wav"));
     menuMusic->setLoops(QMediaPlayer::Infinite);
     menuOutput->setVolume(0.5f);
-    // ── Moteur (boucle) ──────────────────────────────────────
+    // ── Moteur 
     enginePlayer = new QMediaPlayer(this);
     engineOutput = new QAudioOutput(this);
     enginePlayer->setAudioOutput(engineOutput);
-    //enginePlayer->setSource(QUrl::fromLocalFile("sounds/engine_loop.wav"));
     enginePlayer->setLoops(QMediaPlayer::Infinite);
     engineOutput->setVolume(0.7f);
     enginePlayer->play();
 
-    // ── Freinage ─────────────────────────────────────────────
+    // ── Freinage
     brakeSound = new QSoundEffect(this);
     brakeSound->setSource(QUrl::fromLocalFile("sounds/brake.wav"));
     brakeSound->setVolume(0.6f);
 
-    // ── Changement de vitesse ─────────────────────────────────
+    // ── Changement de vitesse
     shiftSound = new QSoundEffect(this);
     shiftSound->setSource(QUrl::fromLocalFile("sounds/gear_shift.wav"));
     shiftSound->setVolume(0.5f);
 
-    // ── NOS ───────────────────────────────────────────────────
+    // ── NOS
     nosSound = new QSoundEffect(this);
     nosSound->setSource(QUrl::fromLocalFile("sounds/nos.wav"));
     nosSound->setVolume(0.8f);
 
-    // ── Herbe ────────────────────────────────────────────────
+    // ── Herbe
     grassSound = new QSoundEffect(this);
     grassSound->setSource(QUrl::fromLocalFile("sounds/grass.wav"));
     grassSound->setVolume(0.4f);
@@ -48,12 +47,8 @@ void SoundManager::updateEngine(float rpm, float maxRpm, bool isOnGrass)
     float targetPitch = 0.5f + ratio * 2.0f;
     float targetVolume = 0.3f + ratio * 0.7f;
     if (isOnGrass) targetVolume *= 0.6f;
-
-    // Lerp pour lisser (0.05 = très doux, 0.15 = plus réactif)
     currentPitch += (targetPitch - currentPitch) * 0.05f;
     currentVolume += (targetVolume - currentVolume) * 0.05f;
-
-    // Mise à jour seulement si le changement est visible
     if (std::abs(enginePlayer->playbackRate() - currentPitch) > 0.01f)
         enginePlayer->setPlaybackRate(currentPitch);
 
@@ -63,7 +58,6 @@ void SoundManager::updateEngine(float rpm, float maxRpm, bool isOnGrass)
 
 void SoundManager::playBrake(bool isBraking, float speed)
 {
-    // Front montant : début du freinage à vitesse suffisante
     if (isBraking && !wasBraking && speed > 5.0f) {
         brakeSound->play();
     }

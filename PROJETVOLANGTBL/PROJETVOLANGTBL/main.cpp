@@ -1,5 +1,3 @@
-// main.cpp
-
 // -- Qt includes --
 #include <QtWidgets/QApplication>
 #include <QDebug>
@@ -11,7 +9,7 @@
 // -- includes --
 #include <windows.h>
 #include <iostream>
-// -- Home includes -- 
+// -- Nos includes -- 
 #include "Vehicule.h"
 #include "Track.h"
 #include "mainwindownate.h"
@@ -32,10 +30,10 @@ int main(int argc, char* argv[])
     qputenv("QT3D_RENDERER", "opengl");
     QApplication app(argc, argv);
 
-    // ===== JEU (créé mais caché) =====
+    
     MainWindow* window = new MainWindow();
-	// ===== Connexion Arduino après 4 secondes =====
-	QTimer::singleShot(2000, window, [window]() {   // ← attente 4 secondes pour laisser le temps au arduino de resetter et se préparer
+	
+	QTimer::singleShot(2000, window, [window]() {   // attente 4 secondes pour laisser le temps au arduino de resetter et se préparer
         bool baseOk = window->arduino->connectBase("\\\\.\\COM3"); 
         bool wheelOk = window->arduino->connectWheel("\\\\.\\COM6");
         qDebug() << "Base connectee:" << baseOk;
@@ -43,79 +41,62 @@ int main(int argc, char* argv[])
         });
     
 
-    // ===== MENU =====
+    // Menu
     MenuWindow* menu = new MenuWindow(window->soundManager, window->arduino);
     menu->show();
-	// ===== TRACK CREATOR =====
+	// Track Creator
 	MainWindowCreator* creator = new MainWindowCreator();
 	creator->show();
-	// ===== 3D VIEWER =====
+	// 3D Viewer
     Track3DViewer* viewer = new Track3DViewer();
-	viewer->setFirstPersonMode(true); // view on the car, not above it
+	viewer->setFirstPersonMode(true); 
 
-	// ===== CONTAINER (intègre le viewer dans une fenêtre Qt classique) =====
+	// Container
     QWidget* container = QWidget::createWindowContainer(viewer);
 	container->setMinimumSize(1280, 720); 
 	container->resize(1280, 720); 
 	container->setWindowTitle("Racing Game 3D"); 
-	container->installEventFilter(viewer); // pour que le viewer puisse recevoir les événements clavier même quand il est dans le container
+	container->installEventFilter(viewer); // pour que le joueur puisse recevoir les événements clavier même quand il est dans le container
 
-	// ===== HUD (overlay transparent au-dessus du viewer) =====
+	// HUD
     HUDOverlay* hud = new HUDOverlay();
     hud->setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     hud->setAttribute(Qt::WA_TranslucentBackground);
     hud->setAttribute(Qt::WA_ShowWithoutActivating);
 
     auto resetGame = [=]() {
-        // ── 1. Arrêter les timers ─────────────────────────────
+       
         window->timer->stop();
         if (window->weatherTimer) window->weatherTimer->stop();
         window->resetInputs();
 
-
-        // ── 2. Cacher le rendu et le HUD ──────────────────────
         container->hide();
         hud->hide();
 
-        // ── 3. Reset état voiture et course ───────────────────
         window->voiture = Vehicule();
         window->raceTimes->resetRace();
         window->isPaused = false;
         window->currentWeather = Vehicule::SUNNY;
 
-        // ── 4. Reset pit stop ─────────────────────────────────
-        window->pitStop = PitStop();   // ou window->pitStop.reset() si la méthode existe
+        window->pitStop = PitStop();  
 
-        // ── 5. Retour au menu ─────────────────────────────────
         menu->goToMainMenu();
         menu->show();
         };
 
-
-
-    // ===== QUAND PLAY EST CLIQUÉ =====
+    // Play Button
     QObject::connect(menu, &MenuWindow::playRequested, [=](int trackIndex) {
         menu->hide();
-        
-        
-		
-        /*QStringList trackFiles = {
-            "tracks/nate.trk",
-            "tracks/nate2.trk",
-            "tracks/defaultTrack1.trk"
-        };*/
+     
         QStringList trackNames = {
             "nate",
             "nate2",
             "NATE3"
         };
-        //qDebug() << "Working directory:" << QDir::currentPath();
-        //qDebug() << "Track name:" << trackNames[trackIndex];
        
-        window->track->playTrack(trackNames[trackIndex]);  // uses the name from the menu
+        window->track->playTrack(trackNames[trackIndex]); 
         window->pitStop.placePitLane(window->track->getPitLane(), window->track->getTrackWidth());
 
-        // Spawn the car at the start of the track with the correct heading
         {
             float startAngleDeg = window->track->getStartAngle();
             window->voiture.setAngle(qDegreesToRadians(startAngleDeg));
@@ -146,11 +127,9 @@ int main(int argc, char* argv[])
         //    window->raceTimes->forceFinish();
         //}
 
-		//window->arduino->update(); // update Arduino state once before starting the game loop - flush data
-        window->timer->start(16);  // start game loop AFTER everything is ready
+        window->timer->start(16);  
         });
 
-    
     QObject::connect(window->timer, &QTimer::timeout, [=]() {
         bool raceEndOpen = false;
         for (QWidget* w : QApplication::allWidgets()) {
@@ -173,7 +152,7 @@ int main(int argc, char* argv[])
         
         if (!window->track || window->track->getCenterLine().empty()) return;
 
-        // ===== NAVIGATION JOYSTICK =====
+        // Joystick
         static int lastJoyDir = 0;
         static bool lastBtnSelect = false;
 
@@ -204,7 +183,7 @@ int main(int argc, char* argv[])
                 }
             }
             else {
-                // Pour pause/raceend dialogs
+                // Pour pause et race end 
                 QWidget* activeWindow = QApplication::activeWindow();
                 if (activeWindow) {
                     QList<QPushButton*> buttons = activeWindow->findChildren<QPushButton*>();
@@ -225,8 +204,6 @@ int main(int argc, char* argv[])
             }
         }
         lastJoyDir = joyDir;
-
-       
 
         // Sélection
         if (btnSelect && !lastBtnSelect) {
@@ -330,7 +307,7 @@ int main(int argc, char* argv[])
             window->voiture.getNos(),
             window->voiture.getTireWear(),
             window->currentWeather,
-			window->voiture.getSpeed(),     // m/s → km/h (ajuste si déjà en km/h)
+			window->voiture.getSpeed(),    
 			window->voiture.getRpm(),
 			window->voiture.getMaxRpm(),
 			window->raceTimes->getCurrentLap(),
@@ -353,7 +330,8 @@ int main(int argc, char* argv[])
         hud->move(container->mapToGlobal(QPoint(0, 0)));
         hud->resize(container->size());
     });
-    // Timer séparé pour le joystick menu — tourne toujours
+
+    // Timer séparé pour le joystick menu 
     QTimer* joystickTimer = new QTimer();
     joystickTimer->setInterval(100);
     QObject::connect(joystickTimer, &QTimer::timeout, [=]() {
@@ -441,7 +419,7 @@ int main(int argc, char* argv[])
             window->soundManager->setVolume(newVol);
         }
 
-        //Encodeur2
+        // Encodeur 2 = tout ce qui est scrollable
         static int lastEnc2 = -1;
         int enc2 = window->arduino->getWheelData().enc2;
 
@@ -450,7 +428,7 @@ int main(int argc, char* argv[])
         }
 
         int enc2Delta = enc2 - lastEnc2;
-        lastEnc2 = enc2;  // update TOUJOURS
+        lastEnc2 = enc2;  // update tjrs
         if (enc2Delta != 0) {
             QScrollArea* scrollArea = nullptr;
 

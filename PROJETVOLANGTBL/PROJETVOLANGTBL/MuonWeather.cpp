@@ -17,7 +17,7 @@ void MuonWeather::onMuon()
     int pos = m_count % m_cycleLength;
 
     Vehicule::Weather next;
-    if      (pos < m_rainyAt)   next = Vehicule::SUNNY;   // début du cycle → beau temps
+    if      (pos < m_rainyAt)   next = Vehicule::SUNNY;   // début du cycle 
     else if (pos < m_stormyAt)  next = Vehicule::RAINY;
     else                        next = Vehicule::STORMY;
 
@@ -33,7 +33,6 @@ void MuonWeather::reset()
     m_weather = Vehicule::SUNNY;
 }
 
-// ── Privé ────────────────────────────────────────────────────────────────────
 void MuonWeather::applyIfChanged(Vehicule::Weather next)
 {
     if (next == m_weather) return;

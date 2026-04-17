@@ -1,10 +1,3 @@
-/*
-* Author: Manash Kumar Mandal
-* Modified Library introduced in Arduino Playground which does not work
-* This works perfectly
-* LICENSE: MIT
-*/
-
 #include "SerialPort.hpp"
 
 SerialPort::SerialPort(const char *portName, int BAUD)
@@ -44,11 +37,7 @@ SerialPort::SerialPort(const char *portName, int BAUD)
             dcbSerialParameters.StopBits = ONESTOPBIT;
             dcbSerialParameters.Parity = NOPARITY;
             dcbSerialParameters.fDtrControl = DTR_CONTROL_ENABLE;
-            //dcbSerialParameters.fDtrControl = DTR_CONTROL_DISABLE;
-            //dcbSerialParameters.fRtsControl = RTS_CONTROL_DISABLE;
-
-            
-
+           
             if (!SetCommState(handler, &dcbSerialParameters))
             {
                 std::cout << "ALERT: could not set serial port parameters\n";
@@ -72,8 +61,6 @@ SerialPort::~SerialPort()
     }
 }
 
-// Reading bytes from serial port to buffer;
-// returns read bytes count, or if error occurs, returns 0
 int SerialPort::readSerialPort(const char *buffer, unsigned int buf_size)
 {
     DWORD bytesRead{};
@@ -103,8 +90,6 @@ int SerialPort::readSerialPort(const char *buffer, unsigned int buf_size)
     return 0;
 }
 
-// Sending provided buffer to serial port;
-// returns true if succeed, false if not
 bool SerialPort::writeSerialPort(const char *buffer, unsigned int buf_size)
 {
     DWORD bytesSend;
@@ -118,9 +103,6 @@ bool SerialPort::writeSerialPort(const char *buffer, unsigned int buf_size)
     return true;
 }
 
-
-
-// Checking if serial port is connected
 bool SerialPort::isConnected()
 {
     if (!ClearCommError(this->handler, &this->errors, &this->status))

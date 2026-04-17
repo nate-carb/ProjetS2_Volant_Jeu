@@ -42,7 +42,7 @@ DevMenu::DevMenu(Vehicule* vehicule, QWidget* parent)
     mainLayout->addStretch();
 }
 
-// Helper - crée label + slider + spinbox liés ensemble
+// Helpers
 QSlider* DevMenu::addSlider(QVBoxLayout* layout, const QString& label,
     float min, float max, float value, float* target)
 {

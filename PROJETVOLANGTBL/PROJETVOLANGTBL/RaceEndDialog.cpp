@@ -25,7 +25,7 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, float peakRotAcce
     layout->setSpacing(12);
     layout->setContentsMargins(30, 20, 30, 20);
 
-    // ===== TITRE =====
+    // Titre
     QStringList trackNames = { "Classement Espace", "Classement Monaco", "Classement Plage" };
     QLabel* title = new QLabel(trackNames[trackIndex]);
     title->setStyleSheet(
@@ -35,7 +35,7 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, float peakRotAcce
     layout->addWidget(title);
     title->setFocusPolicy(Qt::NoFocus);
 
-    // ===== TEMPS DU JOUEUR =====
+    // Temps
     LeaderboardManager::Entry playerEntry;
     playerEntry.timeMs = playerTimeMs;
 
@@ -57,7 +57,7 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, float peakRotAcce
     rotAccel->setFocusPolicy(Qt::NoFocus);
     layout->addWidget(rotAccel);
 
-    // ===== LEADERBOARD SCROLLABLE =====
+    // Leaderboard
     QScrollArea* scroll = new QScrollArea();
     scroll->setWidgetResizable(true);
     scroll->setStyleSheet(
@@ -78,7 +78,7 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, float peakRotAcce
     scroll->setFocusPolicy(Qt::NoFocus);
 
 
-    // ===== ENTRER SON NOM =====
+    // Nom
     QLabel* nameLabel = new QLabel("Entrez votre nom:");
     nameLabel->setStyleSheet(
         "color: white; font-size: 14px; font-weight: bold;"
@@ -93,7 +93,7 @@ RaceEndDialog::RaceEndDialog(int trackIndex, int playerTimeMs, float peakRotAcce
         "border-radius: 8px; padding: 8px; border: 2px solid #4B0082;");
     layout->addWidget(m_nameInput);
 
-    // ===== BOUTONS =====
+    // Boutons
     QPushButton* btnSubmit = createStyledButton("Sauvegarder");
     connect(btnSubmit, &QPushButton::clicked, [this, btnSubmit]() {
         QString name = m_nameInput->text().trimmed();

@@ -17,13 +17,13 @@ MainWindowCreator::MainWindowCreator(QWidget* parent)
 
     QHBoxLayout* mainLayout = new QHBoxLayout(centralWidget);
 
-    // Track viewer (left side)
+    // Track viewer 
     trackCreator = new TrackCreator(this);
-    mainLayout->addWidget(trackCreator, 3);  // Takes 3/4 of space
+    mainLayout->addWidget(trackCreator, 3);  
 
-    // Control panel (right side)
+    // Control panel 
     QVBoxLayout* controlLayout = new QVBoxLayout();
-    mainLayout->addLayout(controlLayout, 1);  // Takes 1/4 of space
+    mainLayout->addLayout(controlLayout, 1);  
 
     // Title
     QLabel* titleLabel = new QLabel("Track Pieces", this);
@@ -33,7 +33,7 @@ MainWindowCreator::MainWindowCreator(QWidget* parent)
     titleLabel->setFont(titleFont);
     controlLayout->addWidget(titleLabel);
 
-    // Track pieces buttons
+    // Track 
     QGroupBox* piecesGroup = new QGroupBox("Add Pieces", this);
     QVBoxLayout* piecesLayout = new QVBoxLayout(piecesGroup);
     createPieceButtons(piecesLayout);
@@ -61,20 +61,12 @@ MainWindowCreator::MainWindowCreator(QWidget* parent)
 
 
     controlLayout->addWidget(trackControlsGroup);
-    /*
-    // Add 3D View button
-    QPushButton* view3DBtn = new QPushButton("View in 3D", this);
-    view3DBtn->setStyleSheet("QPushButton { background-color: #9C27B0; color: white; padding: 8px; }");
-    connect(view3DBtn, &QPushButton::clicked, this, &MainWindowCreator::onView3D);
-    controlLayout->addWidget(view3DBtn);
-    */
-    // Status label
     statusLabel = new QLabel("Pieces: 0", this);
     controlLayout->addWidget(statusLabel);
 
     controlLayout->addStretch();
 
-    // Connect track updates
+    // Connect track 
     connect(trackCreator, &TrackCreator::trackUpdated, this, [this](const Track& track) {
         statusLabel->setText(QString("Pieces: %1").arg(track.getCenterLine().size()));
         });
@@ -87,7 +79,7 @@ MainWindowCreator::~MainWindowCreator()
 
 void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
 {
-	// ── Track Segments dropdown ──────────────────────────────────────────
+	// Track segments
     QLabel* segLabel = new QLabel("── Track Segments ──", this);
     segLabel->setAlignment(Qt::AlignCenter);
     segLabel->setStyleSheet("color: #aaa; font-size: 11px;");
@@ -117,53 +109,21 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
 		trackCreator->removeLastSegment();
         });
     layout->addWidget(removeLastBtn);
-	/* OLD BUTTONS for track pieces, replaced by the above ones for better user experience
-    // Straight
-    QPushButton* straightBtn = new QPushButton("Straight", this);
-    straightBtn->setStyleSheet("QPushButton { background-color: #4CAF50; color: white; padding: 8px; }");
-    connect(straightBtn, &QPushButton::clicked, [this]() { onAddPiece(STRAIGHT); });
-    layout->addWidget(straightBtn);
 
-    // 45 Left
-    QPushButton* left45Btn = new QPushButton("45� Left Turn", this);
-    left45Btn->setStyleSheet("QPushButton { background-color: #2196F3; color: white; padding: 8px; }");
-    connect(left45Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_45LEFT); });
-    layout->addWidget(left45Btn);
-
-    // 45 Right
-    QPushButton* right45Btn = new QPushButton("45� Right Turn", this);
-    right45Btn->setStyleSheet("QPushButton { background-color: #2196F3; color: white; padding: 8px; }");
-    connect(right45Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_45RIGHT); });
-    layout->addWidget(right45Btn);
-
-    // 90 Left
-    QPushButton* left90Btn = new QPushButton("90� Left Turn", this);
-    left90Btn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
-    connect(left90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90LEFT); });
-    layout->addWidget(left90Btn);
-
-    // 90 Right
-    QPushButton* right90Btn = new QPushButton("90� Right Turn", this);
-    right90Btn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
-    connect(right90Btn, &QPushButton::clicked, [this]() { onAddPiece(VIRAGE_90RIGHT); });
-    layout->addWidget(right90Btn);
-    */
-    // PIT
+	// Pitstop
     QPushButton* pitBtn = new QPushButton("Pit", this);
     pitBtn->setStyleSheet("QPushButton { background-color: #FF9800; color: white; padding: 8px; }");
     connect(pitBtn, &QPushButton::clicked, [this]() {
         trackCreator->addPitSegment();
         });
     layout->addWidget(pitBtn);
-    
-    // ── Decor dropdown ──────────────────────────────────────────
-    // Separator label
+ 
     QLabel* decorLabel = new QLabel("── Decors ──", this);
     decorLabel->setAlignment(Qt::AlignCenter);
     decorLabel->setStyleSheet("color: #aaa; font-size: 11px;");
     layout->addWidget(decorLabel);
 
-    // Grandstand submenu
+    // Grandstand 
     QComboBox* grandstandCombo = new QComboBox(this);
     grandstandCombo->addItem("Grandstand (Open)");         // index 0
     grandstandCombo->addItem("Grandstand (Covered)");      // index 1
@@ -180,7 +140,7 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         });
     layout->addWidget(addGrandstandBtn);
 
-    // Garage submenu
+    // Garage 
     QComboBox* garageCombo = new QComboBox(this);
     garageCombo->addItem("Garage (Open)");    // index 0
     garageCombo->addItem("Garage (Closed)");  // index 1
@@ -195,7 +155,7 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         });
     layout->addWidget(addGarageBtn);
 
-    // Trees submenu
+    // Arbres
     QComboBox* treesCombo = new QComboBox(this);
     treesCombo->addItem("Tree (Small)"); // index 0
     treesCombo->addItem("Tree (Large)"); // index 1
@@ -209,7 +169,6 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         });
     layout->addWidget(addTreeBtn);
 
-    // ── Decor angle controls ─────────────────────────────────
     QLabel* angleLabel = new QLabel("── Decor Angle ──", this);
     angleLabel->setAlignment(Qt::AlignCenter);
     angleLabel->setStyleSheet("color: #aaa; font-size: 11px;");
@@ -225,7 +184,7 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         double angle = QInputDialog::getDouble(this, "Set Exact Angle",
             "Angle (degrees):", 0.0, -360.0, 360.0, 1, &ok);
         if (ok) {
-			trackCreator->rotateDecorExact(angle); //set selected decor angle to user input (exact)
+			trackCreator->rotateDecorExact(angle); 
             qDebug() << "Set exact angle:" << angle;
         }
         });
@@ -235,7 +194,7 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     relAngleBtn->setStyleSheet(
         "QPushButton { background-color: #FF9800; color: white; padding: 6px; font-size: 10px; }");
     connect(relAngleBtn, &QPushButton::clicked, [this]() {
-		trackCreator->rotateDecorRelative(5); //rotate selected decor by 5 degrees (relative)
+		trackCreator->rotateDecorRelative(5); 
             
         qDebug() << "Rotate by:" << 5;
         
@@ -246,14 +205,14 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     resetAngleBtn->setStyleSheet(
         "QPushButton { background-color: #607D8B; color: white; padding: 6px; font-size: 10px; }");
     connect(resetAngleBtn, &QPushButton::clicked, [this]() {
-		trackCreator->rotateDecorExact(0); //reset selected decor angle to 0 degrees (exact) 
+		trackCreator->rotateDecorExact(0); 
         qDebug() << "Reset angle";
         });
     angleLayout->addWidget(resetAngleBtn);
 
     layout->addLayout(angleLayout);
 
-    // ── Bezier curves controls ───────────────────────────────
+    // Bezier
     QLabel* bezierLabel = new QLabel("── Bezier Curves ──", this);
     bezierLabel->setAlignment(Qt::AlignCenter);
     bezierLabel->setStyleSheet("color: #aaa; font-size: 11px;");
@@ -263,7 +222,7 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
     addBezierCurveBtn->setStyleSheet(
         "QPushButton { background-color: #00BCD4; color: white; padding: 8px; }");
     connect(addBezierCurveBtn, &QPushButton::clicked, [this]() {
-        trackCreator->addBezierCurveAtCenter(); // logic in TrackCreator
+        trackCreator->addBezierCurveAtCenter(); 
         });
     layout->addWidget(addBezierCurveBtn);
 
@@ -273,19 +232,19 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         "QPushButton { background-color: #607D8B; color: white; padding: 8px; }"
         "QPushButton:checked { background-color: #00BCD4; }");
     connect(editCurveBtn, &QPushButton::toggled, [this](bool checked) {
-        trackCreator->toggleBezierEditMode(checked); // logic in TrackCreator
+        trackCreator->toggleBezierEditMode(checked); 
         });
     layout->addWidget(editCurveBtn);
 
-    // ── Close track btn ───────────────────────────────
+    // Close track 
     QPushButton* closeBtn = new QPushButton("Close Track", this);
     closeBtn->setStyleSheet(
         "QPushButton { background-color: #4CAF50; color: white; padding: 8px; }");
     connect(closeBtn, &QPushButton::clicked, [this]() {
-        trackCreator->closeTrack(); // use TrackCreator method not Track directly
+        trackCreator->closeTrack(); 
         });
     layout->addWidget(closeBtn);
-    // ── Auto decors ───────────────────────────────
+    // Decors Auto
     QPushButton* autoDecorsBtn = new QPushButton("Auto Place Decors", this);
     autoDecorsBtn->setStyleSheet(
         "QPushButton { background-color: #FF6F00; color: white; padding: 8px; }");
@@ -293,7 +252,7 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
         trackCreator->autoDecors();
         });
     layout->addWidget(autoDecorsBtn);
-    // ── Remove Auto decors ───────────────────────────────
+    // Enleve Decors Auto
     QPushButton* removeAutoDecorsBtn = new QPushButton("Remove Auto Decors", this);
     removeAutoDecorsBtn->setStyleSheet(
         "QPushButton { background-color: #B71C1C; color: white; padding: 8px; }");
@@ -304,24 +263,21 @@ void MainWindowCreator::createPieceButtons(QVBoxLayout* layout)
 }
 
 void MainWindowCreator::onAddPiece(int pieceType)
-// Cette fonction capte les clics de souris
+// Capte les clics de souris
 {
-    qDebug() << "Adding piece type:" << pieceType;  // Debug output
+    qDebug() << "Adding piece type:" << pieceType;  
     trackCreator->addPiece(pieceType);
 }
 
 void MainWindowCreator::onAddDecor(int decorType, int variant)
 {
-    qDebug() << "Adding decor type:" << decorType << "variant:" << variant;  // Debug output
+    qDebug() << "Adding decor type:" << decorType << "variant:" << variant;  
     trackCreator->addDecor(decorType, variant);
 }
 
 void MainWindowCreator::onUndo()
 {
-    // TODO: Implement undo functionality
-    // You'll need to add a method to TrackCreator to remove last piece
     QMessageBox::information(this, "Undo", "Undo functionality - to be implemented");
-    // Redemande � Qt de redessiner
     update();
 }
 
@@ -381,24 +337,4 @@ void MainWindowCreator::onLoad()
         }
     }
 }
-/*
-void MainWindowCreator::onView3D()
-{
-    // Save current track to temp file
-    Track currentTrack = trackCreator->getCurrentTrack();
-    QString tempFile = "temp_track.trk";
-
-    if (currentTrack.saveToFile(tempFile.toStdString())) {
-        // Open 3D viewer window
-        Track3DViewer* viewer3D = new Track3DViewer();
-        viewer3D->setWindowTitle("3D Track View");
-        viewer3D->resize(1024, 768);
-        viewer3D->loadTrackFile(tempFile);
-        viewer3D->show();
-    }
-
-    update();
-}
-*/
-
 

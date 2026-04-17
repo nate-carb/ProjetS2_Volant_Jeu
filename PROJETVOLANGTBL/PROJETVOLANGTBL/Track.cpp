@@ -23,11 +23,9 @@ float distancePointToSegment(const QVector2D& P,
 
     float ab2 = QVector2D::dotProduct(AB, AB);
 
-	// Si AB est un point, alors la distance est simplement la distance entre P et A
     if (ab2 == 0.0f)
         return (P - A).length();
 
-	// Projection de AP sur AB, normalisée par la longueur de AB au carré
     float t = QVector2D::dotProduct(AP, AB) / ab2;
 
     t = std::max(0.0f, std::min(1.0f, t));
@@ -39,14 +37,13 @@ float distancePointToSegment(const QVector2D& P,
 }
 bool Track::isVector2DOnTrack(const QVector2D& point) const
 {
-    float minDist = 300000;//Valeur arbitraire très grande pour initialiser la distance minimale
+    float minDist = 300000;
     for (size_t i = 1; i < centerLine.size(); i++) {
 
-		// Calcule la distance du point au segment formé par centerLine[i-1] et centerLine[i]
         float d = distancePointToSegment(point, centerLine[i - 1], centerLine[i]);
-        minDist = std::min(minDist, d); // Met à jour la distance minimale si nécessaire
+        minDist = std::min(minDist, d); 
     }
-    return minDist <= trackWidth / 2.0f; // Vérifie si la distance minimale est inférieure ou égale à la moitié de la largeur de la piste
+    return minDist <= trackWidth / 2.0f; 
 }
 bool Track::isVector2DOnPitLane(const QVector2D& point, bool onTrack) const
 {
@@ -75,19 +72,17 @@ bool Track::isVector2DOnPitLane(const QVector2D& point, bool onTrack) const
     return minDist <= trackWidth / 2.0f;
 }
 
-// TrackPieces base class
 TrackPieces::~TrackPieces() {}
 
-// stepAngleDeg = angle turned per step, radius = turn radius
 float lenghtForStep(float stepAngleDeg, float radius) {
     float rad = std::abs(stepAngleDeg) * (3.14159265f / 180.0f);
     return 2.0f * radius * std::sin(rad / 2.0f);
 }
-// Arc length of one step = radius * stepAngle_in_radians (for the straight)
+
 float arcLengthPerStep(float stepAngleDeg, float radius) {
     return radius * (stepAngleDeg * 3.14159265f / 180.0f);
 }
-// Virage_45right
+
 Virage_45right::Virage_45right() {
     id = VIRAGE_45RIGHT;
     pos = 0;
@@ -97,15 +92,8 @@ Virage_45right::Virage_45right() {
 	float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
     angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
 	lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
-    /*
-    //angles = { 0, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 0};
-    angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
-    //lengths = { 0, 10, 10, 10, 10, 0 };
-    lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
-    */
 }
 
-// Virage_45left
 Virage_45left::Virage_45left() {
     id = VIRAGE_45LEFT;
     pos = 0;
@@ -114,14 +102,8 @@ Virage_45left::Virage_45left() {
     float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
     angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
     lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
-
-    ////angles = {0, -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, 0 };
-    //angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
-    ////lengths = {0, 10, 10, 10, 10, 0 };
-    //lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
 }
 
-// Virage_90right
 Virage_90right::Virage_90right() {
     id = VIRAGE_90RIGHT;
     pos = 0;
@@ -131,11 +113,9 @@ Virage_90right::Virage_90right() {
     float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
     angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
     lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
-    //angles = { 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4, 45.0f / 4, 45.0f / 4,  45.0f / 4, 45.0f / 4 };
-    //lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    
 }
 
-// Virage_90left
 Virage_90left::Virage_90left() {
     id = VIRAGE_90LEFT;
     pos = 0;
@@ -145,35 +125,17 @@ Virage_90left::Virage_90left() {
     float lengthAngleVirage = lenghtForStep(stepAngleDeg, getTurnRadius());
     angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
     lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
-    //angles = { -45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4, - 45.0f / 4, -45.0f / 4,  -45.0f / 4, -45.0f / 4 };
-    //lengths = { lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage, lengthAngleVirage , lengthAngleVirage, lengthAngleVirage, lengthAngleVirage };
+    
 }
 
-// Straight
 Straight::Straight() {
     id = STRAIGHT;
     pos = 0;
 	spritePath = "trackPieces/versionPNG/Straight.png";
     spriteRotationOffset = 0.0f;
-    
-    // This makes one straight piece geometrically equivalent to one 45° curve piece
-    //float totalLength = 1.0f * getTurnRadius() * std::sin(22.5f * 3.14159265f / 180.0f);
-
-    //angles = { 0.0f };
-    //lengths = { getTrackWidth()};
-    // Match the arc length of 4 steps of a 45° turn at TURN_RADIUS
-    //float unitLength = arcLengthPerStep(45.0f / 4, getTurnRadius()); // one step unit
-    //float straightLength = unitLength * 2  ; // tune the multiplier to match your sprite
-
-    //angles = { 0, 0, 0, 0 };
-    //lengths = { straightLength / 4, straightLength / 4, straightLength / 4, straightLength / 4 };
-
     angles = { 0, 0, 0, 0};
     lengths = { 10, 10, 10, 10};
- //   stepAngleDeg = 0;
-	//float lenghtFromTurnRadius = getTurnRadius()/4; // Straight length based on turn radius
- //   angles = { stepAngleDeg, stepAngleDeg, stepAngleDeg, stepAngleDeg };
- //   lengths = { lenghtFromTurnRadius , lenghtFromTurnRadius, lenghtFromTurnRadius, lenghtFromTurnRadius };
+
 }
 
 // StartLine
@@ -189,7 +151,7 @@ StartLine::StartLine() {
 Pit::Pit() {
     id = PIT;
     pos = 0;
-    float step = 10.0f; // match Straight length
+    float step = 10.0f; 
     angles = { 0.0f, 0.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 0.0f, 0.0f,
@@ -208,8 +170,6 @@ Pit::Pit() {
                 step, step, step, step };
 }
 
-
-//void Track::generatePitLane(int startIndex, int endIndex)
 void Track::generatePitLane(int startIndex, int endIndex)
 {
     pitStartIndex = startIndex;
@@ -218,7 +178,6 @@ void Track::generatePitLane(int startIndex, int endIndex)
     if (pitStartIndex < 0 || pitEndIndex < 0) return;
     if (pitEndIndex >= (int)centerLine.size()) return;
 
-    // Clear all previous pit lane data
     pitLane.centerLine.clear();
     pitLane.edges.left.clear();
     pitLane.edges.right.clear();
@@ -229,29 +188,18 @@ void Track::generatePitLane(int startIndex, int endIndex)
     pitLane.exitCurveEdges.left.clear();
     pitLane.exitCurveEdges.right.clear();
 
-    float pitOffset = trackWidth * 2.5f; // how far the pit lane is from the main track center
-    float halfWidth = trackWidth * 0.5f; // half track width for edge offset
-    int   curveSteps = 24;                // number of bezier steps (higher = smoother)
+    float pitOffset = trackWidth * 2.5f; 
+    float halfWidth = trackWidth * 0.5f; 
+    int   curveSteps = 24;               
 
-    // ─────────────────────────────────────────────────────────────
-    // Compute a stable offset direction for the entire pit section
-    // We use the midpoint direction so the pit lane stays parallel
-    // to the track even if the track curves slightly in this section
-    // ─────────────────────────────────────────────────────────────
     int midIndex = (pitStartIndex + pitEndIndex) / 2;
     QVector2D midDir = (centerLine[midIndex + 1] - centerLine[midIndex]).normalized();
-    QVector2D pitNormal = perpendicular(midDir); // consistent right-side normal for whole pit
+    QVector2D pitNormal = perpendicular(midDir); 
 
-    // ─────────────────────────────────────────────────────────────
-    // Build the pit lane STRAIGHT section
-    // Only covers the middle portion of the pit block (pitRatio trims
-    // the ends to leave room for the entry/exit curves)
-    // ─────────────────────────────────────────────────────────────
     int pitSize = pitEndIndex - pitStartIndex + 1;
-    int pitRatio = pitSize / 3; // trim 1/3 from each end for curve space
+    int pitRatio = pitSize / 3; 
 
     for (int i = (pitStartIndex + pitRatio); i <= (pitEndIndex - pitRatio); i++) {
-        // Compute local track direction at this point for edge normals
         QVector2D dir;
         if (i == 0)
             dir = (centerLine[1] - centerLine[0]).normalized();
@@ -263,44 +211,30 @@ void Track::generatePitLane(int startIndex, int endIndex)
             dir = (d1 + d2).normalized();
         }
 
-        // Offset the centerline point by pitOffset using the stable pitNormal
         QVector2D pitPoint = centerLine[i] - pitNormal * pitOffset;
         pitLane.centerLine.push_back(pitPoint);
 
-        // Left/right edges use local direction for correct perpendicular
         pitLane.edges.left.push_back(pitPoint + perpendicular(dir) * halfWidth);
         pitLane.edges.right.push_back(pitPoint - perpendicular(dir) * halfWidth);
     }
 
     if (pitLane.centerLine.size() < 2) return;
 
-    // ─────────────────────────────────────────────────────────────
-    // ENTRY CURVE
-    // Cubic bezier from the main track CENTERLINE to the first point
-    // of the pit straight. Starting from the centerline (not the edge)
-    // means the curve visually peels away from the main road smoothly.
-    // ─────────────────────────────────────────────────────────────
-
-    // Entry starts at the main track centerline point
     QVector2D entryStartDir = (centerLine[pitStartIndex + 1] - centerLine[pitStartIndex]).normalized();
-    QVector2D entryStart = centerLine[pitStartIndex]; // START ON CENTERLINE
+    QVector2D entryStart = centerLine[pitStartIndex]; 
 
-    // Entry ends exactly at the first point of the pit straight
     QVector2D entryEnd = pitLane.centerLine.front();
     QVector2D entryEndDir = (pitLane.centerLine[1] - pitLane.centerLine[0]).normalized();
 
-    // Bezier control points extend along entry/exit directions for a smooth S-curve
     float cpDist = (entryEnd - entryStart).length() * 0.5f;
-    QVector2D cp1 = entryStart + entryStartDir * cpDist; // tangent at start
-    QVector2D cp2 = entryEnd - entryEndDir * cpDist; // tangent at end
+    QVector2D cp1 = entryStart + entryStartDir * cpDist; 
+    QVector2D cp2 = entryEnd - entryEndDir * cpDist; 
 
-    // Sample the cubic bezier curve at curveSteps intervals
     for (int i = 0; i <= curveSteps; i++) {
         float t = (float)i / curveSteps;
         float t2 = t * t, t3 = t2 * t;
         float u = 1.0f - t;
         float u2 = u * u, u3 = u2 * u;
-        // Standard cubic bezier: B(t) = (1-t)^3*P0 + 3(1-t)^2*t*P1 + 3(1-t)*t^2*P2 + t^3*P3
         QVector2D point = entryStart * u3
             + cp1 * (3 * u2 * t)
             + cp2 * (3 * u * t2)
@@ -308,11 +242,9 @@ void Track::generatePitLane(int startIndex, int endIndex)
         pitLane.entryCurve.push_back(point);
     }
 
-    // Force exact endpoints to eliminate floating point gaps
     pitLane.entryCurve.front() = entryStart;
     pitLane.entryCurve.back() = entryEnd;
 
-    // Build entry curve edges using the tangent direction at each curve point
     for (size_t i = 0; i < pitLane.entryCurve.size(); i++) {
         QVector2D dir;
         if (i == 0)
@@ -320,7 +252,7 @@ void Track::generatePitLane(int startIndex, int endIndex)
         else if (i == pitLane.entryCurve.size() - 1)
             dir = (pitLane.entryCurve[i] - pitLane.entryCurve[i - 1]).normalized();
         else
-            // Average of incoming and outgoing directions for smooth normals
+
             dir = ((pitLane.entryCurve[i] - pitLane.entryCurve[i - 1]) +
                 (pitLane.entryCurve[i + 1] - pitLane.entryCurve[i])).normalized();
         QVector2D n = perpendicular(dir);
@@ -328,35 +260,19 @@ void Track::generatePitLane(int startIndex, int endIndex)
         pitLane.entryCurveEdges.right.push_back(pitLane.entryCurve[i] - n * halfWidth);
     }
 
-    // Force first edge to align with main track centerline (zero width at start)
-    // This makes the curve appear to "peel off" from the main road
-    //pitLane.entryCurveEdges.left.front() = entryStart; // both edges start at center = zero width
-    //pitLane.entryCurveEdges.right.front() = entryStart;
-
-    // Force last edge to connect seamlessly to pit straight edges
     pitLane.entryCurveEdges.left.back() = pitLane.edges.left.front();
     pitLane.entryCurveEdges.right.back() = pitLane.edges.right.front();
 
-    // ─────────────────────────────────────────────────────────────
-    // EXIT CURVE
-    // Cubic bezier from the last point of the pit straight back to
-    // the main track CENTERLINE. Merges back to a single point on
-    // the centerline for a smooth rejoining effect.
-    // ─────────────────────────────────────────────────────────────
-
-    // Exit starts exactly at the last point of the pit straight
     QVector2D exitStart = pitLane.centerLine.back();
     QVector2D exitStartDir = (pitLane.centerLine.back() - pitLane.centerLine[pitLane.centerLine.size() - 2]).normalized();
 
-    // Exit ends at the main track centerline point
     QVector2D exitEndDir = (centerLine[pitEndIndex] - centerLine[pitEndIndex - 1]).normalized();
-    QVector2D exitEnd = centerLine[pitEndIndex]; // END ON CENTERLINE
+    QVector2D exitEnd = centerLine[pitEndIndex]; 
 
     float cpDistExit = (exitEnd - exitStart).length() * 0.5f;
-    QVector2D cp3 = exitStart + exitStartDir * cpDistExit; // tangent at start
-    QVector2D cp4 = exitEnd - exitEndDir * cpDistExit; // tangent at end
+    QVector2D cp3 = exitStart + exitStartDir * cpDistExit; 
+    QVector2D cp4 = exitEnd - exitEndDir * cpDistExit;
 
-    // Sample the exit bezier curve
     for (int i = 0; i <= curveSteps; i++) {
         float t = (float)i / curveSteps;
         float t2 = t * t, t3 = t2 * t;
@@ -369,11 +285,9 @@ void Track::generatePitLane(int startIndex, int endIndex)
         pitLane.exitCurve.push_back(point);
     }
 
-    // Force exact endpoints to eliminate floating point gaps
     pitLane.exitCurve.front() = exitStart;
     pitLane.exitCurve.back() = exitEnd;
 
-    // Build exit curve edges using tangent direction at each point
     for (size_t i = 0; i < pitLane.exitCurve.size(); i++) {
         QVector2D dir;
         if (i == 0)
@@ -388,15 +302,8 @@ void Track::generatePitLane(int startIndex, int endIndex)
         pitLane.exitCurveEdges.right.push_back(pitLane.exitCurve[i] - n * halfWidth);
     }
 
-    // Force first edge to connect seamlessly to pit straight edges
     pitLane.exitCurveEdges.left.front() = pitLane.edges.left.back();
     pitLane.exitCurveEdges.right.front() = pitLane.edges.right.back();
-
-    // Force last edge to merge back to centerline point (zero width at end)
-    // This makes the curve appear to "merge into" the main road
-    //pitLane.exitCurveEdges.left.back() = exitEnd; // both edges end at center = zero width
-    //pitLane.exitCurveEdges.right.back() = exitEnd;
-
     pitLane.isValid = true;
 
 }
@@ -422,10 +329,6 @@ void Track::addDecor(int decorType, int decorIndexList)
             qDebug() << "Decor type: TREES";
             break;
 
-            //case NOSPECIFICDECOR_INDEX:
-            //    decors.push_back(new NoSpecificDecor(QVector2D(0, 0), 0.0f));
-            //    decors.back()->selectModel(decorIndexList);
-            //break;
         default:
             qDebug() << "Invalid decor type: " << decorType;
             break;
@@ -440,10 +343,10 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
     const TrackSegment& seg = trackSegments[segmentIndex];
     if (seg.type == TrackSegmentType::PIT_TRACK) return;
 
-    const float grandstandSpacing = 150.0f; // old value 150
-    const float treeSpacing = 80.0f; // old value 80
+    const float grandstandSpacing = 150.0f;
+    const float treeSpacing = 80.0f;
     const float sideOffset = trackWidth * 1.5f; 
-    const int   steps = 20; // must match buildFromSegments()
+    const int   steps = 20; 
 
     int segStart = (segmentIndex == 0) ? 0 : segmentIndex * steps;
     int segEnd = segStart + steps;
@@ -453,7 +356,7 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
     auto faceNearestCenterLine = [&](QVector2D pos) -> float {
         float minDist = 1e9f;
         int   nearest = segStart;
-        // Only search within this segment's centerline range
+
         for (int ci = segStart; ci <= segEnd; ci++) {
             float d = (centerLine[ci] - pos).length();
             if (d < minDist) { minDist = d; nearest = ci; }
@@ -472,10 +375,9 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
         };
 
     auto spawnTree = [&](QVector2D pos, int variant) {
-        // Reject position if it is too close to any centerline point
-        // that belongs to a different segment
+
         for (int ci = 0; ci < (int)centerLine.size(); ci++) {
-            if (ci >= segStart && ci <= segEnd) continue; // skip own segment
+            if (ci >= segStart && ci <= segEnd) continue; 
             if ((centerLine[ci] - pos).length() < trackWidth * 1.5f) return;
         }
         TREES* tree = new TREES(pos, 0.0f);
@@ -487,10 +389,9 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
         };
 
     auto spawnGarage = [&](QVector2D pos, int variant) {
-        // Reject position if it is too close to any centerline point
-        // that belongs to a different segment
+
         for (int ci = 0; ci < (int)centerLine.size(); ci++) {
-            if (ci >= segStart && ci <= segEnd) continue; // skip own segment
+            if (ci >= segStart && ci <= segEnd) continue; 
             if ((centerLine[ci] - pos).length() < trackWidth * 1.5f) return;
         }
         Garage* garage = new Garage(pos, 0.0f); 
@@ -514,14 +415,12 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
         QVector2D leftNormal(-tangent.y(), tangent.x());
         QVector2D rightNormal(tangent.y(), -tangent.x());
 
-        // Grandstands on the left side (both segment types)
         bool placeGS = gsFirst || (gsAccum >= grandstandSpacing);
         if (placeGS) {
             gsFirst = false; gsAccum = 0.0f;
             spawnGrandstand(centerLine[i] + leftNormal * sideOffset, i);
         }
 
-        // Trees on both sides (both segment types)
         bool placeTree = treeFirst || (treeAccum >= treeSpacing);
         if (placeTree) {
             treeFirst = false; treeAccum = 0.0f;
@@ -531,8 +430,6 @@ void Track::autoPlaceDecorsForSegment(int segmentIndex)
 
     }
 
-    //qDebug() << "[autoPlace] segment" << segmentIndex
-    //    << "-> total decors now:" << decors.size();
 }
 
 void Track::removeAutoDecorsForSegment(int segmentIndex)
@@ -568,9 +465,6 @@ void Track::removeAllAutoDecors()
         decors.end());
 }
 
-//------------------------------------
-//--- Decor pieces implementations ---
-//------------------------------------
 DecorPieces::~DecorPieces() {}
 
 DecorPieces::DecorPieces()
@@ -588,10 +482,10 @@ Grandstand::Grandstand(QVector2D p, float a)
 {
     info.pos = p;
     info.angle = a;
-    info.width = 1.0f; // need to tune this based on the 3D model size
-    info.length = 1.0f; // need to tune this based on the 3D model size
+    info.width = 1.0f;
+    info.length = 1.0f; 
 	info.modelType = GRANDSTAND_INDEX;
-	info.modelIndex = 0; // Default to the first model in the list
+	info.modelIndex = 0;
 
     modelList = {
         "/3dModels/dae/grandStand.dae",
@@ -600,51 +494,51 @@ Grandstand::Grandstand(QVector2D p, float a)
         "/3dModels/dae/grandStandRound.dae",
         "/3dModels/dae/grandStandCoveredRound.dae"
     };
-    info.modelPath = modelList[0]; // Default to the first model for the garage
+    info.modelPath = modelList[0]; 
 }
 
 void Grandstand::selectModel(int modelNum)
 {
-	//Model selection based on the provided model number. If the number is out of range, it defaults to the first model.
+
     if (modelNum >= 0 && modelNum < (int)modelList.size()) {
         info.modelPath = modelList[modelNum];
 		info.modelIndex = modelNum;
     }
     else {
         qDebug() << "Invalid model number for grandstand: " << modelNum;
-        info.modelPath = modelList[0]; // Set to empty or a default model
-        info.modelIndex = 0; // Default to first model if invalid
+        info.modelPath = modelList[0]; 
+        info.modelIndex = 0; 
     }
     switch (info.modelIndex) {
-        case 0: // grandStand.obj
-            info.width = 1.0f; // Adjust width for this model
-			info.height = 0.9f; // Adjust height for this model
-            info.length = 1.0f; // Adjust length for this model
+        case 0: 
+            info.width = 1.0f; 
+			info.height = 0.9f; 
+            info.length = 1.0f; 
             break;
-        case 1: // grandStandCovered.obj
-            info.width = 1.0f; // Adjust width for this model
-            info.height = 1.19f; // Adjust height for this model
-            info.length = 1.02f; // Adjust length for this model
+        case 1: 
+            info.width = 1.0f; 
+            info.height = 1.19f; 
+            info.length = 1.02f; 
             break;
-        case 2: // grandStandAwning.obj
-            info.width = 1.0f; // Adjust width for this model
-            info.height = 1.39f; // Adjust height for this model
-            info.length = 1.0f; // Adjust length for this modell
+        case 2: 
+            info.width = 1.0f; 
+            info.height = 1.39f; 
+            info.length = 1.0f; 
             break;
-        case 3: // grandStandRound.obj
-            info.width = 1.64f; // Adjust width for this model
-            info.height = 0.9f; // Adjust height for this model
-            info.length = 1.64f; // Adjust length for this model
+        case 3: 
+            info.width = 1.64f; 
+            info.height = 0.9f; 
+            info.length = 1.64f; 
             break;
-        case 4: // grandStandCoveredRound.obj
-            info.width = 1.64f; // Adjust width for this model
-            info.height = 1.19f; // Adjust height for this model
-            info.length = 1.64f; // Adjust length for this model
+        case 4:
+            info.width = 1.64f; 
+            info.height = 1.19f; 
+            info.length = 1.64f; 
             break;
         default:
-			info.width = 1.0f; // Default width
-			info.height = 0.9f; // Default height
-			info.length = 1.0f; // Default length
+			info.width = 1.0f; 
+			info.height = 0.9f; 
+			info.length = 1.0f; 
             break;
     }
 
@@ -658,7 +552,7 @@ Garage::Garage(QVector2D p, float a)
     info.height = 0.7f;
     info.length = 1.1f;
 	info.modelType = GARAGE_INDEX;
-	info.modelIndex = 0; // Default to the first model in the list
+	info.modelIndex = 0; 
     
 
     modelList = {
@@ -666,42 +560,42 @@ Garage::Garage(QVector2D p, float a)
         "/3dModels/dae/pitsGarageClosed.dae",
         "/3dModels/dae/pitsGarageCorner.dae"
     };
-    info.modelPath = modelList[0]; // Default to the first model for the garage
+    info.modelPath = modelList[0]; 
 }
 
 void Garage::selectModel(int modelNum)
 {
-    //Model selection based on the provided model number. If the number is out of range, it defaults to the first model.
+ 
     if (modelNum >= 0 && modelNum < (int)modelList.size()) {
         info.modelPath = modelList[modelNum];
 		info.modelIndex = modelNum;
     }
     else {
         qDebug() << "Invalid model number for grandstand: " << modelNum;
-        info.modelPath = modelList[0]; // Set to empty or a default model
-        info.modelIndex = 0; // Default to first model if invalid
+        info.modelPath = modelList[0]; 
+        info.modelIndex = 0;
     }
 
     switch (info.modelIndex) {
-    case 0: // pitsGarage.obj
-        info.width = 1.0f; // Adjust width for this model
-        info.height = 0.7f; // Adjust height for this model
-        info.length = 1.1f; // Adjust length for this model
+    case 0: 
+        info.width = 1.0f; 
+        info.height = 0.7f;
+        info.length = 1.1f;
         break;
-    case 1: // pitsGarageClosed.obj
-        info.width = 1.0f; // Adjust width for this model
-        info.height = 1.7f; // Adjust height for this model
-        info.length = 1.1f; // Adjust length for this model
+    case 1: 
+        info.width = 1.0f; 
+        info.height = 1.7f;
+        info.length = 1.1f;
         break;
-    case 2: // pitsGarageCorner.obj
-        info.width = 1.05f; // Adjust width for this model
-        info.height = 1.7f; // Adjust height for this model
-        info.length = 1.0f; // Adjust length for this modell
+    case 2: 
+        info.width = 1.05f;
+        info.height = 1.7f;
+        info.length = 1.0f;
         break;
     default:
-        info.width = 1.0f; // Default width
-        info.height = 0.7f; // Default height
-        info.length = 1.1f; // Default length
+        info.width = 1.0f; 
+        info.height = 0.7f;
+        info.length = 1.1f; 
         break;
     }
 
@@ -710,16 +604,16 @@ TREES::TREES(QVector2D p, float a)
 {
     info.pos = p;
     info.angle = a;
-    info.width = 0.25f; // need to tune this based on the 3D model size
-    info.length = 0.29f; // need to tune this based on the 3D model size
+    info.width = 0.25f; 
+    info.length = 0.29f; 
 	info.modelType = TREES_INDEX;
-	info.modelIndex = 0; // Default to the first model in the list
+	info.modelIndex = 0; 
 
     modelList = {
         "/3dModels/dae/treeSmall.dae",
         "/3dModels/dae/treeLarge.dae"
     };
-    info.modelPath = modelList[0]; // Default to the first model for the garage
+    info.modelPath = modelList[0]; 
 }
 
 void TREES::randomModel()
@@ -730,25 +624,25 @@ void TREES::randomModel()
 
 void TREES::selectModel(int modelNum)
 {
-    //Model selection based on the provided model number. If the number is out of range, it defaults to the first model.
+   
     if (modelNum >= 0 && modelNum < (int)modelList.size()) {
         info.modelPath = modelList[modelNum];
 		info.modelIndex = modelNum;
     }
     else {
         qDebug() << "Invalid model number for grandstand: " << modelNum;
-        info.modelPath = modelList[0]; // Set to empty or a default model
-		info.modelIndex = 0; // Default to first model if invalid
+        info.modelPath = modelList[0]; 
+		info.modelIndex = 0;
     }
     if (info.modelIndex == 0) {
-        info.width = 0.25f; // Adjust width for rounded models
-        info.length = 0.29f; // Adjust length for rounded models
-		info.height = 1.07f; // Adjust height for rounded models
+        info.width = 0.25f;
+        info.length = 0.29f; 
+		info.height = 1.07f; 
     }
     else {
-        info.width = 0.36f; // Adjust width for other models
-        info.length = 0.41f; // Adjust length for other models
-		info.height = 1.51f; // Adjust height for other models
+        info.width = 0.36f;
+        info.length = 0.41f;
+		info.height = 1.51f; 
     }
 
 }
@@ -756,48 +650,44 @@ NoSpecificDecor::NoSpecificDecor(QVector2D p, float a)
 {
     info.pos = p;
     info.angle = a;
-    info.width = 1.0f; // arbitrary small size for non-specific decor
+    info.width = 1.0f; 
     info.length = 1.0f;
 	info.modelType = NOSPECIFICDECOR_INDEX;
-	info.modelIndex = 0; // Default to the first model in the list
+	info.modelIndex = 0; 
 
     modelList = {
         "decorPieces/NonSpecificModel1.obj",
         "decorPieces/NonSpecificModel2.obj",
         "decorPieces/NonSpecificModel3.obj"
     };
-    info.modelPath = modelList[0]; // Default to the first model for the garage
-}
+    info.modelPath = modelList[0]; 
 void NoSpecificDecor::selectModel(int modelNum)
 {
-    //Model selection based on the provided model number. If the number is out of range, it defaults to the first model.
     if (modelNum >= 0 && modelNum < (int)modelList.size()) {
         info.modelPath = modelList[modelNum];
         info.modelIndex = modelNum;
     }
     else {
         qDebug() << "Invalid model number for non-specific decor: " << modelNum;
-        info.modelPath = modelList[0]; // Set to empty or a default model
-        info.modelIndex = 0; // Default to first model if invalid
+        info.modelPath = modelList[0]; 
+        info.modelIndex = 0; 
     }
-    // For non-specific decor, we can keep the size constant or add some variation if desired
-    info.width = 1.0f; // Default width
-    info.length = 1.0f; // Default length
-    info.height = 1.0f; // Default height
+   
+    info.width = 1.0f; 
+    info.length = 1.0f;
+    info.height = 1.0f; 
 }
-//---------------------------
-// ---Track implementation---
-//---------------------------
+
 Track::Track()
     : startAngle(0)
     , currentAngle(0)
     , currentPos(0, 0)
 {
-    // Start with just the starting position
+   
     centerLine.push_back(currentPos);
 
-	trackWidth = 40.0f; // Default track width
-    defaultMapList(); // Populate choixMapList with default maps
+	trackWidth = 40.0f;
+    defaultMapList(); 
 }
 
 Track::Track(std::vector<int> listPieces)
@@ -807,20 +697,17 @@ Track::Track(std::vector<int> listPieces)
     , currentPos(0, 0)
     
 {
-    // Start with the origin
+   
     centerLine.push_back(currentPos);
     trackWidth = 40.0f;
-    // Build track from piece list
+   
     for (int pieceId : piecesIntList) {
         calculAngLen(pieceId);
     }
 
-    // Calculate edges after building centerline
     calculateTrackEdges();
 }
-//------------------------------------------------
-// --- Track building and modification methods ---
-//------------------------------------------------
+
 void Track::addCurveSegment()
 {
     TrackSegment seg;
@@ -843,7 +730,7 @@ void Track::addCurveSegment()
     seg.cp2 = seg.start + dir * 0.66f * 200.0f + perp * 50.0f;
 
     trackSegments.push_back(seg);
-    buildFromSegments(); // fills centerLine + trackEdges
+    buildFromSegments();
 }
 
 void Track::addStraightSegment()
@@ -867,7 +754,7 @@ void Track::addStraightSegment()
 
     trackSegments.push_back(seg);
 	qDebug() << "Added straight segment from" << seg.start << "to" << seg.end;
-    buildFromSegments(); // fills centerLine + trackEdges
+    buildFromSegments(); 
 }
 
 void Track::removeLastSegment()
@@ -875,32 +762,9 @@ void Track::removeLastSegment()
     if (trackSegments.empty()) return;
     trackSegments.pop_back();
     
-    buildFromSegments(); // refills centerLine + trackEdges
+    buildFromSegments(); 
 }
 
-// Adds a pit segment that extends from the last track segment, ensuring it's long enough for a pit lane. The actual pit lane geometry is generated in buildFromSegments() when it processes this segment type.
-/*void Track::addPitSegment()
-{
-    TrackSegment seg;
-    seg.type = TrackSegmentType::PIT_TRACK;
-
-    if (trackSegments.empty()) {
-        seg.start = QVector2D(0, 0);
-        seg.end = QVector2D(400, 0); // pit lane needs to be longer than normal straight
-    }
-    else {
-        seg.start = trackSegments.back().end;
-        QVector2D lastDir = (trackSegments.back().end -
-            trackSegments.back().start).normalized();
-        seg.end = seg.start + lastDir * 400.0f;
-    }
-
-    seg.cp1 = seg.start;
-    seg.cp2 = seg.end;
-
-    trackSegments.push_back(seg);
-    buildFromSegments();
-}*/
 void Track::addPitSegment()
 {
     TrackSegment seg;
@@ -911,7 +775,7 @@ void Track::addPitSegment()
     seg.cp2 = seg.end;
 
     if (!trackSegments.empty()) {
-        // Shift existing segments so they chain after the pit
+       
         QVector2D offset = seg.end - trackSegments.front().start;
         for (auto& s : trackSegments) {
             s.start += offset;
@@ -921,7 +785,7 @@ void Track::addPitSegment()
         }
     }
 
-    trackSegments.insert(trackSegments.begin(), seg);  // insert at front
+    trackSegments.insert(trackSegments.begin(), seg);  
     buildFromSegments();
 }
 
@@ -941,7 +805,6 @@ void Track::buildFromSegments()
         const TrackSegment& seg = trackSegments[si];
         int startI = (si == 0) ? 0 : 1;
 
-        // Record pit start index BEFORE adding points
         int segStartIndex = centerLine.size();
 
         for (int i = startI; i <= steps; i++) {
@@ -990,21 +853,16 @@ void Track::buildFromSegments()
             trackEdges.right.push_back(point - normal * (trackWidth / 2.0f));
         }
 
-        // Generate pit lane for pit segments using correct indices
         if (seg.type == TrackSegmentType::PIT_TRACK) {
             int segEndIndex = centerLine.size() - 1;
             generatePitLane(segStartIndex, segEndIndex);
         }
 
         else {
-			createCheckpointAtSegment(); // place checkpoint at the end of this segment
+			createCheckpointAtSegment(); 
         }
     }
-    
-    //qDebug() << "buildFromSegments:" << centerLine.size() << "centerline points"
-    //    << trackEdges.left.size() << "left edge points";
-
-    // For segment-based tracks recompute startAngle from the actual centerline
+   
     if (!trackSegments.empty() && centerLine.size() >= 2) {
         QVector2D dir = (centerLine[1] - centerLine[0]).normalized();
         startAngle = qRadiansToDegrees(atan2f(dir.y(), dir.x()));
@@ -1021,20 +879,6 @@ void Track::setCurrentChoixMapData(QString mapName)
         }
 }
 
-//void Track::createStartLine()
-//{
-//    Checkpoint temp;
-//    temp.centerlineIndex = 0; // place start line at the very beginning of the track
-//    temp.leftEdgeIndex = 0;
-//    temp.rightEdgeIndex = 0;
-//
-//    temp.angle = startAngle; // use track's starting angle for orientation
-//	checkpoints.push_back(temp);
-//}
-
-//--------------------
-// --- Checkpoint  ---
-//--------------------
 void Track::createCheckpointAtSegment()
 {
     if (centerLine.empty()) return;
@@ -1055,7 +899,6 @@ void Track::createCheckpointAtSegment()
 
     int clIndex = centerLine.size() - 1;
 
-    // Get forward direction from last two centerline points
     QVector2D forward;
     if (clIndex > 0)
         forward = (centerLine[clIndex] - centerLine[clIndex - 1]).normalized();
@@ -1071,26 +914,23 @@ void Track::createCheckpointAtSegment()
 
     checkpoints.push_back(cp);
 }
-// Checks if the car is within a certain distance (threshold) of the line segment defined by pointA and pointB. This is used to determine if the car has crossed a checkpoint.
+
 bool Track::isBetweenPoints(const QVector2D& carPos,
     const QVector2D& pointA,
     const QVector2D& pointB,
     float threshold) const
 {
-    // Vector from A to B (the checkpoint line)
+   
     QVector2D AB = pointB - pointA;
     QVector2D AP = carPos - pointA;
 
     float ab2 = QVector2D::dotProduct(AB, AB);
     if (ab2 == 0.0f) return false;
 
-    // Project car onto the line AB
     float t = QVector2D::dotProduct(AP, AB) / ab2;
 
-    // t must be between 0 and 1 to be between the two points
     if (t < 0.0f || t > 1.0f) return false;
 
-    // Distance from car to the line
     QVector2D closest = pointA + AB * t;
     float dist = (carPos - closest).length();
 
@@ -1100,7 +940,7 @@ bool Track::isBetweenPoints(const QVector2D& carPos,
 int Track::isCarBetweenCheckpoints(const QVector2D& point) const
 {
     for (int i = 0; i < checkpoints.size(); i++)
-        // Check if car is between the checkpoints 
+       
         if (isBetweenPoints(point, checkpoints[i].left, checkpoints[i].right)) {
             return i;
         }
@@ -1112,7 +952,6 @@ void Track::calculAngLen(int index)
 {
     TrackPieces* piece = nullptr;
 
-    // Create the appropriate piece based on ID
     switch (index) {
     case VIRAGE_45RIGHT:
         piece = new Virage_45right();
@@ -1142,17 +981,11 @@ void Track::calculAngLen(int index)
 
     if (!piece) return;
 
-    // Get angles and lengths from the piece
     std::vector<float> angles = piece->getAngles();
     std::vector<float> lengths = piece->getLengths();
 
-    
-    // Record where the piece starts in the centerline
-    
-
     piece->setStartIndex(centerLine.size() - 1);
 
-    // Generate track points
     for (size_t i = 0; i < angles.size() && i < lengths.size(); i++) {
         currentAngle += angles[i];
         currentPos = move(currentPos, currentAngle, lengths[i]);
@@ -1163,15 +996,14 @@ void Track::calculAngLen(int index)
     
 
     if (piece->getId() == PIT) {
-        generatePitLane(piece->getStartIndex(), piece->getEndIndex()); // auto-generate parallel lane
-		//generatePitLane(); // auto-generate parallel lane
+        generatePitLane(piece->getStartIndex(), piece->getEndIndex()); 
+		
 	}
       
     
 
     delete piece;
 }
-
 
 void Track::calculateTrackEdges()
 {
@@ -1186,15 +1018,15 @@ void Track::calculateTrackEdges()
         QVector2D dir;
 
         if (i == 0) {
-            // First point - use direction to next point
+          
             dir = (centerLine[1] - centerLine[0]).normalized();
         }
         else if (i == centerLine.size() - 1) {
-            // Last point - use direction from previous point
+           
             dir = (centerLine[i] - centerLine[i - 1]).normalized();
         }
         else {
-            // Middle point - average direction for smooth turns
+           
             QVector2D dir1 = (centerLine[i] - centerLine[i - 1]).normalized();
             QVector2D dir2 = (centerLine[i + 1] - centerLine[i]).normalized();
             dir = (dir1 + dir2).normalized();
@@ -1219,7 +1051,6 @@ float Track::getClosureGap() const
     return (centerLine.back() - centerLine.front()).length();
 }
 
-// Closes the track by adding a smooth bezier curve from the end back to the start
 void Track::closeTrack()
 {
     if (isClosed()) return;
@@ -1228,30 +1059,25 @@ void Track::closeTrack()
     QVector2D start = centerLine.front();
     QVector2D end = centerLine.back();
 
-    // Compute tangents at start and end for smooth connection
     QVector2D startTangent = (centerLine[1] - centerLine[0]).normalized();
     QVector2D endTangent = (centerLine.back() -
         centerLine[centerLine.size() - 2]).normalized();
 
     float dist = (end - start).length();
 
-    // Control points extend along tangent directions
     QVector2D cp1 = end + endTangent * (dist * 0.4f);
     QVector2D cp2 = start - startTangent * (dist * 0.4f);
 
-    // Sample the closing bezier and append to centerline/edges
     int steps = 20;
     for (int i = 1; i <= steps; i++) {
         float t = (float)i / steps;
         float u = 1.0f - t;
 
-        // Cubic bezier: end → cp1 → cp2 → start
         QVector2D point = end * (u * u * u)
             + cp1 * (3 * u * u * t)
             + cp2 * (3 * u * t * t)
             + start * (t * t * t);
 
-        // Tangent for edge normals
         QVector2D tangent;
         if (i < steps) {
             float t2 = (float)(i + 1) / steps;
@@ -1283,21 +1109,17 @@ bool Track::saveToFile(const std::string& filename) const
         return false;
     }
 
-    // Write header
     file << "TRACK_V1\n";
 
-    // Write track width
     file << "TRACK_WIDTH " << trackWidth << "\n";
 
-    // Write start angle
     file << "START_ANGLE " << startAngle << "\n";
 
-    // Write pieces list (this is what we need to reconstruct the track)
     file << "PIECES " << piecesIntList.size() << "\n";
     for (int pieceId : piecesIntList) {
         file << pieceId << "\n";
     }
-	// Write track segments (for reconstructing bezier curves and centerline)
+	
     file << "TRACK_SEGMENTS " << trackSegments.size() << "\n";
     for (const auto& s : trackSegments) {
         file << (int)s.type << " "
@@ -1306,13 +1128,12 @@ bool Track::saveToFile(const std::string& filename) const
             << s.cp1.x() << " " << s.cp1.y() << " "
             << s.cp2.x() << " " << s.cp2.y() << "\n";
     }
-	// Write decors list
+	
 	file << "DECORS " << decors.size() << "\n";
 	for (const auto& decor : decors) {
 		file << decor->getInfo().modelType << " " << decor->getInfo().modelIndex << " " << decor->getInfo().pos.x() << " " << decor->getInfo().pos.y() << " " << decor->getInfo().angle << "\n";
 	}
 
-    // Write bezier curves for walls
     file << "BEZIER_CURVES " << bezierCurves.size() << "\n";
     for (const auto& c : bezierCurves) {
         file << c.p0.x() << " " << c.p0.y() << " "
@@ -1321,13 +1142,11 @@ bool Track::saveToFile(const std::string& filename) const
             << c.p3.x() << " " << c.p3.y() << "\n";
     }
 
-    // Optional: Write centerline for verification
     file << "CENTERLINE " << centerLine.size() << "\n";
     for (const auto& point : centerLine) {
         file << point.x() << " " << point.y() << "\n";
     }
 
-    // Optional: Write edges for verification
     file << "LEFT_EDGE " << trackEdges.left.size() << "\n";
     for (const auto& point : trackEdges.left) {
         file << point.x() << " " << point.y() << "\n";
@@ -1367,7 +1186,6 @@ bool Track::loadFromFile(const std::string& filename)
     float loadedTrackWidth = 40;
     float loadedStartAngle = 0;
 
-    // Read header
     std::getline(file, line);
     if (line != "TRACK_V1") {
         std::cerr << "Invalid file format: " << line << std::endl;
@@ -1392,7 +1210,7 @@ bool Track::loadFromFile(const std::string& filename)
             loadedPieces.clear();
             for (int i = 0; i < count; i++) {
                 std::getline(file, line);
-                // Convert piece ID from string to int and store
+               
                 int pieceId = std::stoi(line);
                 loadedPiecesInt.push_back(pieceId);
 
@@ -1462,15 +1280,13 @@ bool Track::loadFromFile(const std::string& filename)
                     case TREES_INDEX:
                         decor = new TREES(QVector2D(posX, posY), angle);
                         break;
-                    //case NOSPECIFICDECOR_INDEX:
-                    //    decor = new NoSpecificDecor(QVector2D(posX, posY), angle);
-                    //    break;
+                   
                     default:
                         qDebug() << "Invalid decor type in file: " << decorType;
-                        continue; // skip invalid decor
+                        continue; 
                 }
                 if (decor) {
-                    decor->selectModel(decorIndex); // set the specific model based on index
+                    decor->selectModel(decorIndex); 
                     loadedDecors.push_back(decor);
                 }
 			}
@@ -1512,7 +1328,7 @@ bool Track::loadFromFile(const std::string& filename)
         }
 
         else if (command == "CENTERLINE" || command == "LEFT_EDGE" || command == "RIGHT_EDGE") {
-            // Skip these sections - we'll regenerate from pieces
+          
             int count;
             iss >> count;
             for (int i = 0; i < count; i++) {
@@ -1523,25 +1339,23 @@ bool Track::loadFromFile(const std::string& filename)
 
     file.close();
 
-	// Basic validation to ensure we have the necessary data to reconstruct the track
+	
     if (loadedPiecesInt.empty() && trackSegments.empty()) {
         std::cerr << "No pieces or segments found in file" << std::endl;
         return false;
     }
 
-    // Reconstruct the track from loaded pieces
     piecesIntList = loadedPiecesInt;
     pieces = loadedPieces;
 	decors = loadedDecors;
 	
     trackWidth = loadedTrackWidth;
-    // Use the saved angle only as the initial heading for piece-based construction.
-    // For segment-based tracks, startAngle will be recomputed from the geometry below.
+    
     currentAngle = loadedStartAngle;
     currentPos = QVector2D(0, 0);
 
     if (!piecesIntList.empty()) {
-        // Piece-based track - rebuild from pieces
+        
         startAngle = loadedStartAngle;
         centerLine.clear();
         centerLine.push_back(currentPos);
@@ -1551,13 +1365,10 @@ bool Track::loadFromFile(const std::string& filename)
         closeTrack();
     }
     else if (!trackSegments.empty()) {
-        // Segment-based track - already built during TRACK_SEGMENTS parsing.
-        // buildFromSegments() already set startAngle from the real geometry.
+       
         closeTrack();
     }
 
-    // For segment-based tracks recompute startAngle from the actual centerline
-    // direction so the car is always spawned facing the right way.
     if (!trackSegments.empty() && centerLine.size() >= 2) {
         QVector2D dir = (centerLine[1] - centerLine[0]).normalized();
         startAngle = qRadiansToDegrees(atan2f(dir.y(), dir.x()));
@@ -1605,14 +1416,13 @@ void Track::defaultMapList()
 
     map1.groundData.width = 2000.0f;
     map1.groundData.height = 2000.0f;
-    //map1.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
     map1.groundData.ambientColor = QColor(0, 0, 0);
     
 	map1.trackData.trackTexturePath = "/images/rainbow.png";
-	map1.trackData.trackColor = QColor(241, 242, 246); // kenney gray
+	map1.trackData.trackColor = QColor(241, 242, 246);
     map1.trackData.kerbData.width = 5.0f;
     map1.trackData.kerbData.height = 0.05f;
-    map1.trackData.kerbData.color1 = QColor(220, 30, 30); //red QColor(220, 30, 30)
+    map1.trackData.kerbData.color1 = QColor(220, 30, 30);
     map1.trackData.kerbData.color2 = QColor(Qt::white);
     map1.trackData.ambientColor = QColor(80, 80, 80);
 
@@ -1637,13 +1447,13 @@ void Track::defaultMapList()
     map2.groundData.width = 5000.0f;
     map2.groundData.height = 5000.0f;
     map2.groundData.texturePath = "/images/Cartoon_green_texture_grass.jpg";
-	map2.groundData.ambientColor = QColor(100, 150, 100); // slightly darker green for ambient lighting
+	map2.groundData.ambientColor = QColor(100, 150, 100); 
 
     map2.trackData.trackTexturePath = "/images/road_texture.jpg";
-    map2.trackData.trackColor = QColor(241, 242, 246); // kenney gray
+    map2.trackData.trackColor = QColor(241, 242, 246);
     map2.trackData.kerbData.width = 5.0f;
     map2.trackData.kerbData.height = 0.05f;
-    map2.trackData.kerbData.color1 = QColor(220, 30, 30); //red QColor(220, 30, 30)
+    map2.trackData.kerbData.color1 = QColor(220, 30, 30);
     map2.trackData.kerbData.color2 = QColor(Qt::white);
     map2.trackData.ambientColor = QColor(80, 80, 80);
 
@@ -1671,10 +1481,10 @@ void Track::defaultMapList()
     map3.groundData.ambientColor = QColor(153, 255, 255);
 
 	map3.trackData.trackTexturePath = "/images/sand.jpg";
-    map3.trackData.trackColor = QColor(139, 69, 19); // kenney brun
+    map3.trackData.trackColor = QColor(139, 69, 19); 
     map3.trackData.kerbData.width = 5.0f;
     map3.trackData.kerbData.height = 0.05f;
-    map3.trackData.kerbData.color1 = QColor(222, 184, 135); //red QColor(220, 30, 30)
+    map3.trackData.kerbData.color1 = QColor(222, 184, 135); 
     map3.trackData.kerbData.color2 = QColor(Qt::white);
     map3.trackData.ambientColor = QColor(250 / 2, 232 /2 , 180/ 2);
 

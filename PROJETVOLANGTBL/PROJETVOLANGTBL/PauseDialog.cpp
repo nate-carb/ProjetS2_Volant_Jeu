@@ -32,7 +32,7 @@ PauseDialog::PauseDialog(SoundManager* soundManager, QWidget* parent)
     QWidget* card = new QWidget(this);
     card->setStyleSheet("QWidget { background-color: #4B0082; border-radius: 18px; }");
 
-    QVBoxLayout* layout = new QVBoxLayout(card);  // ← card au lieu de this
+    QVBoxLayout* layout = new QVBoxLayout(card);  
     layout->setSpacing(12);
     layout->setContentsMargins(40, 30, 40, 30);
 
@@ -73,12 +73,12 @@ PauseDialog::PauseDialog(SoundManager* soundManager, QWidget* parent)
     // Options — ouvre le dialog options sans fermer la pause
     connect(btnOptions, &QPushButton::clicked, [this, soundManager]() {
         OptionsDialog* dlg = new OptionsDialog(soundManager, this);
-        dlg->show();  // au lieu de exec()
+        dlg->show(); 
         });
 
     connect(btnControls, &QPushButton::clicked, [this]() {
         ControlsDialog* dlg = new ControlsDialog(this);
-        dlg->show();  // au lieu de exec()
+        dlg->show(); 
         });
 
     // Main Menu

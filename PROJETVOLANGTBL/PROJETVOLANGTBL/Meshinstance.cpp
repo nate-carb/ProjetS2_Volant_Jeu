@@ -3,10 +3,6 @@
 #include <QDebug>
 #include <QUrl>
 
-// ─────────────────────────────────────────────────────────────
-// Internal helper — builds one instanced draw call for one
-// MeshData (one material, N instances)
-// ─────────────────────────────────────────────────────────────
 static Qt3DCore::QEntity* buildSingleMesh(
     const MeshData& mesh,
     const QVector<QMatrix4x4>& transforms,
@@ -16,7 +12,7 @@ static Qt3DCore::QEntity* buildSingleMesh(
 
     Qt3DCore::QEntity* entity = new Qt3DCore::QEntity(parent);
 
-    // ── Vertex buffer ─────────────────────────────────────────
+    // ── Vertex buffer
     QByteArray vertData;
     vertData.resize(mesh.vertices.size() * 8 * sizeof(float));
     float* vptr = reinterpret_cast<float*>(vertData.data());
@@ -33,7 +29,7 @@ static Qt3DCore::QEntity* buildSingleMesh(
     Qt3DCore::QBuffer* vertexBuffer = new Qt3DCore::QBuffer(entity);
     vertexBuffer->setData(vertData);
 
-    // ── Index buffer ──────────────────────────────────────────
+    // ── Index buffer
     QByteArray idxData;
     idxData.resize(mesh.indices.size() * sizeof(quint32));
     memcpy(idxData.data(), mesh.indices.constData(),
@@ -41,7 +37,7 @@ static Qt3DCore::QEntity* buildSingleMesh(
     Qt3DCore::QBuffer* indexBuffer = new Qt3DCore::QBuffer(entity);
     indexBuffer->setData(idxData);
 
-    // ── Instance buffer — one mat4 per instance ───────────────
+    // ── Instance buffer
     QByteArray instData;
     instData.resize(transforms.size() * 16 * sizeof(float));
     float* iptr = reinterpret_cast<float*>(instData.data());
@@ -53,7 +49,7 @@ static Qt3DCore::QEntity* buildSingleMesh(
         new Qt3DCore::QBuffer(entity);
     instanceBuffer->setData(instData);
 
-    // ── Geometry ──────────────────────────────────────────────
+    // ── Geometrie
     Qt3DCore::QGeometry* geom = new Qt3DCore::QGeometry(entity);
 
     auto addAttr = [&](const QString& name,
@@ -91,7 +87,7 @@ static Qt3DCore::QEntity* buildSingleMesh(
         defaultTextureCoordinateAttributeName(),
         6 * sizeof(float), 2, vertexBuffer, vStride, vertCount);
 
-    // Instance matrix: 4 columns of vec4, divisor=1
+    // Instance matrix
     for (int col = 0; col < 4; col++)
         addAttr(QString("instanceModelMatrix%1").arg(col),
             col * 4 * static_cast<int>(sizeof(float)),
@@ -108,7 +104,7 @@ static Qt3DCore::QEntity* buildSingleMesh(
     idxAttr->setCount(static_cast<uint>(mesh.indices.size()));
     geom->addAttribute(idxAttr);
 
-    // ── Renderer ──────────────────────────────────────────────
+    // ── Renderer
     Qt3DRender::QGeometryRenderer* renderer =
         new Qt3DRender::QGeometryRenderer(entity);
     renderer->setGeometry(geom);
@@ -117,7 +113,7 @@ static Qt3DCore::QEntity* buildSingleMesh(
     renderer->setInstanceCount(
         static_cast<int>(transforms.size()));
 
-    // ── Custom instanced shader ───────────────────────────────
+    // ── Shader
     Qt3DRender::QShaderProgram* shader =
         new Qt3DRender::QShaderProgram(entity);
     shader->setVertexShaderCode(
@@ -166,7 +162,6 @@ static Qt3DCore::QEntity* buildSingleMesh(
         new Qt3DRender::QMaterial(entity);
     mat->setEffect(effect);
 
-    // Colors directly from the parsed .dae material
     mat->addParameter(new Qt3DRender::QParameter(
         "ka", QVector4D(mesh.ambient.redF(),
             mesh.ambient.greenF(),
@@ -189,10 +184,6 @@ static Qt3DCore::QEntity* buildSingleMesh(
     return entity;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Public API
-// ─────────────────────────────────────────────────────────────
-
 Qt3DCore::QEntity* MeshInstance::build(
     const MeshData& mesh,
     const QVector<QMatrix4x4>& transforms,
@@ -208,7 +199,6 @@ Qt3DCore::QEntity* MeshInstance::buildFromList(
 {
     if (!meshList.valid || transforms.isEmpty()) return nullptr;
 
-    // Parent entity groups all submesh entities together
     Qt3DCore::QEntity* groupEntity =
         new Qt3DCore::QEntity(parent);
 

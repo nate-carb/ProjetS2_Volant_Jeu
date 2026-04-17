@@ -43,7 +43,7 @@ void RaceTimes::checkForCheckpoint(Track* track, QVector2D position)
     }
 }
 
-// ── Lap actuel (1-based) ──────────────────────────────────────────────────
+// ── Lap actuel
 int RaceTimes::getCurrentLap() const
 {
     if (!raceStarted || stamps.empty()) return 1;
@@ -51,7 +51,7 @@ int RaceTimes::getCurrentLap() const
     return completedCheckpoints / checkpointsPerLap + 1;
 }
 
-// ── Temps du lap en cours (ms depuis début du lap) ───────────────────────
+// ── Temps du lap en cours (ms depuis début du lap)
 qint64 RaceTimes::getCurrentLapMs() const
 {
     if (!raceStarted) return 0;
@@ -62,7 +62,7 @@ qint64 RaceTimes::getCurrentLapMs() const
     return elapsedTimer.elapsed() - lapStartMs;
 }
 
-// ── Meilleur lap terminé ─────────────────────────────────────────────────
+// ── Meilleur lap terminé
 qint64 RaceTimes::getBestLapMs() const
 {
     qint64 best = -1;
@@ -76,7 +76,7 @@ qint64 RaceTimes::getBestLapMs() const
     return best;
 }
 
-// ── Delta : écart avec le best au même checkpoint ────────────────────────
+// ── Delta : écart avec le best au même checkpoint 
 qint64 RaceTimes::getDeltaMs() const
 {
     qint64 best = getBestLapMs();
@@ -84,7 +84,7 @@ qint64 RaceTimes::getDeltaMs() const
     return getCurrentLapMs() - best;
 }
 
-// ── Format "M:SS.mmm" ────────────────────────────────────────────────────
+// ── Format "M:SS.mmm" 
 QString RaceTimes::formatMs(qint64 ms) const
 {
     if (ms < 0) return "--:--.---";

@@ -46,30 +46,27 @@ void PitStop::placeNearTrack(const std::vector<QVector2D>& centerLine, float sca
     pitLaneDir = dir;
     pitLaneNormal = normal;
 
-    float laneHalfLen = 100.0f;   // demi-longueur du trapèze
-    float laneDepth = 35.0f;   // profondeur vers la droite
-    float laneTopHalf = 75.0f;   // demi-largeur du côté court (côté piste)
+    float laneHalfLen = 100.0f;   
+    float laneDepth = 35.0f;  
+    float laneTopHalf = 75.0f;   
 
     // Bord droit de la piste
     QVector2D trackRightEdge = point + normal * (trackWidth / 2.0f);
 
-    // 4 coins du trapèze en coords monde
-    // Côté piste (grand côté maintenant)
-    trapeze[0] = trackRightEdge - dir * laneHalfLen;   // haut-gauche
-    trapeze[1] = trackRightEdge + dir * laneHalfLen;   // bas-gauche
-    // Côté extérieur (petit côté maintenant)
-    trapeze[2] = trackRightEdge + normal * laneDepth + dir * laneTopHalf;   // bas-droite
-    trapeze[3] = trackRightEdge + normal * laneDepth - dir * laneTopHalf;   // haut-droite
+    trapeze[0] = trackRightEdge - dir * laneHalfLen;   
+    trapeze[1] = trackRightEdge + dir * laneHalfLen;  
+    trapeze[2] = trackRightEdge + normal * laneDepth + dir * laneTopHalf;   
+    trapeze[3] = trackRightEdge + normal * laneDepth - dir * laneTopHalf;   
 
     // Points d'entrée/sortie
     pitEntry = trapeze[0];
     pitExit = trapeze[1];
 
-    // Pit stop au centre du trapèze, un peu plus grand
+    // Pit stop au centre du trapèze
     QVector2D center = (trapeze[0] + trapeze[1] + trapeze[2] + trapeze[3]) / 4.0f;
     int px = (int)(center.x() * scale);
     int py = (int)(center.y() * scale);
-    zone = QRect(px - 45, py - 30, 90, 60);  // encore plus grand
+    zone = QRect(px - 45, py - 30, 90, 60);  
 }
 
 

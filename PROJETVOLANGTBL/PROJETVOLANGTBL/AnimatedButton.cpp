@@ -53,7 +53,6 @@ void AnimatedButton::enterEvent(QEnterEvent* event) {
 void AnimatedButton::leaveEvent(QEvent* event) {
     m_hovered = false;
     QPushButton::leaveEvent(event);
-    // Le pulse fait le fade-out puis arrête le timer + retire l'effet
 }
 
 
@@ -79,7 +78,7 @@ void AnimatedButton::onPulse()
             m_pulseTimer->stop();
         }
     }
-    m_shadow->setBlurRadius(m_glowAlpha * 25.0f); // 120.0f
+    m_shadow->setBlurRadius(m_glowAlpha * 25.0f); 
     m_shadow->setColor(QColor(0, 200, 255, int(m_glowAlpha * 255)));
 }
 
@@ -99,7 +98,6 @@ void AnimatedButton::focusInEvent(QFocusEvent* event)
 void AnimatedButton::focusOutEvent(QFocusEvent* event)
 {
     m_hovered = false;
-    // Remet le style original
     setStyleSheet(R"(
         QPushButton {
             background-color: #111111;

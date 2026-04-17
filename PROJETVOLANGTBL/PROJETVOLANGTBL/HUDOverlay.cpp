@@ -55,13 +55,13 @@ void HUDOverlay::updateData(float carburant, float nos, float tireWear,
 void HUDOverlay::paintEvent(QPaintEvent*)
 {
     QPainter painter(this);
-    if (m_paused) return;  // transparent quand pause
+    if (m_paused) return;  
 
     painter.setRenderHint(QPainter::Antialiasing);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
     painter.setRenderHint(QPainter::TextAntialiasing, false);
 
-    // ── Pluie ─────────────────────────────────────────────────────────────
+    // ── Pluie 
     if (!m_paused && (m_weather == Vehicule::RAINY || m_weather == Vehicule::STORMY)) {
         int   numDrops = (m_weather == Vehicule::STORMY) ? 150 : 75;
         float penWidth = (m_weather == Vehicule::STORMY) ? 2.5f : 1.5f;
@@ -74,7 +74,7 @@ void HUDOverlay::paintEvent(QPaintEvent*)
         }
     }
 
-    // ── Widgets ───────────────────────────────────────────────────────────
+    // ── Widgets 
     drawLapCounter(painter);
     drawLapTimes(painter);
     drawSpeedRpm(painter);
@@ -85,9 +85,6 @@ void HUDOverlay::paintEvent(QPaintEvent*)
     if (m_warning) drawWarning(painter);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LAP COUNTER — image lap.png + texte "2/3" par-dessus
-// ─────────────────────────────────────────────────────────────────────────────
 void HUDOverlay::drawLapCounter(QPainter& p)
 {
     const int W = 120, H = 90;
@@ -97,7 +94,6 @@ void HUDOverlay::drawLapCounter(QPainter& p)
     p.drawPixmap(x, y, W, H, m_pixLap);
 
     // Numéro de lap centré sur l'image
-    // (ajuste les offsets selon la position exacte du chiffre dans lap.png)
     p.setRenderHint(QPainter::TextAntialiasing, false);
     p.setFont(QFont("Press Start 2P", 16));
     p.setPen(Qt::white);
@@ -105,9 +101,6 @@ void HUDOverlay::drawLapCounter(QPainter& p)
     p.drawText(QRect(x, y + 35, W, 40), Qt::AlignCenter, lapStr);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LAP TIMES — image laptime.png + textes BEST/LAP/DELTA par-dessus
-// ─────────────────────────────────────────────────────────────────────────────
 void HUDOverlay::drawLapTimes(QPainter& p)
 {
     if (!m_raceTimes) return;
@@ -136,8 +129,6 @@ void HUDOverlay::drawLapTimes(QPainter& p)
         deltaColor = ahead ? QColor(80, 220, 80) : QColor(220, 80, 80);
     }
 
-    // Chaque ligne fait ~H/3 de haut dans l'image
-    // Les offsets sont calibrés pour laptime.png (ajuste si nécessaire)
     const int ROW_H = H / 3;
     struct Row { QString value; QColor color; };
     Row rows[3] = {
@@ -148,7 +139,7 @@ void HUDOverlay::drawLapTimes(QPainter& p)
 
     p.setRenderHint(QPainter::TextAntialiasing, false);
     p.setFont(QFont("Press Start 2P", 8));
-    int offsets[3] = { 5, 38, 68 }; // BEST, LAP, DELTA — tweake ces valeurs
+    int offsets[3] = { 5, 38, 68 }; // BEST, LAP, DELTA
     for (int i = 0; i < 3; i++) {
         QRect rowRect(x + 2, y + offsets[i], W - 14, ROW_H);
         p.setPen(rows[i].color);
@@ -156,31 +147,24 @@ void HUDOverlay::drawLapTimes(QPainter& p)
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// VITESSE + RPM — image vitesserpmvide.png + chiffre + segments par-dessus
-// ─────────────────────────────────────────────────────────────────────────────
 void HUDOverlay::drawSpeedRpm(QPainter& p)
 {
     const int W = 220, H = 90;
     int x = width() - W - 15;
     int y = height() - H - 15;
 
-    // Image de fond (cadre vide avec labels KM/H et RPM)
     p.drawPixmap(x, y, W, H, m_pixSpeedRpm);
 
-    // ── Vitesse (gros chiffre, haut droite dans le cadre) ──
     p.setRenderHint(QPainter::TextAntialiasing, false);
     p.setFont(QFont("Press Start 2P", 18));
     p.setPen(Qt::yellow);
-    // Zone du chiffre : occupe la moitié droite du haut du cadre
     p.drawText(QRect(x + 2, y + 14, W - 70, 45),
         Qt::AlignRight | Qt::AlignVCenter,
         QString::number((int)m_speedKmh));
 
-    // ── Barre RPM (bas du cadre, à droite de "RPM") ──
+    // ── Barre RPM 
     const int NUM_SEG = 14;
     const int SEG_W = 9, SEG_H = 12, SEG_GAP = 1;
-    // Ajuste barX/barY pour coller exactement sur les cases vides de l'image
     int barX = x + 64;
     int barY = y + H - SEG_H - 14;
 
@@ -203,17 +187,13 @@ void HUDOverlay::drawSpeedRpm(QPainter& p)
             p.setPen(c.lighter(130));
         }
         else {
-            // Transparent pour laisser voir les cases vides de l'image
             p.setBrush(Qt::NoBrush);
             p.setPen(Qt::NoPen);
         }
         p.drawRoundedRect(seg, 2, 2);
     }
 }
-// ─────────────────────────────────────────────────────────────────────────────
-// BOOST BAR — image boostvide.png + segments orange/jaune (bas gauche)
-// Même principe que la barre RPM
-// ─────────────────────────────────────────────────────────────────────────────
+
 void HUDOverlay::drawBoostBar(QPainter& p)
 {
     if (m_pixBoostEmpty.isNull()) return;
@@ -221,14 +201,13 @@ void HUDOverlay::drawBoostBar(QPainter& p)
     const int H = 140;
     int W = m_pixBoostEmpty.width() * H / m_pixBoostEmpty.height();
 
-    // ── Aligné à droite, au-dessus du panneau KM/H ──
     const int speedPanelW = 220, speedPanelH = 90;
-    int x = width() - speedPanelW - 15;   // même bord gauche que KM/H
-    int y = height() - speedPanelH - 15 - H - 8; // juste au-dessus
+    int x = width() - speedPanelW - 15;   
+    int y = height() - speedPanelH - 15 - H - 8; 
 
     p.save();
     p.setPen(Qt::NoPen);
-    p.setBrush(QColor(0, 0, 0, 80)); // augmente le 120 pour plus opaque
+    p.setBrush(QColor(0, 0, 0, 80)); 
     p.drawRoundedRect(x +12, y +45, W , H-100, 8, 8);
     p.restore();
 
@@ -236,7 +215,7 @@ void HUDOverlay::drawBoostBar(QPainter& p)
 
     const int NUM_SEG = 8;
     const int SEG_W = 9, SEG_H = 12, SEG_GAP = 1;
-    int barX = x + (int)(W * 0.6f); // ← diminue si encore trop à droite
+    int barX = x + (int)(W * 0.6f); 
     int barY = y + (H - SEG_H) / 2;
 
     float nosRatio = m_nos / 100.0f;
@@ -271,9 +250,6 @@ void HUDOverlay::drawBoostBar(QPainter& p)
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// WARNING — image warning.png, clignotante, centrée
-// ─────────────────────────────────────────────────────────────────────────────
 void HUDOverlay::drawWarning(QPainter& p)
 {
     // Clignote toutes les 400ms
@@ -286,7 +262,6 @@ void HUDOverlay::drawWarning(QPainter& p)
     p.drawPixmap(x, y, SIZE, SIZE, m_pixWarning);
 }
 
-// ── Barres existantes (inchangées) ───────────────────────────────────────────
 void HUDOverlay::drawBar(QPainter& painter, int x, int y, int w, int h,
     float value, QColor color, const QString& label)
 {
@@ -305,59 +280,13 @@ void HUDOverlay::drawBar(QPainter& painter, int x, int y, int w, int h,
     painter.drawText(x + w - 35, y + h - 5, QString("%1%").arg((int)value));
 }
 
-//void HUDOverlay::drawBoostBar(QPainter& painter, int x, int y, float nosRatio)
-//{
-//    const int NUM_SEGMENTS = 8, SEG_W = 16, SEG_H = 18, SEG_GAP = 3, CORNER = 2;
-//    int filledCount = (int)(nosRatio * NUM_SEGMENTS);
-//
-//    painter.setPen(QColor(255, 200, 0));
-//    painter.setFont(QFont("Arial", 10, QFont::Bold));
-//    painter.drawText(x, y + SEG_H - 2, "⚡ BOOST");
-//
-//    int barX = x + 90;
-//
-//    if (nosRatio > 0.0f) {
-//        painter.save();
-//        QRadialGradient glow(barX + NUM_SEGMENTS * (SEG_W + SEG_GAP) / 2,
-//            y + SEG_H / 2, 50);
-//        glow.setColorAt(0.0, QColor(255, 150, 0, 60));
-//        glow.setColorAt(1.0, Qt::transparent);
-//        painter.setBrush(glow);
-//        painter.setPen(Qt::NoPen);
-//        painter.drawEllipse(barX - 10, y - 10,
-//            NUM_SEGMENTS * (SEG_W + SEG_GAP) + 20, SEG_H + 20);
-//        painter.restore();
-//    }
-//
-//    for (int i = 0; i < NUM_SEGMENTS; i++) {
-//        QRect seg(barX + i * (SEG_W + SEG_GAP), y, SEG_W, SEG_H);
-//        if (i < filledCount) {
-//            QLinearGradient grad(seg.topLeft(), seg.bottomRight());
-//            grad.setColorAt(0.0, QColor(255, 180, 0));
-//            grad.setColorAt(1.0, QColor(210, 70, 0));
-//            painter.setBrush(grad);
-//            painter.setPen(QColor(255, 210, 50, 200));
-//        }
-//        else {
-//            painter.setBrush(QColor(30, 20, 0, 150));
-//            painter.setPen(QColor(80, 55, 0, 120));
-//        }
-//        painter.drawRoundedRect(seg, CORNER, CORNER);
-//    }
-//}
-
 void HUDOverlay::drawMinimap(QPainter& p)
 {
     if (!m_track || m_track->getCenterLine().empty()) return;
 
-    // ── Calculer les bounds de la piste ──────────────────────
     float minX = 1e9f, maxX = -1e9f;
     float minY = 1e9f, maxY = -1e9f;
 
-    //auto checkPoint = [&](const QVector2D& p) {
-    //    minX = std::min(minX, p.x()); maxX = std::max(maxX, p.x());
-    //    minY = std::min(minY, p.y()); maxY = std::max(maxY, p.y());
-    //    };
     auto checkPoint = [&](const QVector2D& p) {
         minX = qMin(minX, p.x()); maxX = qMax(maxX, p.x());
         minY = qMin(minY, p.y()); maxY = qMax(maxY, p.y());
@@ -374,7 +303,6 @@ void HUDOverlay::drawMinimap(QPainter& p)
     float rangeY = maxY - minY;
     if (rangeX <= 0 || rangeY <= 0) return;
 
-    // ── Calcul proportionnel ──────────────────────────────────
     const float MAX_SIZE = 250.0f;
     const int MARGIN = 15;
 
@@ -389,7 +317,7 @@ void HUDOverlay::drawMinimap(QPainter& p)
         minimapHeight
     );
 
-    // ── Projection monde → mini-map ──────────────────────────
+    // ── Projection monde → mini-map 
     auto toMinimap = [&](const QVector2D& p) -> QPointF {
         float nx = (p.x() - minX) / rangeX;
         float ny = (p.y() - minY) / rangeY;
@@ -399,18 +327,15 @@ void HUDOverlay::drawMinimap(QPainter& p)
         );
         };
 
-    // ── Fond semi-transparent ─────────────────────────────────
     p.setBrush(QColor(0, 0, 0, 160));
     p.setPen(QPen(QColor(255, 255, 255, 80), 1));
     p.drawRoundedRect(minimapRect, 8, 8);
 
-    // ── Clipping ─────────────────────────────────────────────
     p.save();
     QPainterPath clipPath;
     clipPath.addRoundedRect(minimapRect, 8, 8);
     p.setClipPath(clipPath);
 
-    // ── Surface de la piste ───────────────────────────────────
     const auto& left = m_track->getTrackEdges().left;
     const auto& right = m_track->getTrackEdges().right;
 
@@ -426,7 +351,6 @@ void HUDOverlay::drawMinimap(QPainter& p)
         p.drawPolygon(trackPoly);
     }
 
-    // ── Pit lane ──────────────────────────────────────────────
     if (m_track->hasPitLane()) {
         PitLane pit = m_track->getPitLane();
 
@@ -437,7 +361,7 @@ void HUDOverlay::drawMinimap(QPainter& p)
                 for (const auto& p : edgeL)  poly << toMinimap(p);
                 for (int i = (int)edgeR.size() - 1; i >= 0; i--)
                     poly << toMinimap(edgeR[i]);
-                p.setBrush(QColor(255, 165, 0, 200));  // orange
+                p.setBrush(QColor(255, 165, 0, 200)); 
                 p.setPen(Qt::NoPen);
                 p.drawPolygon(poly);
             };
@@ -447,18 +371,17 @@ void HUDOverlay::drawMinimap(QPainter& p)
         drawEdgePoly(pit.exitCurveEdges.left, pit.exitCurveEdges.right);
     }
 
-    // ── Ligne centrale ────────────────────────────────────────
     const auto& center = m_track->getCenterLine();
     p.setPen(QPen(QColor(255, 255, 255, 80), 1, Qt::DashLine));
     for (size_t i = 1; i < center.size(); i++)
         p.drawLine(toMinimap(center[i - 1]), toMinimap(center[i]));
 
-    // ── Joueur ────────────────────────────────────────────────
+    // ── Joueur 
     p.setBrush(Qt::red);
     p.setPen(Qt::NoPen);
     p.drawEllipse(toMinimap(m_carPos), 3, 3);
 
-    // ── Pit stop box ──────────────────────────────────────────
+    // ── Pit stop box 
     QRect pitRect = m_pitStop->getRect();
     const float PIXELS_PER_METER = 5.0f;
     QVector2D pitCenter(
@@ -475,7 +398,6 @@ void HUDOverlay::drawMinimap(QPainter& p)
 
 void HUDOverlay::updateRaceStart(RaceStart::State state, int lightsOn)
 {
-    // Démarre le chrono dès qu'on passe en RACING (pour l'animation d'extinction)
     if (state == RaceStart::RACING && m_raceStartState != RaceStart::RACING) {
         m_racingTimer.start();
     }
@@ -486,26 +408,20 @@ void HUDOverlay::updateRaceStart(RaceStart::State state, int lightsOn)
 
 void HUDOverlay::drawStartLights(QPainter& p)
 {
-    // ── Quand ne rien afficher ────────────────────────────────────────────
     if (m_raceStartState == RaceStart::IDLE) return;
 
-    // Après le GO : affiche les feux éteints 1.5s puis disparaît
     const qint64 SHOW_AFTER_GO_MS = 1500;
     if (m_raceStartState == RaceStart::RACING &&
         m_racingTimer.elapsed() > SHOW_AFTER_GO_MS) return;
 
-    // ── Taille & position centrée (haut-centre de l'écran) ───────────────
+ 
     const int W = 450, H = 225;
     int x = (width() - W) / 2;
-    int y = height() / 8;        // ajuste si trop haut/bas
+    int y = height() / 8;        
 
-    // ── Choisir l'image ──────────────────────────────────────────────────
-    // Mappe 5 feux internes → 3 feux à l'écran
-    // 0→0  1→1  2→1  3→2  4→2  5→3
     int displayLights = (m_raceStartLights * 3 + 2) / 5;
     displayLights = qBound(0, displayLights, 3);
 
-    // Après le GO ou pendant la pénalité : feux éteints
     if (m_raceStartState == RaceStart::RACING ||
         m_raceStartState == RaceStart::FALSE_START) {
         displayLights = 0;
@@ -514,7 +430,7 @@ void HUDOverlay::drawStartLights(QPainter& p)
     if (!m_pixLights[displayLights].isNull())
         p.drawPixmap(x, y, W, H, m_pixLights[displayLights]);
 
-    // ── Texte FAUX DÉPART (clignote en rouge) ────────────────────────────
+    // ── Texte FAUX DÉPART
     if (m_raceStartState == RaceStart::FALSE_START) {
         if ((QTime::currentTime().msec() / 300) % 2 == 0) {
             p.setRenderHint(QPainter::TextAntialiasing, false);
@@ -525,11 +441,10 @@ void HUDOverlay::drawStartLights(QPainter& p)
         }
     }
 
-    // ── Texte GO ! (1.5s après extinction) ───────────────────────────────
+    // ── Texte GO !
     if (m_raceStartState == RaceStart::RACING) {
         p.setRenderHint(QPainter::TextAntialiasing, false);
         p.setFont(QFont("Press Start 2P", 28));
-        // Fondu : opacité diminue sur 1.5s
         int alpha = (int)(255 * (1.0f - m_racingTimer.elapsed() / (float)SHOW_AFTER_GO_MS));
         alpha = qBound(0, alpha, 255);
         p.setPen(QColor(0, 230, 0, alpha));

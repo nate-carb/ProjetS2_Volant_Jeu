@@ -9,7 +9,6 @@ MainWindowView::MainWindowView(QWidget* parent)
     setCentralWidget(centralWidget);
 
     QHBoxLayout* mainLayout = new QHBoxLayout(centralWidget);
-    // Track viewer (left side)
     trackViewer = new TrackViewer(this);
     mainLayout->addWidget(trackViewer);
 

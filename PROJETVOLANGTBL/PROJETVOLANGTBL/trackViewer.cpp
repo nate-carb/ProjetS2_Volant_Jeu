@@ -9,7 +9,7 @@ TrackViewer::TrackViewer(QWidget* parent)
     , offset(0, 0)
 {
     setMinimumSize(800, 600);
-	currentTrack.loadFromFile("tracks/defaultTrack1.trk"); // Load a default track on startup
+	currentTrack.loadFromFile("tracks/defaultTrack1.trk"); 
 }
 
 
@@ -18,7 +18,6 @@ void TrackViewer::setTrack(const Track& track)
 {
     currentTrack = track;
 
-    // Auto-fit track to view
     if (!track.getCenterLine().empty()) {
         float minX, maxX, minY, maxY;
         calculateBounds(minX, maxX, minY, maxY);
@@ -26,10 +25,8 @@ void TrackViewer::setTrack(const Track& track)
         float rangeX = maxX - minX;
         float rangeY = maxY - minY;
 
-        // Center the track
         offset = QPointF(-(minX + rangeX / 2), -(minY + rangeY / 2));
 
-        // Set zoom to fit
         zoom = std::min(width() / rangeX, height() / rangeY) * 0.8;
     }
 
@@ -75,7 +72,6 @@ void TrackViewer::drawTrack(QPainter& painter)
     if (currentTrack.getCenterLine().empty())
         return;
 
-    // Draw left edge (red)
     if (!currentTrack.getTrackEdges().left.empty()) {
         QPen leftPen(Qt::red, 3);
         painter.setPen(leftPen);
@@ -87,7 +83,6 @@ void TrackViewer::drawTrack(QPainter& painter)
         }
     }
 
-    // Draw right edge (blue)
     if (!currentTrack.getTrackEdges().right.empty()) {
         QPen rightPen(Qt::blue, 3);
         painter.setPen(rightPen);
@@ -99,7 +94,6 @@ void TrackViewer::drawTrack(QPainter& painter)
         }
     }
 
-    // Draw center line (yellow dashed)
     if (!currentTrack.getCenterLine().empty()) {
         QPen centerPen(Qt::yellow, 2, Qt::DashLine);
         painter.setPen(centerPen);
@@ -111,13 +105,11 @@ void TrackViewer::drawTrack(QPainter& painter)
         }
     }
 
-    // Draw start position (green circle)
     QPointF startScreen = worldToScreen(QVector2D(0,0));
     painter.setPen(Qt::green);
     painter.setBrush(Qt::green);
     painter.drawEllipse(startScreen, 8, 8);
 
-    // Draw text
     painter.setPen(Qt::white);
     painter.drawText(startScreen + QPointF(12, 0), "START");
 }
@@ -127,14 +119,12 @@ void TrackViewer::drawSpriteTrack(QPainter& painter)
     if (currentTrack.getCenterLine().empty())
         return;
 
-    // Set up the world-to-screen transform
     QTransform transform;
     transform.translate(width() / 2.0, height() / 2.0);
     transform.scale(zoom, zoom);
     transform.translate(offset.x(), offset.y());
     painter.setTransform(transform);
 
-    // Draw each piece sprite along the center line
     auto centerLine = currentTrack.getCenterLine();
     for (size_t i = 1; i < centerLine.size(); i++) {
         QVector2D pos = centerLine[i];
@@ -143,7 +133,6 @@ void TrackViewer::drawSpriteTrack(QPainter& painter)
 
         float angle = atan2(dir.y(), dir.x()) * 180.0f / M_PI;
 
-        // Get the sprite path for this piece type
         QPixmap sprite(currentTrack.getPieces()[i]->getSpritePath());
 
         if (sprite.isNull()) continue;
@@ -158,10 +147,9 @@ void TrackViewer::drawSpriteTrack(QPainter& painter)
         );
         painter.restore();
     }
-        // Reset transform for UI elements drawn in screen space
+
         painter.resetTransform();
 
-        // Draw start, piece count etc. (screen space)
         painter.setPen(Qt::white);
         painter.drawText(10, height() - 10,
             QString("Pieces: %1").arg(currentTrack.getPiecesList().size()));
@@ -172,10 +160,8 @@ void TrackViewer::paintEvent(QPaintEvent* event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    // Background
     painter.fillRect(rect(), QColor(30, 30, 30));
 
-    // Draw track
     drawTrack(painter);
 
     

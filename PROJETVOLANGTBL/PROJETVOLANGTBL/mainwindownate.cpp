@@ -1,6 +1,4 @@
 ﻿#include "mainwindownate.h"
-
-//#define NOMINMAX
 #include <QPainter>
 #include <QMouseEvent>
 #include <QDebug>
@@ -12,44 +10,22 @@
 #include <devmenu.h>
 #include <windows.h>
 
-// 
-
 const float PIXELS_PER_METER = 5.0f;
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), imageX(100), imageY(100)
 {
-    // Voir où le programme cherche les fichiers
     qDebug() << "Dossier de travail actuel:" << QDir::currentPath();
 
     soundManager = new SoundManager(this);
     soundManager->playMenuMusic();
-    // Essayer de charger l'image
-    image = QPixmap("images/car.PNG");  // Remplace par ton nom de fichier
+    image = QPixmap("images/car.PNG"); 
 	image = image.scaled(60, 60, Qt::KeepAspectRatio);
 
-    
-    
-
     raceTimes = new RaceTimes();
-	//Vehicule* voiture = new Vehicule;
     voiture = Vehicule();
-	//track = Track();
-	//track.loadFromFile("tracks/defaultTrack1.trk");
-    track = new Track();       // assigns to the MEMBER pointer
+    track = new Track();       
     rotPeak = new WheelRotationPeak(this);
-    //track->playTrack("nate2");
-    //pitStop.placePitLane(track->getPitLane(), track->getTrackWidth());
-
-    //track->loadFromFile("tracks/nate2.trk");
-    //track->loadFromFile("tracks/decorsNate1.trk");
-    //track->loadFromFile("tracks/test400.trk");
-	//track->playTrack("nate");
-    //track->loadFromFile("tracks/track3dmodelV1.trk");
-    //track->loadFromFile("tracks/test_pit.trk");
-    // Vérifier si ça a marché
-    //pitStop.placePitLane(track->getPitLane(), track->getTrackWidth());
-   
     if (image.isNull()) {
         qDebug() << "ERREUR: Image non chargée!";
         qDebug() << "Le fichier existe?" << QFile::exists("images/car.PNG");
@@ -58,37 +34,20 @@ MainWindow::MainWindow(QWidget* parent)
         qDebug() << "SUCCESS! Taille:" << image.size();
     }
 
-    // Timer qui change la m�t�o toutes les 10 secondes
+    // Timer meteo
     weatherTimer = new QTimer(this);
     connect(weatherTimer, &QTimer::timeout, this, &MainWindow::changeWeather);
-    weatherTimer->start(10000);  // 10 secondes
+    weatherTimer->start(10000);  
 
     resize(800, 600);
 
     // Crée un timer
     timer = new QTimer(this);
 
-    // CONNECTE le timer à ta fonction gameLoop
+    // connecte le timer au gameloop
     connect(timer, &QTimer::timeout, this, &MainWindow::gameLoop);
-
-    // DÉMARRE le timer - déclenche toutes les 10ms (~100 fois par seconde 100Hz)
-    //timer->start(10);  // 10 millisecondes ? 100 fois par seconde 100Hz
-
-
     lastFrameTime = QTime::currentTime();
-
-    // Instead, at the end of the constructor, add:
     arduino = new ArduinoManager(this);
-    //bool baseOk = arduino->connectBase("\\\\.\\COM3");
-    //bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
-    //qDebug() << "Base connectee:" << baseOk;
-    //qDebug() << "Wheel connectee:" << wheelOk;
-//    QTimer::singleShot(4000, this, [this]() {
-//        bool baseOk = arduino->connectBase("\\\\.\\COM3");
-//        bool wheelOk = arduino->connectWheel("\\\\.\\COM5");
-//        qDebug() << "Base connectee:" << baseOk;
-//        qDebug() << "Wheel connectee:" << wheelOk;
-//        });
     raceStart = new RaceStart(this);
     connect(raceStart, &RaceStart::raceStarted, this, [this]() {
         if (track) {
@@ -123,16 +82,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 
 void MainWindow::changeWeather()
 {
-    //// Cycle SUNNY -> RAINY -> STORMY -> SUNNY
-    //if (currentWeather == Vehicule::SUNNY)
-    //    currentWeather = Vehicule::RAINY;
-    //else if (currentWeather == Vehicule::RAINY)
-    //    currentWeather = Vehicule::STORMY;
-    //else
-    //    currentWeather = Vehicule::SUNNY;
-
-    //voiture.setWeather(currentWeather);
-    //qDebug() << "M�t�o chang�e !";
+ 
 }
 
 
@@ -141,29 +91,28 @@ void MainWindow::paintEvent(QPaintEvent* event)
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    // ===== FOND =====
     painter.fillRect(rect(), QColor(34, 139, 34));  // Herbe verte
 
     if (!track || track->getCenterLine().empty()) return;
 
     const float PIXELS_PER_METER = 5.0f;
 
-    // ===== CAMÉRA QUI SUIT LA VOITURE =====
+    // Cam char
     float carX = voiture.getPosition().x() * PIXELS_PER_METER;
     float carY = voiture.getPosition().y() * PIXELS_PER_METER;
 
-    // Centrer la caméra sur la voiture
+    // Centre la caméra sur la voiture
     painter.translate(width() / 2 - carX, height() / 2 - carY);
 
-    // ===== DESSINER LA PISTE ===== 
+    // Track
     drawTrack(painter, PIXELS_PER_METER);
 
-    // ===== PITLANE =====
+    // Pitlane
     painter.setBrush(QColor(50, 50, 50));
     painter.setPen(Qt::NoPen);
     painter.drawPath(pitStop.getPitLanePath(PIXELS_PER_METER));
 
-    // Rebords rouges/blancs sur les 4 c�t�s
+    // Rebords rouges/blancs sur les 4 cotes
     QPainterPath path = pitStop.getPitLanePath(PIXELS_PER_METER);
     QPolygonF poly = path.toFillPolygon();
 
@@ -189,27 +138,27 @@ void MainWindow::paintEvent(QPaintEvent* event)
     drawCurbs(painter, edgeBot, 1.0f, Qt::red);
     drawCurbs(painter, edgeRight, 1.0f, Qt::red);
 
-    // ===== PIT STOP BOX (jaune, plus gros) =====
-    painter.setBrush(Qt::NoBrush);  // transparent � l'int�rieur
+    // Pit Stop box
+    painter.setBrush(Qt::NoBrush); 
     painter.setPen(QPen(Qt::white, 2));
     painter.drawRect(pitStop.getRect());
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 8, QFont::Bold));
     painter.drawText(pitStop.getRect(), Qt::AlignCenter, "PIT\nSTOP");
 
-    // ===== DESSINER LA VOITURE =====
+    // Char
     painter.save();
     painter.translate(carX, carY);
     painter.rotate(voiture.getAngle() * 180.0 / M_PI);
     painter.drawPixmap(-image.width() / 2, -image.height() / 2, image);
     painter.restore();
 
-    // ===== HUD (fixe � l'�cran) =====
+    // HUD
     painter.resetTransform();
-    painter.setClipRect(rect());  // <-- force le clipping sur toute la fen�tre
+    painter.setClipRect(rect()); 
     painter.setClipping(true);
 
-    // ===== PLUIE =====
+    // Pluie
     if (currentWeather == Vehicule::RAINY || currentWeather == Vehicule::STORMY) {
         int numDrops = (currentWeather == Vehicule::STORMY) ? 150 : 75;
         float penWidth = (currentWeather == Vehicule::STORMY) ? 2.5f : 1.5f;
@@ -222,7 +171,7 @@ void MainWindow::paintEvent(QPaintEvent* event)
             painter.drawLine(x, y, x - 3, y + length);
         }
     }
-    // ===== COULEUR M�T�O =====
+    // Meteo
     QString weatherText;
     QColor weatherColor;
     switch (currentWeather) {
@@ -240,12 +189,12 @@ void MainWindow::paintEvent(QPaintEvent* event)
         break;
     }
 
-    // ===== FOND HUD =====
+    // HUD
     painter.setBrush(QColor(0, 0, 0, 150));
     painter.setPen(Qt::NoPen);
     painter.drawRect(10, 10, 170, 115);
 
-    // ===== TEXTE HUD =====
+    // Texte HUD
     painter.setPen(Qt::white);
     painter.setFont(QFont("Arial", 12));
     painter.drawText(20, 35, QString("Carburant: %1%").arg((int)voiture.getCarburant()));
@@ -269,7 +218,8 @@ void MainWindow::paintEvent(QPaintEvent* event)
     // Gear
     painter.setPen(Qt::white);
     painter.drawText(20, 130, QString("Gear: %1").arg(voiture.getGear()));
-    // ===== MESSAGE PIT STOP =====
+
+    // Message Pit
     if (inPitStop) {
         painter.setPen(Qt::green);
         painter.setFont(QFont("Arial", 14, QFont::Bold));
@@ -278,14 +228,11 @@ void MainWindow::paintEvent(QPaintEvent* event)
 	drawMinimap(painter);
 }
 
-// Cette fonction capte les clics de souris
 void MainWindow::mousePressEvent(QMouseEvent* event)
 {
     // Met à jour les coordonnées
     imageX = event->pos().x() - image.width() / 2;
     imageY = event->pos().y() - image.height() / 2;
-
-    // Redemande à Qt de redessiner
     update();
 }
 
@@ -304,10 +251,8 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     if (event->key() == Qt::Key_Q) voiture.shiftDown();
     if (event->key() == Qt::Key_F1) {
         DevMenu* devMenu = new DevMenu(&voiture, this);
-        devMenu->show(); // non-bloquant, le jeu continue
+        devMenu->show(); 
     }
-	
-    
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
@@ -324,31 +269,11 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 
 void MainWindow::gameLoop()
 {
-
-   
-	//wait for track to load before doing anything
     if (!track || track->getCenterLine().empty() || track->getCheckpoints().empty()) return;
-    //---------- Info Arduino -------------
     auto w = arduino->getWheelData();
     rotPeak->update(w.accelX, w.accelY, w.accelZ, deltaTime);
-
-    //qDebug() << "Muon count:" << w.muonCount;
-    //qDebug() << "Rotation peaks detected:" << rotPeak->getPeakRotAccel();
-    //qDebug() << "Rotation peaks detected:" << rotPeak->getCurrent().rotAccel;
-	//qDebug() << "Rotation peaks (raw):" << w.accelX << w.accelY << w.accelZ;
-
-    // Utiliser les données
     ArduinoBaseData  base = arduino->getBaseData();
     ArduinoWheelData wheelData = arduino->getWheelData();
-    //qDebug() << "=== WHEEL DATA ===";
-    //qDebug() << "Encoders  - enc1:" << wheelData.enc1 << "enc2:" << wheelData.enc2;
-    //qDebug() << "Accel     - X:" << wheelData.accelX << "Y:" << wheelData.accelY << "Z:" << wheelData.accelZ;
-    //qDebug() << "Switches  - TL:" << wheelData.switchTL << "TR:" << wheelData.switchTR << "BL:" << wheelData.switchBL << "BR:" << wheelData.switchBR << "PADGAU" << wheelData.paddleshiftdown << "PADDRO" << wheelData.paddleshiftup;
-    //qDebug() << "Joystick  - Dir:" << wheelData.joyDir;
-    //qDebug() << "BASE DATA" << base.pos << "accel " << base.gas << "brake" << base.brake;
-    //qDebug() << "GEAR" << voiture.getGear();
-
-    // Lecture directe des touches Windows
     keyW = (GetAsyncKeyState('W') & 0x8000) != 0;
     keyS = (GetAsyncKeyState('S') & 0x8000) != 0;
     keyA = (GetAsyncKeyState('A') & 0x8000) != 0;
@@ -376,10 +301,9 @@ void MainWindow::gameLoop()
     prevKeyF1 = curKeyF1;
 
     QTime currentTime = QTime::currentTime();
-    int msElapsed = lastFrameTime.msecsTo(currentTime);  // Millisecondes écoulées
-    deltaTime = msElapsed / 1000.0f;  // Convertit en secondes
-    lastFrameTime = currentTime;  // Sauvegarde pour la prochaine frame
-
+    int msElapsed = lastFrameTime.msecsTo(currentTime);  
+    deltaTime = msElapsed / 1000.0f;  
+    lastFrameTime = currentTime;  
 
 	// ===== INPUTS CLAVIERS =====
     //float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
@@ -395,7 +319,7 @@ void MainWindow::gameLoop()
     
 
 	// ===== INPUTS WHEEL =====
-     //Bloque l'accélération jusqu'au GO (ou pendant la pénalité de faux départ)
+    //Bloque l'accélération jusqu'au GO (ou pendant la pénalité de faux départ)
     float accelInput = (raceStart->isRacing() && !raceStart->isPenalty())
         ? base.gas : 0.0f;
     voiture.setAccel(accelInput);
@@ -408,32 +332,23 @@ void MainWindow::gameLoop()
    
     int delta = wheelData.enc1 - arduino->prevEnc1;
     if (delta != 0) {
-        float step = 0.02f;  // 2% par cran — ajuste au besoin
+        float step = 0.02f;  
         float newVol = soundManager->getVolume() + delta * step;
         if (newVol < 0.0f) newVol = 0.0f;
         if (newVol > 1.0f) newVol = 1.0f;
         soundManager->setVolume(newVol);
-        //qDebug() << "Volume:" << int(newVol * 100) << "%";
         arduino->prevEnc1 = wheelData.enc1;
     }
-    // mettre en sorte que tr est pause DONE, bl est changer vue DONE et br est sortir pitstop DONE
-    // encodeur 1 = changer volume DONE et encodeur 2 = scrool leaderboard, joystick = menu 
     
     bool onTrack = track->isVector2DOnTrack(voiture.getPosition());
-
-    //if (!raceTimes->isRaceStarted()) { raceTimes->setupRace(3, track);  raceTimes->startRace(); }// ONLY FOR TESTING MUST BE CHANGE FOR FINAL VERSION
-    ////Checkpoint Check
-    //raceTimes->checkForCheckpoint(track, voiture.getPosition());
-    // 
-    // 
-        // ===== SEQUENCE DE DEPART F1 =====
+    // ===== SEQUENCE DE DEPART F1 =====
     // Lance la séquence une seule fois quand la piste est prête
     if (raceStart->getState() == RaceStart::IDLE) {
         raceStart->startSequence();
     }
     raceStart->update(deltaTime);
 
-    // ── Détection muon (frontal montant sur muonCount) ──────────
+    // ── Détection muon
     // Le volant Arduino incrémente muonCount à chaque muon détecté.
     // On appelle muonDetected() une seule fois par nouveau muon.
     {
@@ -449,13 +364,12 @@ void MainWindow::gameLoop()
     bool playerGassing = (base.gas > 0.05f || keyW);
     if (playerGassing) raceStart->playerAccelerated();
 
-    // Checkpoints seulement une fois la course lancée
+    // Checkpoints une fois la course lancée
     if (raceTimes->isRaceStarted()) {
         raceTimes->checkForCheckpoint(track, voiture.getPosition());
     }
 
-
-    ////Mecanique de pitstop
+    // Mecanique de pitstop
 	bool onPitlane = track->isVector2DOnPitLane(voiture.getPosition(), onTrack);
 
     int carXpos = (int)(voiture.getPosition().x());
@@ -485,7 +399,7 @@ void MainWindow::gameLoop()
 
     if (inPitStop && (keyEnter || wheelData.switchBR)) pitStop.setLeaving(true);
 
-	// ===== SON =====
+	// Son
     soundManager->updateEngine(voiture.getRpm(), voiture.getMaxRpm(), voiture.is_on_grass);
     soundManager->playBrake(keyS, voiture.getSpeed());
     soundManager->playNos(wheelData.switchTL && voiture.getNos() > 0);
@@ -507,7 +421,7 @@ void MainWindow::gameLoop()
     }
 
     if (arduino->hasNewWheelData()) {
-        waitingForWheel = false;  // le volant a répondu, on peut renvoyer
+        waitingForWheel = false;  
     }
 
     if (waitingForWheel && sendTimer.elapsed() > 500) {  // timeout 500ms
@@ -516,7 +430,6 @@ void MainWindow::gameLoop()
     // Toggle pause avec Escape
     static bool escWasPressed = false;
     bool escNow = (((GetAsyncKeyState(VK_ESCAPE) & 0x8000) != 0) || (wheelData.switchTR && !arduino->prevtr));
-	//arduino->prevtr = wheelData.switchTR;
     if (escNow && !escWasPressed) {
         isPaused = !isPaused;
     }
@@ -524,7 +437,7 @@ void MainWindow::gameLoop()
 
     if (isPaused) return;
 
-    // ===== UPDATE PHYSIQUE =====
+    // Update Phys
     voiture.update(deltaTime);
 
     update();
@@ -532,14 +445,10 @@ void MainWindow::gameLoop()
 
 void MainWindow::drawTrack(QPainter& painter, float scale)
 {
-    // PISTE (gris foncé)
-    
     painter.setPen(Qt::NoPen);
     painter.setBrush(QColor(50, 50, 50));
     std::vector<QVector2D> left = track->getTrackEdges().left;
     std::vector<QVector2D> right = track->getTrackEdges().right;
-    
-    // Dessiner la piste comme un polygone
     QPolygonF trackPoly;
     for (const auto& p : left) {
         trackPoly << QPointF(p.x() * scale, p.y() * scale);
@@ -566,25 +475,24 @@ void MainWindow::drawTrack(QPainter& painter, float scale)
     drawCurbs(painter, right, scale, Qt::red);
 	drawPit(scale, track, painter);
 
-    // Draw sprites along center line
+    // Sprites
     auto centerLine = track->getCenterLine();
     auto pieces = track->getPieces();
 
-    size_t pointIndex = 0; // tracks where we are in centerLine
+    size_t pointIndex = 0; 
 
     for (size_t i = 0; i < pieces.size(); i++) {
         if (!pieces[i]) { pointIndex++; continue; }  
-        int segmentCount = pieces[i]->getLengths().size(); // how many points this piece uses
+        int segmentCount = pieces[i]->getLengths().size(); 
 
         size_t startIdx = pointIndex;
         size_t endIdx = pointIndex + segmentCount;
 
         if (endIdx >= centerLine.size()) break;
 
-        // Use start and end of this piece for position and angle
         QVector2D startPos = centerLine[startIdx];
         QVector2D endPos = centerLine[endIdx];
-        QVector2D midPos = (startPos + endPos) * 0.5f; // draw sprite at center of piece
+        QVector2D midPos = (startPos + endPos) * 0.5f;
         QVector2D dir = endPos - startPos;
 
         float angle = atan2(dir.y(), dir.x()) * 180.0f / M_PI + pieces[i]->getSpriteRotationOffset();
@@ -630,9 +538,7 @@ void MainWindow::drawCurbs(QPainter& painter, const std::vector<QVector2D>& edge
 
 void MainWindow::drawPit(float scale, Track* track, QPainter& painter)
 {
-    // After drawCurbs calls, before sprite drawing:
-
-// ── PIT LANE ──────────────────────────────────────────
+    // Pit Lane
     if (track->hasPitLane()) {
         PitLane pit = track->getPitLane();
 
@@ -647,7 +553,7 @@ void MainWindow::drawPit(float scale, Track* track, QPainter& painter)
             pitPoly << QPointF(pit.edges.right[i].x() * scale, pit.edges.right[i].y() * scale);
         painter.drawPolygon(pitPoly);
 
-        // Entry curve surface
+        // Curve surface entree
         if (!pit.entryCurveEdges.left.empty()) {
             QPolygonF entryPoly;
             for (const auto& p : pit.entryCurveEdges.left)
@@ -657,7 +563,7 @@ void MainWindow::drawPit(float scale, Track* track, QPainter& painter)
             painter.drawPolygon(entryPoly);
         }
 
-        // Exit curve surface
+        // Curve surface sortie
         if (!pit.exitCurveEdges.left.empty()) {
             QPolygonF exitPoly;
             for (const auto& p : pit.exitCurveEdges.left)
@@ -667,7 +573,7 @@ void MainWindow::drawPit(float scale, Track* track, QPainter& painter)
             painter.drawPolygon(exitPoly);
         }
 
-        // Pit center line (orange dashed)
+        // Pit center line
         QPen pitCenterPen(QColor(255, 165, 0), 2, Qt::DashLine);
         painter.setPen(pitCenterPen);
         for (size_t i = 1; i < pit.centerLine.size(); i++)
@@ -684,15 +590,8 @@ void MainWindow::drawPit(float scale, Track* track, QPainter& painter)
 void MainWindow::drawMinimap(QPainter& painter)
 {
     if (!track || track->getCenterLine().empty()) return;
-
-    // ── Calculer les bounds de la piste ──────────────────────
     float minX = 1e9f, maxX = -1e9f;
     float minY = 1e9f, maxY = -1e9f;
-
-    //auto checkPoint = [&](const QVector2D& p) {
-    //    minX = std::min(minX, p.x()); maxX = std::max(maxX, p.x());
-    //    minY = std::min(minY, p.y()); maxY = std::max(maxY, p.y());
-    //    };
     auto checkPoint = [&](const QVector2D& p) {
         minX = qMin(minX, p.x()); maxX = qMax(maxX, p.x());
         minY = qMin(minY, p.y()); maxY = qMax(maxY, p.y());
@@ -709,7 +608,6 @@ void MainWindow::drawMinimap(QPainter& painter)
     float rangeY = maxY - minY;
     if (rangeX <= 0 || rangeY <= 0) return;
 
-    // ── Calcul proportionnel ──────────────────────────────────
     const float MAX_SIZE = 250.0f;
     const int MARGIN = 15;
 
@@ -724,7 +622,7 @@ void MainWindow::drawMinimap(QPainter& painter)
         minimapHeight
     );
 
-    // ── Projection monde → mini-map ──────────────────────────
+    // Mini-map
     auto toMinimap = [&](const QVector2D& p) -> QPointF {
         float nx = (p.x() - minX) / rangeX;
         float ny = (p.y() - minY) / rangeY;
@@ -734,18 +632,15 @@ void MainWindow::drawMinimap(QPainter& painter)
         );
         };
 
-    // ── Fond semi-transparent ─────────────────────────────────
     painter.setBrush(QColor(0, 0, 0, 160));
     painter.setPen(QPen(QColor(255, 255, 255, 80), 1));
     painter.drawRoundedRect(minimapRect, 8, 8);
 
-    // ── Clipping ─────────────────────────────────────────────
     painter.save();
     QPainterPath clipPath;
     clipPath.addRoundedRect(minimapRect, 8, 8);
     painter.setClipPath(clipPath);
 
-    // ── Surface de la piste ───────────────────────────────────
     const auto& left = track->getTrackEdges().left;
     const auto& right = track->getTrackEdges().right;
 
@@ -761,7 +656,7 @@ void MainWindow::drawMinimap(QPainter& painter)
         painter.drawPolygon(trackPoly);
     }
 
-    // ── Pit lane ──────────────────────────────────────────────
+    // Pit lane
     if (track->hasPitLane()) {
         PitLane pit = track->getPitLane();
 
@@ -782,18 +677,17 @@ void MainWindow::drawMinimap(QPainter& painter)
         drawEdgePoly(pit.exitCurveEdges.left, pit.exitCurveEdges.right);
     }
 
-    // ── Ligne centrale ────────────────────────────────────────
     const auto& center = track->getCenterLine();
     painter.setPen(QPen(QColor(255, 255, 255, 80), 1, Qt::DashLine));
     for (size_t i = 1; i < center.size(); i++)
         painter.drawLine(toMinimap(center[i - 1]), toMinimap(center[i]));
 
-    // ── Joueur ────────────────────────────────────────────────
+    // Joueur
     painter.setBrush(Qt::red);
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(toMinimap(voiture.getPosition()), 3, 3);
 
-    // ── Pit stop box ──────────────────────────────────────────
+    // Pit stop box
     QRect pitRect = pitStop.getRect();
     const float PIXELS_PER_METER = 5.0f;
     QVector2D pitCenter(

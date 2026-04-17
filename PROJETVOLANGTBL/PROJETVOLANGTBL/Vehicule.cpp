@@ -1,4 +1,3 @@
-// Vehicule.cpp
 #include "Vehicule.h"
 #include <cmath>
 #include <qDebug>
@@ -57,7 +56,7 @@ void Vehicule::update(float deltaTime)
 {
     if (carburant <= 0) return;
 
-    // 1) ACCÉLÉRATION avec gear
+    // ACCÉLÉRATION avec gear
     if (accel > 0) {
         if (speed < gearMinSpeed[gear]) {
             speed -= 5.0f * deltaTime;
@@ -68,7 +67,7 @@ void Vehicule::update(float deltaTime)
         }
     }
 
-    // 2) NOS
+    // NOS
     if (boosting && nos > 0.0f) {
         speed += nosForce * deltaTime;
         nos -= nosDrain * deltaTime;
@@ -79,27 +78,24 @@ void Vehicule::update(float deltaTime)
         nos = std::min(nos, 100.0f);
     }
 
-    // 3) Brider à la vitesse max du gear
+    // Brider à la vitesse max du gear
     float maxSpeed = gearMaxSpeed[gear];
     if (boosting && nos > 0.0f) maxSpeed *= 1.25f;
     speed = std::min(speed, maxSpeed);
 
-    // 4) FREINAGE
+    // Freinage
     if (breaking > 0) {
         speed *= (1.0f - breaking * brakeForce);
         speed -= brakeDecel * breaking * deltaTime;
         speed = std::max(speed, 0.0f);
     }
 
-    // 5) FRICTION
+    // Friction
     speed *= is_on_grass ? dragOnGrass : dragOnTrack;
 
-    // 6) STEERING
+    // Steering
     float speedValue = vitesse.length();
     if (speedValue > 0.1f) {
-    //    float speedNorm = std::clamp(speedValue / 240.0f, 0.0f, 1.0f);
-    //    float bell = 4.0f * speedNorm * (1.0f - speedNorm);
-    //    float turnFactor = minTurnFactor + bell * (maxTurnFactor - minTurnFactor);
         float speedNorm = std::clamp(speedValue / 300.0f, 0.0f, 1.0f);
         float turnFactor = maxTurnFactor - speedNorm * (maxTurnFactor - minTurnFactor);
 
@@ -119,27 +115,27 @@ void Vehicule::update(float deltaTime)
         angle = std::atan2(vitesse.y(), vitesse.x());
     }
 
-    // 7) Reconstruit vitesse depuis angle
+    // Reconstruit vitesse depuis angle
     vitesse.setX(std::cos(angle) * speed);
     vitesse.setY(std::sin(angle) * speed);
 
-    // 8) Position
+    // Position
     position.setX(position.x() + vitesse.x() * deltaTime);
     position.setY(position.y() + vitesse.y() * deltaTime);
 
-    // 9) Carburant
+    // Carburant
     if (speed > 0.1f)        carburant -= 0.05f * deltaTime;
     if (accel > 0 || boosting) carburant -= 0.01f * deltaTime;
     carburant = std::max(carburant, 0.0f);
 
-    // 10) RPM
+    // RPM
     float targetRpm = minRpm + (speed / gearMaxSpeed[gear]) * maxRpm;
     rpm += (targetRpm - rpm) * 0.1f;
     rpm = std::clamp(rpm, minRpm, maxRpm);
 
-    // USURE DES PNEUS
+    // Usure des pneus
     float wearRate = is_on_grass ? 1.5f : 0.5f;  // usure par seconde
-    // 11) Usure pneus
+    // Usure pneus
     if (speed > 0.1f) {
         tireWear -= 0.05f * deltaTime;
         tireWear = std::max(tireWear, 0.0f);

@@ -36,7 +36,6 @@ void RaceStart::startSequence()
 
 void RaceStart::muonDetected()
 {
-    // Un muon a été détecté par l'Arduino → éteindre les feux
     if (m_state == LIGHTS_OFF) {
         triggerLightsOut();
     }
